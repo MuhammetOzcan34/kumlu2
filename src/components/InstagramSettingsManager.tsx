@@ -1,0 +1,308 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { Instagram, Save, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface InstagramSettings {
+  instagram_username: string;
+  instagram_access_token: string;
+  instagram_enabled: boolean;
+  instagram_post_count: number;
+  instagram_cache_duration: number;
+}
+
+export const InstagramSettingsManager = () => {
+  const [settings, setSettings] = useState<InstagramSettings>({
+    instagram_username: "",
+    instagram_access_token: "",
+    instagram_enabled: false,
+    instagram_post_count: 6,
+    instagram_cache_duration: 3600
+  });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("ayarlar")
+        .select("*")
+        .in("anahtar", [
+          "instagram_username",
+          "instagram_access_token",
+          "instagram_enabled",
+          "instagram_post_count",
+          "instagram_cache_duration"
+        ]);
+
+      if (error) {
+        console.error("Ayarlar yüklenirken hata:", error);
+        toast({
+          title: "Hata",
+          description: "Ayarlar yüklenirken bir hata oluştu.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newSettings = { ...settings };
+      data?.forEach((setting) => {
+        if (setting.anahtar === "instagram_enabled") {
+          newSettings[setting.anahtar] = setting.deger === "true";
+        } else if (setting.anahtar === "instagram_post_count" || setting.anahtar === "instagram_cache_duration") {
+          newSettings[setting.anahtar] = parseInt(setting.deger) || 0;
+        } else {
+          newSettings[setting.anahtar] = setting.deger;
+        }
+      });
+
+      setSettings(newSettings);
+    } catch (error) {
+      console.error("Ayarlar yüklenirken hata:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const settingsToSave = [
+        { anahtar: "instagram_username", deger: settings.instagram_username },
+        { anahtar: "instagram_access_token", deger: settings.instagram_access_token },
+        { anahtar: "instagram_enabled", deger: settings.instagram_enabled.toString() },
+        { anahtar: "instagram_post_count", deger: settings.instagram_post_count.toString() },
+        { anahtar: "instagram_cache_duration", deger: settings.instagram_cache_duration.toString() }
+      ];
+
+      const { error } = await supabase
+        .from("ayarlar")
+        .upsert(settingsToSave, { onConflict: "anahtar" });
+
+      if (error) {
+        console.error("Ayarlar kaydedilirken hata:", error);
+        toast({
+          title: "Hata",
+          description: "Ayarlar kaydedilirken bir hata oluştu.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Başarılı",
+        description: "Instagram ayarları başarıyla kaydedildi.",
+      });
+    } catch (error) {
+      console.error("Ayarlar kaydedilirken hata:", error);
+      toast({
+        title: "Hata",
+        description: "Ayarlar kaydedilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const testInstagramConnection = async () => {
+    setTesting(true);
+    try {
+      // Instagram API bağlantısını test et
+      const { instagramAPI } = await import('@/api/instagram');
+      const result = await instagramAPI.testConnection(
+        settings.instagram_username,
+        settings.instagram_access_token
+      );
+
+      if (result.success) {
+        toast({
+          title: "Başarılı",
+          description: "Instagram bağlantısı başarıyla test edildi.",
+        });
+      } else {
+        toast({
+          title: "Hata",
+          description: result.error || "Instagram bağlantısı test edilemedi.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Instagram test hatası:", error);
+      toast({
+        title: "Hata",
+        description: "Instagram bağlantısı test edilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleInputChange = (key: keyof InstagramSettings, value: string | boolean | number) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Instagram className="h-5 w-5" />
+            Instagram Ayarları
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Ayarlar yükleniyor...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Instagram className="h-5 w-5" />
+          Instagram Ayarları
+        </CardTitle>
+        <CardDescription>
+          Instagram hesabınızı bağlayın ve paylaşımlarınızı web sitenizde gösterin.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Instagram Bağlantı Durumu */}
+        <Alert>
+          <Instagram className="h-4 w-4" />
+          <AlertDescription>
+            Instagram API'si için geçerli bir access token gereklidir. 
+            <a 
+              href="https://developers.facebook.com/docs/instagram-basic-display-api/getting-started" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline ml-1"
+            >
+              Instagram Basic Display API dokümantasyonunu inceleyin
+            </a>
+          </AlertDescription>
+        </Alert>
+
+        {/* Instagram Kullanıcı Adı */}
+        <div className="space-y-2">
+          <Label htmlFor="instagram_username">Instagram Kullanıcı Adı</Label>
+          <Input
+            id="instagram_username"
+            placeholder="ornek_kullanici"
+            value={settings.instagram_username}
+            onChange={(e) => handleInputChange("instagram_username", e.target.value)}
+          />
+          <p className="text-sm text-muted-foreground">
+            @ işareti olmadan kullanıcı adınızı girin
+          </p>
+        </div>
+
+        {/* Instagram Access Token */}
+        <div className="space-y-2">
+          <Label htmlFor="instagram_access_token">Instagram Access Token</Label>
+          <Input
+            id="instagram_access_token"
+            type="password"
+            placeholder="IGQWRP..."
+            value={settings.instagram_access_token}
+            onChange={(e) => handleInputChange("instagram_access_token", e.target.value)}
+          />
+          <p className="text-sm text-muted-foreground">
+            Instagram Basic Display API access token'ınızı girin
+          </p>
+        </div>
+
+        {/* Instagram Aktif/Pasif */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Instagram Akışını Göster</Label>
+            <p className="text-sm text-muted-foreground">
+              Anasayfada Instagram paylaşımlarını göster
+            </p>
+          </div>
+          <Switch
+            checked={settings.instagram_enabled}
+            onCheckedChange={(checked) => handleInputChange("instagram_enabled", checked)}
+          />
+        </div>
+
+        {/* Gösterilecek Post Sayısı */}
+        <div className="space-y-2">
+          <Label htmlFor="instagram_post_count">Gösterilecek Post Sayısı</Label>
+          <Input
+            id="instagram_post_count"
+            type="number"
+            min="1"
+            max="20"
+            value={settings.instagram_post_count}
+            onChange={(e) => handleInputChange("instagram_post_count", parseInt(e.target.value) || 6)}
+          />
+          <p className="text-sm text-muted-foreground">
+            Anasayfada gösterilecek maksimum post sayısı (1-20 arası)
+          </p>
+        </div>
+
+        {/* Cache Süresi */}
+        <div className="space-y-2">
+          <Label htmlFor="instagram_cache_duration">Cache Süresi (saniye)</Label>
+          <Input
+            id="instagram_cache_duration"
+            type="number"
+            min="300"
+            max="86400"
+            value={settings.instagram_cache_duration}
+            onChange={(e) => handleInputChange("instagram_cache_duration", parseInt(e.target.value) || 3600)}
+          />
+          <p className="text-sm text-muted-foreground">
+            Instagram verilerinin cache'de tutulma süresi (5 dakika - 24 saat arası)
+          </p>
+        </div>
+
+        {/* Butonlar */}
+        <div className="flex gap-2 pt-4">
+          <Button 
+            onClick={saveSettings} 
+            disabled={saving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={testInstagramConnection}
+            disabled={testing || !settings.instagram_username || !settings.instagram_access_token}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${testing ? 'animate-spin' : ''}`} />
+            {testing ? "Test Ediliyor..." : "Bağlantıyı Test Et"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}; 
