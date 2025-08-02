@@ -118,6 +118,70 @@ export function BrandLogosSettingsManager() {
     }
   };
 
+  const uploadLogo = async (file: File, index: number) => {
+    try {
+      setUploadingLogo(index);
+      
+      // Dosya boyutu kontrolü (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Dosya boyutu 5MB'dan büyük olamaz");
+      }
+
+      // Dosya tipi kontrolü
+      if (!file.type.startsWith('image/')) {
+        throw new Error("Sadece resim dosyaları yüklenebilir");
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `brand-logos/${Date.now()}-${index}.${fileExt}`;
+
+      // Supabase Storage'a yükle
+      const { data, error } = await supabase.storage
+        .from('images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Public URL al
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(fileName);
+
+      // Settings'i güncelle
+      const imageKey = `brand_logo_${index}_image` as keyof typeof settings;
+      setSettings(prev => ({ ...prev, [imageKey]: publicUrl }));
+
+      toast({
+        title: "Başarılı",
+        description: "Logo başarıyla yüklendi.",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: "Logo yüklenirken bir hata oluştu: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(null);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadLogo(file, index);
+    }
+  };
+
+  const removeLogo = (index: number) => {
+    const imageKey = `brand_logo_${index}_image` as keyof typeof settings;
+    setSettings(prev => ({ ...prev, [imageKey]: "" }));
+  };
+
   const saveSettings = async () => {
     try {
       setLoading(true);
@@ -172,6 +236,7 @@ export function BrandLogosSettingsManager() {
     const nameKey = `brand_logo_${index}_name` as keyof typeof settings;
     const imageKey = `brand_logo_${index}_image` as keyof typeof settings;
     const descriptionKey = `brand_logo_${index}_description` as keyof typeof settings;
+    const hasImage = settings[imageKey];
 
     return (
       <Card key={index}>
@@ -195,28 +260,79 @@ export function BrandLogosSettingsManager() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor={`logo_${index}_image`}>Logo URL</Label>
-            <Input
-              id={`logo_${index}_image`}
-              value={settings[imageKey]}
-              onChange={(e) =>
-                setSettings(prev => ({ ...prev, [imageKey]: e.target.value }))
-              }
-              placeholder="Logo resmi URL'si"
-            />
-            {settings[imageKey] && (
-              <div className="mt-2">
-                <img
-                  src={settings[imageKey]}
-                  alt={`Marka ${index} önizleme`}
-                  className="w-16 h-16 object-contain border rounded"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
+            <Label>Logo Resmi</Label>
+            <div className="space-y-3">
+              {/* Dosya Yükleme Alanı */}
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  {hasImage ? (
+                    <div className="relative">
+                      <img
+                        src={settings[imageKey]}
+                        alt={`Marka ${index} önizleme`}
+                        className="w-24 h-24 object-contain rounded"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 w-6 h-6 p-0"
+                        onClick={() => removeLogo(index)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                  )}
+                  
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRefs.current[index]?.click()}
+                      disabled={uploadingLogo === index}
+                      className="flex items-center gap-2"
+                    >
+                      {uploadingLogo === index ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Yükleniyor...
+                        </>
+                      ) : hasImage ? (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Değiştir
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Logo Yükle
+                        </>
+                      )}
+                    </Button>
+                    <input
+                      ref={(el) => fileInputRefs.current[index] = el}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e, index)}
+                      className="hidden"
+                    />
+                  </div>
+                  
+                  {!hasImage && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      PNG, JPG, GIF (max 5MB)
+                    </p>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -331,7 +447,7 @@ export function BrandLogosSettingsManager() {
             Marka Logoları
           </CardTitle>
           <CardDescription>
-            6 adet marka logosu ve açıklamalarını yapılandırın
+            6 adet marka logosu ve açıklamalarını yapılandırın. Logoları yükleyerek ekleyebilirsiniz.
           </CardDescription>
         </CardHeader>
         <CardContent>
