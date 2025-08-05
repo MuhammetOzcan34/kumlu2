@@ -16,6 +16,7 @@ interface CompanySettings {
   firma_email: string;
   firma_adres: string;
   firma_logo_url: string;
+  firma_calisma_saatleri: string;
 }
 
 export const CompanySettingsManager: React.FC = () => {
@@ -26,7 +27,8 @@ export const CompanySettingsManager: React.FC = () => {
     firma_telefon: '',
     firma_email: '',
     firma_adres: '',
-    firma_logo_url: ''
+    firma_logo_url: '',
+    firma_calisma_saatleri: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +43,7 @@ export const CompanySettingsManager: React.FC = () => {
       const { data, error } = await supabase
         .from('ayarlar')
         .select('anahtar, deger')
-        .in('anahtar', ['firma_adi', 'firma_website', 'firma_telefon', 'firma_email', 'firma_adres', 'firma_logo_url']);
+        .in('anahtar', ['firma_adi', 'firma_website', 'firma_telefon', 'firma_email', 'firma_adres', 'firma_logo_url', 'firma_calisma_saatleri']);
 
       if (error) throw error;
 
@@ -153,7 +155,8 @@ export const CompanySettingsManager: React.FC = () => {
       firma_telefon: 'Firma telefon numarası',
       firma_email: 'Firma e-posta adresi',
       firma_adres: 'Firma adresi',
-      firma_logo_url: 'Firma logo dosya yolu'
+      firma_logo_url: 'Firma logo dosya yolu',
+      firma_calisma_saatleri: 'Firma çalışma saatleri'
     };
     return descriptions[key] || '';
   };
@@ -234,6 +237,20 @@ export const CompanySettingsManager: React.FC = () => {
             placeholder="Firma adresinizi girin"
             rows={3}
           />
+        </div>
+
+        <div>
+          <Label htmlFor="firma_calisma_saatleri">Çalışma Saatleri</Label>
+          <Textarea
+            id="firma_calisma_saatleri"
+            value={settings.firma_calisma_saatleri}
+            onChange={(e) => handleInputChange('firma_calisma_saatleri', e.target.value)}
+            placeholder="Pazartesi - Cuma: 08:00 - 18:00&#10;Cumartesi: 09:00 - 17:00&#10;Pazar: Kapalı"
+            rows={4}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Her satıra bir çalışma günü yazın. Örnek: Pazartesi - Cuma: 08:00 - 18:00
+          </p>
         </div>
 
         <div>

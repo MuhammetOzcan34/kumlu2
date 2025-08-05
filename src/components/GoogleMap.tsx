@@ -1,4 +1,5 @@
 import { useSetting } from "@/hooks/useSettings";
+import { MapPin } from "lucide-react";
 
 interface GoogleMapProps {
   className?: string;
@@ -9,17 +10,25 @@ export const GoogleMap = ({ className }: GoogleMapProps) => {
   const boylam = useSetting("firma_boylam");
   const firmaAdres = useSetting("firma_adres");
 
-  // Eğer koordinatlar yoksa placeholder göster
-  if (!enlem || !boylam) {
+  // Eğer adres yoksa placeholder göster
+  if (!firmaAdres) {
     return (
       <div className={`aspect-video bg-muted rounded-lg flex items-center justify-center ${className}`}>
-        <p className="text-muted-foreground">Harita için koordinat bilgisi bekleniyor</p>
+        <div className="text-center">
+          <MapPin className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+          <p className="text-muted-foreground">Adres bilgisi girildiğinde harita gösterilecek</p>
+        </div>
       </div>
     );
   }
 
-  // Google Maps iframe URL'i oluştur
-  const mapUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3008.7!2d${boylam}!3d${enlem}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM${Math.floor(parseFloat(enlem))}°${((parseFloat(enlem) % 1) * 60).toFixed(2)}'N%20${Math.floor(parseFloat(boylam))}°${((parseFloat(boylam) % 1) * 60).toFixed(2)}'E!5e0!3m2!1str!2str!4v1609459200000!5m2!1str!2str`;
+  // Google Maps iframe URL'i oluştur - ücretsiz embed API kullan
+  let mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(firmaAdres)}`;
+  
+  // Eğer koordinatlar varsa onları kullan
+  if (enlem && boylam) {
+    mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${enlem},${boylam}`;
+  }
 
   return (
     <div className={`aspect-video rounded-lg overflow-hidden ${className}`}>
@@ -31,7 +40,7 @@ export const GoogleMap = ({ className }: GoogleMapProps) => {
         allowFullScreen
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
-        title={`${firmaAdres || 'Firma'} Konumu`}
+        title={`${firmaAdres} Konumu`}
       />
     </div>
   );

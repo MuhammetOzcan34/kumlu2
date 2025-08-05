@@ -141,7 +141,7 @@ export const LogoDisplay: React.FC = () => {
 
   if (!companyLogo || !companyLogo.trim()) {
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed border-muted-foreground/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-muted-foreground">
             <Upload className="h-5 w-5" />
@@ -151,6 +151,19 @@ export const LogoDisplay: React.FC = () => {
             Şirket logosu ayarlardan yüklenebilir. Logo aynı zamanda favicon ve PWA ikonları olarak kullanılacaktır.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+              <Upload className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <div>
+              <p className="font-medium text-muted-foreground">Logo Yüklenmedi</p>
+              <p className="text-sm text-muted-foreground/70">
+                Logo yüklendiğinde favicon ve PWA ikonları otomatik olarak güncellenecektir
+              </p>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     );
   }

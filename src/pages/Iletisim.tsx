@@ -4,17 +4,15 @@ import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useSetting } from "@/hooks/useSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { GoogleMap } from "@/components/GoogleMap";
+import { ContactForm } from "@/components/ContactForm";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 const Iletisim = () => {
   const firmaAdres = useSetting("firma_adres") || "";
-  const firmaTelefon = useSetting("firma_telefon") || "+90 555 123 45 67";
-  const firmaEmail = useSetting("firma_email") || "info@kumlu.com";
+  const firmaTelefon = useSetting("firma_telefon") || "";
+  const firmaEmail = useSetting("firma_email") || "";
+  const firmaCalismaSaatleri = useSetting("firma_calisma_saatleri") || "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,8 +22,8 @@ const Iletisim = () => {
       {/* Mobile Hamburger Menu */}
       <HamburgerMenu />
       
-      {/* Phone Button */}
-      <PhoneButton phoneNumber={firmaTelefon} />
+      {/* Phone Button - Sadece telefon numarası varsa göster */}
+      {firmaTelefon && <PhoneButton phoneNumber={firmaTelefon} />}
       
       {/* Main Content */}
       <main className="lg:ml-64 pb-20 lg:pb-8">
@@ -39,46 +37,7 @@ const Iletisim = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Bize Yazın</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Ad Soyad</Label>
-                    <Input id="name" placeholder="Adınız ve soyadınız" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
-                    <Input id="phone" placeholder="0555 123 45 67" />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-posta</Label>
-                  <Input id="email" type="email" placeholder="ornek@email.com" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Konu</Label>
-                  <Input id="subject" placeholder="Mesajınızın konusu" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="message">Mesaj</Label>
-                  <Textarea 
-                    id="message" 
-                    placeholder="Mesajınızı buraya yazın..."
-                    className="min-h-[120px]"
-                  />
-                </div>
-                
-                <Button className="w-full">
-                  Gönder
-                </Button>
-              </CardContent>
-            </Card>
+            <ContactForm />
             
             {/* Contact Info */}
             <div className="space-y-6">
@@ -87,47 +46,53 @@ const Iletisim = () => {
                   <CardTitle>İletişim Bilgileri</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold">Adres</h4>
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">
-                        {firmaAdres}
-                      </p>
+                  {firmaAdres && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold">Adres</h4>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">
+                          {firmaAdres}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold">Telefon</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {firmaTelefon}
-                      </p>
+                  {firmaTelefon && (
+                    <div className="flex items-start gap-3">
+                      <Phone className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold">Telefon</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {firmaTelefon}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-start gap-3">
-                    <Mail className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold">E-posta</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {firmaEmail}
-                      </p>
+                  {firmaEmail && (
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold">E-posta</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {firmaEmail}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-primary mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold">Çalışma Saatleri</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Pazartesi - Cuma: 08:00 - 18:00<br />
-                        Cumartesi: 09:00 - 17:00<br />
-                        Pazar: Kapalı
-                      </p>
+                  {firmaCalismaSaatleri && (
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold">Çalışma Saatleri</h4>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">
+                          {firmaCalismaSaatleri}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
               

@@ -22,50 +22,50 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
   const popupDuration = parseInt(settings?.brand_popup_duration || "3000"); // 3 saniye varsayılan
   const popupEnabled = settings?.brand_popup_enabled !== "false";
 
-  // Eğer pop-up devre dışı bırakılmışsa hiçbir şey gösterme
-  if (!popupEnabled) {
+  // Logo ayarları - Sadece yüklenen logoları göster
+  const logos = [
+    ...(settings?.brand_logo_1_image ? [{
+      id: 1,
+      name: settings.brand_logo_1_name || "Marka 1",
+      image: settings.brand_logo_1_image,
+      description: settings.brand_logo_1_description || "Kaliteli ürünler"
+    }] : []),
+    ...(settings?.brand_logo_2_image ? [{
+      id: 2,
+      name: settings.brand_logo_2_name || "Marka 2",
+      image: settings.brand_logo_2_image,
+      description: settings.brand_logo_2_description || "Güvenilir marka"
+    }] : []),
+    ...(settings?.brand_logo_3_image ? [{
+      id: 3,
+      name: settings.brand_logo_3_name || "Marka 3",
+      image: settings.brand_logo_3_image,
+      description: settings.brand_logo_3_description || "Profesyonel çözümler"
+    }] : []),
+    ...(settings?.brand_logo_4_image ? [{
+      id: 4,
+      name: settings.brand_logo_4_name || "Marka 4",
+      image: settings.brand_logo_4_image,
+      description: settings.brand_logo_4_description || "İnovatif teknoloji"
+    }] : []),
+    ...(settings?.brand_logo_5_image ? [{
+      id: 5,
+      name: settings.brand_logo_5_name || "Marka 5",
+      image: settings.brand_logo_5_image,
+      description: settings.brand_logo_5_description || "Güçlü performans"
+    }] : []),
+    ...(settings?.brand_logo_6_image ? [{
+      id: 6,
+      name: settings.brand_logo_6_name || "Marka 6",
+      image: settings.brand_logo_6_image,
+      description: settings.brand_logo_6_description || "Yenilikçi tasarım"
+    }] : [])
+  ];
+
+  // Eğer pop-up devre dışı bırakılmışsa veya hiç logo yüklenmemişse hiçbir şey gösterme
+  if (!popupEnabled || logos.length === 0) {
     return null;
   }
-
-  // Logo ayarları
-  const logos = [
-    {
-      id: 1,
-      name: settings?.brand_logo_1_name || "Marka 1",
-      image: settings?.brand_logo_1_image || "/src/assets/logos/adidas-logo.png",
-      description: settings?.brand_logo_1_description || "Kaliteli ürünler"
-    },
-    {
-      id: 2,
-      name: settings?.brand_logo_2_name || "Marka 2",
-      image: settings?.brand_logo_2_image || "/src/assets/logos/nike-logo.png",
-      description: settings?.brand_logo_2_description || "Güvenilir marka"
-    },
-    {
-      id: 3,
-      name: settings?.brand_logo_3_name || "Marka 3",
-      image: settings?.brand_logo_3_image || "/src/assets/logos/puma-logo.png",
-      description: settings?.brand_logo_3_description || "Profesyonel çözümler"
-    },
-    {
-      id: 4,
-      name: settings?.brand_logo_4_name || "Marka 4",
-      image: settings?.brand_logo_4_image || "/src/assets/logos/apple-logo.png",
-      description: settings?.brand_logo_4_description || "İnovatif teknoloji"
-    },
-    {
-      id: 5,
-      name: settings?.brand_logo_5_name || "Marka 5",
-      image: settings?.brand_logo_5_image || "/src/assets/logos/microsoft-logo.png",
-      description: settings?.brand_logo_5_description || "Güçlü performans"
-    },
-    {
-      id: 6,
-      name: settings?.brand_logo_6_name || "Marka 6",
-      image: settings?.brand_logo_6_image || "/src/assets/logos/samsung-logo.png",
-      description: settings?.brand_logo_6_description || "Yenilikçi tasarım"
-    }
-  ];
 
   useEffect(() => {
     if (isOpen) {
@@ -137,9 +137,9 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
                     alt={logo.name}
                     className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-200"
                     onError={(e) => {
-                      // Hata durumunda varsayılan logo göster
+                      // Hata durumunda logoyu gizle
                       const target = e.target as HTMLImageElement;
-                      target.src = "/src/assets/logos/adidas-logo.png";
+                      target.style.display = 'none';
                     }}
                   />
                 </div>
