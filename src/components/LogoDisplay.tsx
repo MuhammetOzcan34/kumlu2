@@ -50,20 +50,43 @@ export const LogoDisplay: React.FC = () => {
         ? logoUrl 
         : `${getStorageUrl()}${logoUrl}`;
       
-      // Favicon güncelle
-      const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-      if (favicon) {
-        favicon.href = fullLogoUrl;
-      }
+      // Tüm favicon link'lerini güncelle
+      const faviconLinks = document.querySelectorAll('link[rel="icon"]');
+      faviconLinks.forEach((link) => {
+        const linkElement = link as HTMLLinkElement;
+        linkElement.href = fullLogoUrl;
+        // Cache'i temizlemek için timestamp ekle
+        linkElement.href = `${fullLogoUrl}?v=${Date.now()}`;
+      });
 
       // Apple touch icon güncelle
       const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
       if (appleTouchIcon) {
-        appleTouchIcon.href = fullLogoUrl;
+        appleTouchIcon.href = `${fullLogoUrl}?v=${Date.now()}`;
+      }
+
+      // Apple touch startup image güncelle
+      const appleTouchStartupImage = document.querySelector('link[rel="apple-touch-startup-image"]') as HTMLLinkElement;
+      if (appleTouchStartupImage) {
+        appleTouchStartupImage.href = `${fullLogoUrl}?v=${Date.now()}`;
       }
 
       // PWA manifest ikonlarını dinamik olarak güncelle
       updatePWAManifest(fullLogoUrl);
+
+      // Browser cache'i temizlemek için force reload
+      setTimeout(() => {
+        // Sadece favicon'u yeniden yükle
+        const links = document.querySelectorAll('link[rel="icon"]');
+        links.forEach((link) => {
+          const linkElement = link as HTMLLinkElement;
+          const originalHref = linkElement.href;
+          linkElement.href = '';
+          setTimeout(() => {
+            linkElement.href = originalHref;
+          }, 100);
+        });
+      }, 500);
 
       console.log('✅ Favicon ve PWA ikonları güncellendi:', fullLogoUrl);
     } catch (error) {

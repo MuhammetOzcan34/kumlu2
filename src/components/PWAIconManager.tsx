@@ -29,17 +29,38 @@ export const PWAIconManager = () => {
     const fullLogoUrl = getFullLogoUrl(logoUrl);
     console.log('🔗 PWAIconManager - Favicon URL:', fullLogoUrl);
 
-    // Update favicon
-    const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-    if (favicon) {
-      favicon.href = fullLogoUrl;
-    }
+    // Tüm favicon link'lerini güncelle
+    const faviconLinks = document.querySelectorAll('link[rel="icon"]');
+    faviconLinks.forEach((link) => {
+      const linkElement = link as HTMLLinkElement;
+      // Cache'i temizlemek için timestamp ekle
+      linkElement.href = `${fullLogoUrl}?v=${Date.now()}`;
+    });
 
     // Update apple touch icon
     const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
     if (appleTouchIcon) {
-      appleTouchIcon.href = fullLogoUrl;
+      appleTouchIcon.href = `${fullLogoUrl}?v=${Date.now()}`;
     }
+
+    // Apple touch startup image güncelle
+    const appleTouchStartupImage = document.querySelector('link[rel="apple-touch-startup-image"]') as HTMLLinkElement;
+    if (appleTouchStartupImage) {
+      appleTouchStartupImage.href = `${fullLogoUrl}?v=${Date.now()}`;
+    }
+
+    // Browser cache'i temizlemek için force reload
+    setTimeout(() => {
+      const links = document.querySelectorAll('link[rel="icon"]');
+      links.forEach((link) => {
+        const linkElement = link as HTMLLinkElement;
+        const originalHref = linkElement.href;
+        linkElement.href = '';
+        setTimeout(() => {
+          linkElement.href = originalHref;
+        }, 100);
+      });
+    }, 500);
   };
 
   const updateManifestName = (companyName: string) => {
