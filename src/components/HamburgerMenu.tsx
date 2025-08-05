@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSetting } from "@/hooks/useSettings";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   { icon: Home, label: "Anasayfa", href: "/" },
@@ -23,6 +24,12 @@ export const HamburgerMenu = () => {
   const firmaLogo = useSetting('firma_logo_url');
 
   console.log('🔍 HamburgerMenu - firmaLogo:', firmaLogo);
+
+  // Supabase storage URL'sini dinamik olarak al
+  const getStorageUrl = () => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://kepfuptrmccexgyzhcti.supabase.co";
+    return `${supabaseUrl}/storage/v1/object/public/fotograflar/`;
+  };
 
   return (
     <>
@@ -48,12 +55,13 @@ export const HamburgerMenu = () => {
                         <img 
                           src={firmaLogo.startsWith('http') 
                             ? firmaLogo 
-                            : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`
+                            : `${getStorageUrl()}${firmaLogo}`
                           }
                           alt="Logo" 
                           className="h-6 w-6 object-contain"
                           onError={(e) => {
-                            console.error('Mobil menu logo hatası:', firmaLogo);
+                            console.error('❌ Mobil menu logo hatası:', firmaLogo);
+                            console.error('❌ Storage URL:', getStorageUrl());
                             e.currentTarget.style.display = 'none';
                           }}
                         />
@@ -99,7 +107,7 @@ export const HamburgerMenu = () => {
                 <img 
                   src={firmaLogo.startsWith('http') 
                     ? firmaLogo 
-                    : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`
+                    : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`
                   }
                   alt="Logo" 
                   className="h-6 w-6 object-contain"

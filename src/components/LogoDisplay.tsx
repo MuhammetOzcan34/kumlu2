@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSetting } from "@/hooks/useSettings";
 import { Image, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const LogoDisplay: React.FC = () => {
   const companyLogo = useSetting("firma_logo_url");
@@ -12,6 +13,12 @@ export const LogoDisplay: React.FC = () => {
   console.log('🔍 LogoDisplay - companyLogo type:', typeof companyLogo);
   console.log('🔍 LogoDisplay - companyLogo length:', companyLogo?.length);
   console.log('🔍 LogoDisplay - companyLogo trimmed:', companyLogo?.trim());
+
+  // Supabase storage URL'sini dinamik olarak al
+  const getStorageUrl = () => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://kepfuptrmccexgyzhcti.supabase.co";
+    return `${supabaseUrl}/storage/v1/object/public/fotograflar/`;
+  };
 
   // Logo değiştiğinde favicon ve PWA ikonlarını güncelle - güvenli yaklaşım
   useEffect(() => {
@@ -41,7 +48,7 @@ export const LogoDisplay: React.FC = () => {
     try {
       const fullLogoUrl = logoUrl.startsWith('http') 
         ? logoUrl 
-        : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoUrl}`;
+        : `${getStorageUrl()}${logoUrl}`;
       
       // Favicon güncelle
       const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
@@ -154,7 +161,7 @@ export const LogoDisplay: React.FC = () => {
     }
     // Eğer sadece dosya adı ise, tam URL oluştur
     if (logoPath && !logoPath.includes('/')) {
-      return `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
+      return `${getStorageUrl()}${logoPath}`;
     }
     return logoPath;
   };
@@ -214,18 +221,28 @@ export const LogoDisplay: React.FC = () => {
                 console.log('✅ Logo başarıyla yüklendi:', logoUrl);
               }}
               onError={(e) => {
-                console.error('❌ Logo görüntüleme hatası:', logoUrl);
-                console.error('❌ Error event:', e);
+                const errorDetails = {
+                  logoUrl,
+                  companyLogo,
+                  storageUrl: getStorageUrl(),
+                  timestamp: new Date().toISOString()
+                };
+                
+                console.error('❌ Logo yükleme hatası:', errorDetails);
+                console.error(`Logo yükleme hatası: ${companyLogo}`);
                 
                 // Hata durumunda placeholder göster
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
                 
-                // Placeholder div oluştur
-                const placeholder = document.createElement('div');
-                placeholder.className = 'w-full h-full bg-red-100 flex items-center justify-center text-red-500 text-xs';
-                placeholder.textContent = 'Logo Hatası';
-                target.parentElement?.appendChild(placeholder);
+                // Eğer placeholder zaten varsa, tekrar ekleme
+                if (!target.parentElement?.querySelector('.logo-error-placeholder')) {
+                  const placeholder = document.createElement('div');
+                  placeholder.className = 'logo-error-placeholder w-full h-full bg-red-100 flex items-center justify-center text-red-500 text-xs font-medium';
+                  placeholder.textContent = 'Logo Hatası';
+                  placeholder.title = `Dosya: ${companyLogo}`;
+                  target.parentElement?.appendChild(placeholder);
+                }
               }}
             />
           </div>

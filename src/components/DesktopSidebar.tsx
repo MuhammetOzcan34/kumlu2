@@ -31,7 +31,7 @@ export const DesktopSidebar = () => {
             <img 
               src={firmaLogo.startsWith('http') 
                 ? firmaLogo 
-                : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`
+                : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`
               }
               alt="Logo" 
               className="h-8 w-8 object-contain"

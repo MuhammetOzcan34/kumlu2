@@ -21,7 +21,7 @@ export const PWAIconManager = () => {
       }
       // Eğer sadece dosya adı ise, tam URL oluştur
       if (logoPath && !logoPath.includes('/')) {
-        return `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
+        return `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
       }
       return logoPath;
     };

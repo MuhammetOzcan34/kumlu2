@@ -1,67 +1,89 @@
--- Storage bucket'ını kontrol et ve düzelt
--- Fotograflar bucket'ını oluştur (eğer yoksa)
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'fotograflar',
-  'fotograflar',
-  true,
-  52428800, -- 50MB
-  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-)
-ON CONFLICT (id) DO UPDATE SET
-  public = true,
-  file_size_limit = 52428800,
-  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+-- Storage bucket ve RLS politikalarını düzelt
+-- Bu komutları Supabase SQL Editor'da çalıştırın
 
--- Storage RLS politikalarını düzelt
--- Eski politikaları sil
-DROP POLICY IF EXISTS "Public read access" ON storage.objects;
-DROP POLICY IF EXISTS "Admin upload access" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
-DROP POLICY IF EXISTS "Anyone can view images" ON storage.objects;
+-- 1. Önce mevcut bucket'ları kontrol et
+SELECT name, id, public FROM storage.buckets;
 
--- Yeni politikaları oluştur
-CREATE POLICY "Anyone can view images" ON storage.objects
+-- 2. Eğer 'fotograflar' bucket'ı yoksa oluştur
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('fotograflar', 'fotograflar', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 3. Fotograflar bucket'ını public yap (eğer değilse)
+UPDATE storage.buckets 
+SET public = true 
+WHERE id = 'fotograflar';
+
+-- 4. Storage objects tablosunda RLS'yi etkinleştir
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- 5. Mevcut politikaları temizle
+DROP POLICY IF EXISTS "Allow public read access to fotograflar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated uploads to fotograflar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow admin full access to fotograflar" ON storage.objects;
+DROP POLICY IF EXISTS "Allow users to delete their own uploads from fotograflar" ON storage.objects;
+
+-- 6. Yeni politikaları oluştur
+-- Public read access - herkes fotografları okuyabilir
+CREATE POLICY "Allow public read access to fotograflar" ON storage.objects
   FOR SELECT USING (bucket_id = 'fotograflar');
 
-CREATE POLICY "Authenticated users can upload images" ON storage.objects
+-- Authenticated upload access - giriş yapmış kullanıcılar yükleyebilir
+CREATE POLICY "Allow authenticated uploads to fotograflar" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'fotograflar' AND 
-    auth.role() = 'authenticated'
+    bucket_id = 'fotograflar' 
+    AND auth.role() = 'authenticated'
   );
 
-CREATE POLICY "Users can update own images" ON storage.objects
+-- Admin full access - admin kullanıcılar her şeyi yapabilir
+CREATE POLICY "Allow admin full access to fotograflar" ON storage.objects
+  FOR ALL USING (
+    bucket_id = 'fotograflar' 
+    AND EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE user_id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Update access for authenticated users
+CREATE POLICY "Allow authenticated updates to fotograflar" ON storage.objects
   FOR UPDATE USING (
-    bucket_id = 'fotograflar' AND 
-    auth.role() = 'authenticated'
+    bucket_id = 'fotograflar' 
+    AND auth.role() = 'authenticated'
   );
 
-CREATE POLICY "Users can delete own images" ON storage.objects
+-- Delete access for file owners and admins
+CREATE POLICY "Allow users to delete their own uploads from fotograflar" ON storage.objects
   FOR DELETE USING (
-    bucket_id = 'fotograflar' AND 
-    auth.role() = 'authenticated'
+    bucket_id = 'fotograflar' 
+    AND (
+      auth.uid()::text = owner 
+      OR EXISTS (
+        SELECT 1 FROM public.profiles 
+        WHERE user_id = auth.uid() AND role = 'admin'
+      )
+    )
   );
 
--- Mevcut storage dosyalarını listele
+-- 7. Bucket'ın durumunu kontrol et
 SELECT 
   name,
-  bucket_id,
-  created_at,
-  updated_at,
-  last_accessed_at,
-  metadata
-FROM storage.objects 
-WHERE bucket_id = 'fotograflar'
-ORDER BY created_at DESC;
-
--- Bucket bilgilerini kontrol et
-SELECT 
   id,
-  name,
   public,
   file_size_limit,
-  allowed_mime_types,
-  created_at,
-  updated_at
+  allowed_mime_types
 FROM storage.buckets 
-WHERE id = 'fotograflar'; 
+WHERE id = 'fotograflar';
+
+-- 8. Mevcut politikaları listele
+SELECT 
+  schemaname,
+  tablename,
+  policyname,
+  permissive,
+  roles,
+  cmd,
+  qual,
+  with_check
+FROM pg_policies 
+WHERE schemaname = 'storage' AND tablename = 'objects'; 

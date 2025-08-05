@@ -89,7 +89,7 @@ export const CompanySettingsManager: React.FC = () => {
       }
 
       console.log('✅ Logo başarıyla yüklendi:', data.path);
-      console.log('🔗 Tam URL:', `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${data.path}`);
+      console.log('🔗 Tam URL:', `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${data.path}`);
       
       return data.path;
     } catch (error) {
@@ -275,7 +275,7 @@ export const CompanySettingsManager: React.FC = () => {
                 <img 
                   src={settings.firma_logo_url.startsWith('http') 
                     ? settings.firma_logo_url 
-                    : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${settings.firma_logo_url}`
+                    : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${settings.firma_logo_url}`
                   }
                   alt="Mevcut Logo" 
                   className="h-16 w-16 object-contain border rounded"
