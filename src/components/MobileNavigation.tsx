@@ -19,7 +19,7 @@ const allPages = [
   { label: "Tabelalar", href: "/tabelalar" },
   { label: "Referanslar", href: "/referanslar" },
   { label: "Video Galeri", href: "/video-galeri" },
-  { label: "Servis Bedelleri", href: "/servis-bedelleri" },
+  
   { label: "Hesaplama", href: "/hesaplama" },
   { label: "İletişim", href: "/iletisim" },
 ];

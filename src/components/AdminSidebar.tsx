@@ -53,12 +53,7 @@ const adminMenuItems = [
     icon: Image, 
     description: "Galeri yönetimi" 
   },
-  { 
-    title: "Servis Bedelleri", 
-    value: "servis-bedelleri", 
-    icon: Wrench, 
-    description: "Servis fiyatları" 
-  },
+
   { 
     title: "Video Galeri", 
     value: "video-galeri", 

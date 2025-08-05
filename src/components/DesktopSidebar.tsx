@@ -10,7 +10,7 @@ const sidebarItems = [
   { icon: Car, label: "Araç Giydirme", href: "/arac-giydirme" },
   { icon: FileText, label: "Tabelalar", href: "/tabelalar" },
   { icon: Play, label: "Video Galeri", href: "/video-galeri" },
-  { icon: Calculator, label: "Servis Bedelleri", href: "/servis-bedelleri" },
+  
   { icon: Calculator, label: "Hesaplama", href: "/hesaplama" },
   { icon: Users, label: "Referanslar", href: "/referanslar" },
   { icon: Phone, label: "İletişim", href: "/iletisim" },

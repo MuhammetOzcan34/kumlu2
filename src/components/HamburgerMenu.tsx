@@ -12,7 +12,7 @@ const menuItems = [
   { icon: Palette, label: "Cam Kumlama", href: "/kumlamalar" },
   { icon: FileText, label: "Tabelalar", href: "/tabelalar" },
   { icon: Play, label: "Video Galeri", href: "/video-galeri" },
-  { icon: Calculator, label: "Servis ve Montaj Bedelleri", href: "/servis-bedelleri" },
+  
   { icon: Calculator, label: "Hesaplama", href: "/hesaplama" },
   { icon: Users, label: "Referanslar", href: "/referanslar" },
   { icon: Phone, label: "İletişim", href: "/iletisim" },

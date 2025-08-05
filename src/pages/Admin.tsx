@@ -20,7 +20,7 @@ import { PhotoUploadManager } from "@/components/PhotoUploadManager";
 import { PhotoGalleryManager } from "@/components/PhotoGalleryManager";
 import { CompanySettingsManager } from "@/components/CompanySettingsManager";
 import { CategoryManager } from "@/components/CategoryManager";
-import { ServisBedelleriManager } from "@/components/ServisBedelleriManager";
+
 import { VideoGaleriManager } from "@/components/VideoGaleriManager";
 import { WhatsAppSettingsManager } from "@/components/WhatsAppSettingsManager";
 import { BrandLogosSettingsManager } from "@/components/BrandLogosSettingsManager";
@@ -284,7 +284,7 @@ export default function Admin() {
                     <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
                   </div>
                   <div className="flex w-full">
-                    <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servisler</TabsTrigger>
+        
                     <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
                     <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
                   </div>
@@ -391,7 +391,7 @@ export default function Admin() {
                   <PhotoGalleryManager />
                 </div>
               )}
-              {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
+
               {activeTab === "video-galeri" && <VideoGaleriManager />}
               {activeTab === "ayarlar" && <CompanySettingsManager />}
               {activeTab === "hesaplama" && (
@@ -581,7 +581,7 @@ export default function Admin() {
                          <PhotoGalleryManager />
                        </div>
                      )}
-                    {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
+
                     {activeTab === "video-galeri" && <VideoGaleriManager />}
                     {activeTab === "ayarlar" && <CompanySettingsManager />}
                     {activeTab === "hesaplama" && (

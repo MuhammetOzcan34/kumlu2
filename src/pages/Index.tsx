@@ -43,12 +43,7 @@ const services = [
     href: "/kumlamalar",
     gradient: "bg-gradient-to-r from-coral-pink to-warm-orange"
   },
-  {
-    title: "Servis Bedelleri",
-    icon: Settings,
-    href: "/servis-bedelleri", 
-    gradient: "bg-gradient-to-r from-sunset-red to-amber-gold"
-  },
+
   {
     title: "Hesaplama",
     icon: Wrench,
