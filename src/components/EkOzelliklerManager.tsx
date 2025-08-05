@@ -31,7 +31,11 @@ export const EkOzelliklerManager: React.FC = () => {
   useEffect(() => { fetchEkOzellikler(); }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    setForm({ 
+      ...form, 
+      [name]: type === 'number' ? Number(value) : value 
+    });
   };
 
   const handleSwitch = (val: boolean) => setForm({ ...form, aktif: val });
@@ -44,7 +48,12 @@ export const EkOzelliklerManager: React.FC = () => {
       const { error } = await supabase.from('ek_ozellikler').update(form).eq('id', editingId);
       if (!error) toast.success('Güncellendi');
     } else {
-      const { error } = await supabase.from('ek_ozellikler').insert([{ ...form }]);
+      const { error } = await supabase.from('ek_ozellikler').insert([{ 
+        ad: form.ad || '',
+        aciklama: form.aciklama || null,
+        carpani: form.carpani || 0,
+        aktif: form.aktif ?? true
+      }]);
       if (!error) toast.success('Eklendi');
     }
     setForm({ ad: '', aciklama: '', carpani: 0, aktif: true });

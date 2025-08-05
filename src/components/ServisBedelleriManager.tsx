@@ -38,22 +38,22 @@ export const ServisBedelleriManager = () => {
   });
 
   const resetForm = () => {
-    setFormData({
+      setFormData({
       kategori: "Tüm Kategoriler", // Varsayılan olarak "Tüm Kategoriler" seçili
       hizmet_adi: "",
       birim: "m²",
-      birim_fiyat: 0,
+        birim_fiyat: 0,
       aciklama: "",
-      sira_no: 0,
-      aktif: true
-    });
+        sira_no: 0,
+        aktif: true
+      });
     setEditingServisBedeli(null);
   };
 
   const handleOpenDialog = (servisBedeli?: ServisBedeli) => {
     if (servisBedeli) {
       setEditingServisBedeli(servisBedeli);
-      setFormData({
+    setFormData({
         kategori: servisBedeli.kategori,
         hizmet_adi: servisBedeli.hizmet_adi,
         birim: servisBedeli.birim,

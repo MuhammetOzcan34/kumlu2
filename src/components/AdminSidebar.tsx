@@ -14,7 +14,8 @@ import {
   Car,
   MessageCircle,
   Palette,
-  Instagram
+  Instagram,
+  Plus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -94,6 +95,12 @@ const adminMenuItems = [
     value: "marka-logolari", 
     icon: Palette, 
     description: "Marka logoları pop-up" 
+  },
+  { 
+    title: "Ek Özellikler", 
+    value: "ek-ozellikler", 
+    icon: Plus, 
+    description: "Hesaplama ek özellikleri" 
   },
   { 
     title: "Profil", 
