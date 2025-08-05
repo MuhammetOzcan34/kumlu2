@@ -44,9 +44,13 @@ const Tabelalar = () => {
   // İlk kategoriyi otomatik seç
   useEffect(() => {
     if (categories && categories.length > 0 && !activeCategory) {
-      setActiveCategory(categories[0].id);
+      const firstCategory = categories[0];
+      if (firstCategory && firstCategory.id) {
+        console.log('🎯 İlk kategori seçiliyor (Tabelalar):', firstCategory.ad, firstCategory.id);
+        setActiveCategory(firstCategory.id);
+      }
     }
-  }, [categories]); // activeCategory dependency'sini kaldırdık
+  }, [categories, activeCategory]);
 
   // Aktif kategoriyi memo ile cache'le
   const currentCategory = useMemo(() => {
@@ -80,7 +84,12 @@ const Tabelalar = () => {
             {categories?.map((category) => (
               <button
                 key={`category-${category.id}`}
-                onClick={() => setActiveCategory(category.id)}
+                onClick={() => {
+                  if (category && category.id) {
+                    console.log('🎯 Kategori seçildi (Tabelalar):', category.ad, category.id);
+                    setActiveCategory(category.id);
+                  }
+                }}
                 className={cn(
                   "category-tab",
                   activeCategory === category.id && "active"

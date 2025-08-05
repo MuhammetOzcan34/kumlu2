@@ -23,8 +23,14 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
         .eq("aktif", true)
         .order("created_at", { ascending: false });
       
-      if (categoryId) {
-        query = query.eq("kategori_id", categoryId);
+      if (categoryId && categoryId.trim() !== '') {
+        // Kategori ID'sinin geçerli olup olmadığını kontrol et
+        try {
+          query = query.eq("kategori_id", categoryId);
+        } catch (error) {
+          console.warn('⚠️ Geçersiz kategori ID:', categoryId);
+          return [];
+        }
       }
       
       if (usageArea) {
@@ -35,6 +41,7 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
       
       if (error) {
         console.error('❌ Photos fetch error:', error);
+        console.error('🔍 Query details:', { categoryId, usageArea });
         return []; // Return empty array instead of throwing
       }
       return data as Photo[] || [];
@@ -44,6 +51,7 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
     refetchOnWindowFocus: false,
     retry: 1,
     retryDelay: 2000,
+    enabled: !categoryId || categoryId.trim() !== '', // Geçersiz kategori ID'si varsa query'yi çalıştırma
   });
 };
 

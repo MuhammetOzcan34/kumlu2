@@ -76,10 +76,15 @@ const Index = () => {
         .from("fotograflar")
         .select("*")
         .eq("aktif", true)
-        .eq("gorsel_tipi", "slider")
+        .or("gorsel_tipi.eq.slider,kullanim_alani.cs.{ana-sayfa-slider}")
         .order("sira_no", { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Slider photos fetch error:', error);
+        return [];
+      }
+      
+      console.log('🖼️ Slider fotoğrafları yüklendi:', data?.length || 0);
       
       return data?.map(photo => ({
         id: photo.id,

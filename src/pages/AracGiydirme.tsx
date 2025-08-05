@@ -49,9 +49,13 @@ const AracGiydirme = () => {
 
   // İlk kategoriyi otomatik seç
   useEffect(() => {
-  if (categories && categories.length > 0 && !activeCategory) {
-    setActiveCategory(categories[0].id);
-  }
+    if (categories && categories.length > 0 && !activeCategory) {
+      const firstCategory = categories[0];
+      if (firstCategory && firstCategory.id) {
+        console.log('🎯 İlk kategori seçiliyor (Araç Giydirme):', firstCategory.ad, firstCategory.id);
+        setActiveCategory(firstCategory.id);
+      }
+    }
   }, [categories, activeCategory]);
 
   // Kategori değiştiğinde selectedImageIndex'i sıfırla
@@ -88,7 +92,12 @@ const AracGiydirme = () => {
             {categories?.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setActiveCategory(category.id)}
+                onClick={() => {
+                  if (category && category.id) {
+                    console.log('🎯 Kategori seçildi (Araç Giydirme):', category.ad, category.id);
+                    setActiveCategory(category.id);
+                  }
+                }}
                 className={cn(
                   "category-tab",
                   activeCategory === category.id && "active"

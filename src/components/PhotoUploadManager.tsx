@@ -53,6 +53,17 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     loadCategories();
   }, []);
 
+  // Kategoriler yüklendiğinde ilk kategoriyi otomatik seç
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      const firstCategory = categories[0];
+      if (firstCategory && firstCategory.id) {
+        console.log('🎯 İlk kategori otomatik seçiliyor:', firstCategory.ad);
+        setSelectedCategory(firstCategory.id);
+      }
+    }
+  }, [categories, selectedCategory]);
+
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase
@@ -71,9 +82,16 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       setCategories(validCategories);
       
       console.log('✅ Geçerli kategoriler:', validCategories);
+      
+      // Eğer seçili kategori geçersizse, temizle
+      if (selectedCategory && !validCategories.find(cat => cat.id === selectedCategory)) {
+        console.warn('⚠️ Seçili kategori geçersiz, temizleniyor:', selectedCategory);
+        setSelectedCategory('');
+      }
     } catch (error) {
       console.error('❌ Kategoriler yüklenirken hata:', error);
       setCategories([]);
+      setSelectedCategory(''); // Hata durumunda kategori seçimini temizle
     }
   };
 
@@ -182,6 +200,22 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
           // Save to database
           const selectedCategoryData = selectedCategory ? categories.find(c => c.id === selectedCategory) : null;
+          
+          // Görsel tipini belirle
+          let gorselTipi = 'galeri';
+          let kullanimAlani = selectedUsageAreas;
+          
+          // Eğer kullanım alanı seçilmemişse, varsayılan olarak galeri ekle
+          if (selectedUsageAreas.length === 0) {
+            kullanimAlani = ['galeri'];
+          }
+          
+          if (selectedUsageAreas.includes('ana-sayfa-slider')) {
+            gorselTipi = 'slider';
+          } else if (selectedUsageAreas.includes('referanslar')) {
+            gorselTipi = 'referans_logo';
+          }
+          
           const { error: dbError } = await supabase
             .from('fotograflar')
             .insert({
@@ -190,8 +224,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               dosya_yolu: storageData.path,
               kategori_id: selectedCategory || null,
               kategori_adi: selectedCategoryData?.ad || null,
-              kullanim_alani: selectedUsageAreas.length > 0 ? selectedUsageAreas : null,
-              gorsel_tipi: selectedUsageAreas.includes('referanslar') ? 'referans_logo' : 'galeri',
+              kullanim_alani: kullanimAlani,
+              gorsel_tipi: gorselTipi,
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
               logo_eklendi: addLogo && firmaLogo ? true : false,
@@ -212,6 +246,14 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             throw dbError;
           }
           console.log(`✅ Tamamlandı: ${fileName}`);
+          console.log('📊 Veritabanına kaydedilen veri:', {
+            baslik: file.name.replace(/\.[^/.]+$/, ""),
+            dosya_yolu: storageData.path,
+            kategori_id: selectedCategory,
+            kategori_adi: selectedCategoryData?.ad,
+            kullanim_alani: kullanimAlani,
+            gorsel_tipi: gorselTipi
+          });
           
           return fileName;
         } catch (error) {
@@ -314,6 +356,9 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
           <div>
             <Label>Kullanım Alanları</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              Fotoğrafın hangi sayfalarda gösterileceğini seçin
+            </div>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {usageAreas.map((area) => (
                 <div key={area.id} className="flex items-center space-x-2">
@@ -334,6 +379,11 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
                 </div>
               ))}
             </div>
+            {selectedUsageAreas.length === 0 && (
+              <p className="text-sm text-amber-600 mt-1">
+                ⚠️ En az bir kullanım alanı seçmeniz önerilir
+              </p>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">
@@ -355,6 +405,12 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             <Upload className="h-4 w-4 mr-2" />
             {isUploading ? 'Yükleniyor...' : 'Fotoğrafları Yükle'}
           </Button>
+          
+          {selectedUsageAreas.length === 0 && photos && (
+            <p className="text-sm text-amber-600 text-center">
+              ⚠️ Kullanım alanı seçilmedi. Fotoğraf sadece genel galeriye eklenecek.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
