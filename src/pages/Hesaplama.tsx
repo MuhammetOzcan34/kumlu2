@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TeklifFormu } from "@/components/TeklifFormu";
 import { Calculator, AlertCircle, Package, Plus, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface AlanBilgisi {
   id: string;
@@ -128,16 +129,13 @@ const Hesaplama = () => {
   };
 
   // Ek özellik toggle fonksiyonu
-  const ekOzellikToggle = (alanId: string, ozellik: string) => {
+  const ekOzellikToggle = (ozellik: string, checked: boolean) => {
     setAlanlar(alanlar.map(alan => {
-      if (alan.id === alanId) {
-        const mevcutOzellikler = alan.ekOzellikler;
-        const yeniOzellikler = mevcutOzellikler.includes(ozellik)
-          ? mevcutOzellikler.filter(o => o !== ozellik)
-          : [...mevcutOzellikler, ozellik];
-        return { ...alan, ekOzellikler: yeniOzellikler };
-      }
-      return alan;
+      const mevcutOzellikler = alan.ekOzellikler;
+      const yeniOzellikler = checked
+        ? [...mevcutOzellikler, ozellik]
+        : mevcutOzellikler.filter(o => o !== ozellik);
+      return { ...alan, ekOzellikler: yeniOzellikler };
     }));
   };
 
@@ -294,21 +292,30 @@ const Hesaplama = () => {
               <CardContent className="space-y-8">
                 {/* Alan Bilgileri */}
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Alan Bilgileri</h3>
-                  </div>
+                  {/* Alan Ekleme Butonu */}
+                  <Button
+                    onClick={alanEkle}
+                    className="w-full md:w-auto text-lg py-6 px-8 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-6 w-6" />
+                    Alan Ekle
+                  </Button>
 
+                  {/* Alan Listesi */}
                   {alanlar.map((alan, index) => (
-                    <Card key={alan.id} className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium">Alan Ölçüsü {index + 1}</h4>
-                        {alanlar.length > 1 && (
+                    <div key={alan.id} className="space-y-4 p-6 rounded-lg border">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xl font-semibold">
+                          Alan Ölçüsü {index + 1}
+                        </Label>
+                        {index > 0 && (
                           <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => alanSil(alan.id)}
-                            variant="outline"
-                            size="sm"
+                            className="text-destructive hover:text-destructive/90"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-5 w-5" />
                           </Button>
                         )}
                       </div>
@@ -367,57 +374,46 @@ const Hesaplama = () => {
 
                         {/* 3. Ek Özellik Seçimi */}
                         <div className="space-y-3">
-                          <Label className="text-base font-medium">3. Ek Özellik Seçiniz</Label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
                               { name: "UV Korumalı", icon: "☀️", desc: "Güneş ışınlarına karşı koruma" },
                               { name: "Yansıtıcı", icon: "✨", desc: "Işık yansıtma özelliği" },
                               { name: "Özel Kesim", icon: "✂️", desc: "Özel şekil kesim" },
                               { name: "Hızlı Teslimat", icon: "🚀", desc: "Acil teslimat seçeneği" }
                             ].map((ozellik) => (
-                              <div key={ozellik.name} className="relative">
-                                <input
-                                  type="checkbox"
-                                  id={`${alan.id}-${ozellik.name}`}
+                              <div
+                                key={ozellik.name}
+                                className={cn(
+                                  "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
+                                  alan.ekOzellikler.includes(ozellik.name)
+                                    ? "bg-primary/10 border-primary"
+                                    : "hover:bg-muted/50"
+                                )}
+                              >
+                                <div className="flex-shrink-0 text-2xl">{ozellik.icon}</div>
+                                <div className="flex-grow">
+                                  <Label
+                                    htmlFor={`ek-ozellik-${ozellik.name}`}
+                                    className="text-base font-medium cursor-pointer"
+                                  >
+                                    {ozellik.name}
+                                  </Label>
+                                  <p className="text-sm text-muted-foreground">{ozellik.desc}</p>
+                                </div>
+                                <Checkbox
+                                  id={`ek-ozellik-${ozellik.name}`}
                                   checked={alan.ekOzellikler.includes(ozellik.name)}
-                                  onChange={() => ekOzellikToggle(alan.id, ozellik.name)}
-                                  className="sr-only"
+                                  onCheckedChange={(checked) => ekOzellikToggle(ozellik.name, checked)}
+                                  className="mt-1"
                                 />
-                                <label
-                                  htmlFor={`${alan.id}-${ozellik.name}`}
-                                  className={`block p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                                    alan.ekOzellikler.includes(ozellik.name)
-                                      ? 'border-primary bg-primary/5 text-primary'
-                                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-xl">{ozellik.icon}</span>
-                                    <div>
-                                      <div className="font-medium text-sm">{ozellik.name}</div>
-                                      <div className="text-xs text-muted-foreground">{ozellik.desc}</div>
-                                    </div>
-                                  </div>
-                                </label>
                               </div>
                             ))}
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
-                </div>
-                
-                {/* Alan Ekle Butonu - Büyük ve Belirgin */}
-                <div className="flex justify-center py-6">
-                  <Button 
-                    onClick={alanEkle}
-                    size="lg"
-                    className="flex items-center gap-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  >
-                    <Plus className="w-6 h-6" />
-                    Alan Ekle
-                  </Button>
                 </div>
                 
                 {/* 4. Uygulama & Montaj */}

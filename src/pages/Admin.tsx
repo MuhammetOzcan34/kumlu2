@@ -16,6 +16,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 import { KampanyaForm } from "@/components/KampanyaForm";
 import { HesaplamaUrunleriManager } from "@/components/HesaplamaUrunleriManager";
+import { ServisBedelleriManager } from "@/components/ServisBedelleriManager";
 import { PhotoUploadManager } from "@/components/PhotoUploadManager";
 import { PhotoGalleryManager } from "@/components/PhotoGalleryManager";
 import { CompanySettingsManager } from "@/components/CompanySettingsManager";
@@ -288,10 +289,13 @@ export default function Admin() {
                     <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
                     <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
-                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
-                  </div>
+                                  <div className="flex w-full">
+                  <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
+                </div>
+                <div className="flex w-full">
+                  <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
+                </div>
                   <div className="flex w-full">
                     <TabsTrigger value="instagram" className="text-xs px-2 py-1 h-8 flex-1">Instagram</TabsTrigger>
                     <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
@@ -410,6 +414,7 @@ export default function Admin() {
               {activeTab === "whatsapp" && <WhatsAppSettingsManager />}
               {activeTab === "instagram" && <InstagramSettingsManager />}
               {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
+              {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
               {activeTab === "profil" && (
                 <Card>
                   <CardHeader>
@@ -600,6 +605,7 @@ export default function Admin() {
                     {activeTab === "whatsapp" && <WhatsAppSettingsManager />}
                     {activeTab === "instagram" && <InstagramSettingsManager />}
                     {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
+                    {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
                     {activeTab === "profil" && (
                       <Card>
                         <CardHeader>
