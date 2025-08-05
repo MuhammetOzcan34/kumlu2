@@ -18,8 +18,14 @@ const Kumlamalar = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
   const [showBrandPopup, setShowBrandPopup] = useState(false);
   
-  // Aktif kategoriye göre fotoğrafları çek
-  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory);
+  // Aktif kategoriye göre fotoğrafları çek (kumlama kullanım alanı ile)
+  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory, 'kumlama');
+  
+  // Debug: Aktif kategori ve fotoğraf sayısını logla
+  useEffect(() => {
+    console.log('🔍 Kumlamalar - Aktif kategori:', activeCategory);
+    console.log('🔍 Kumlamalar - Fotoğraf sayısı:', photos.length);
+  }, [activeCategory, photos.length]);
   
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {

@@ -22,8 +22,8 @@ const AracGiydirme = () => {
     return allCategories.filter(category => category.tip === 'arac-giydirme');
   }, [allCategories]);
   
-  // Aktif kategoriye göre fotoğrafları çek
-  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory);
+  // Aktif kategoriye göre fotoğrafları çek (arac-giydirme kullanım alanı ile)
+  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory, 'arac-giydirme');
   
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {

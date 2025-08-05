@@ -12,27 +12,37 @@
 - ✅ Kategori seçimi sırasında hata kontrolü eklendi
 - ✅ **Tüm sayfalarda (Kumlamalar, Tabelalar, Araç Giydirme) aynı düzeltmeler uygulandı**
 
-### 3. Kullanım Alanları
-- ✅ Kullanım alanı seçilmediğinde varsayılan olarak `['galeri']` eklenir
-- ✅ Kullanıcıya kullanım alanı seçmesi için uyarı gösterilir
+### 3. Kullanım Alanları - YENİ MANTIK
+- ✅ **Önce kullanım alanı seçimi, sonra kategori seçimi**
+- ✅ Kullanım alanına göre kategoriler otomatik filtrelenir
+- ✅ Her sayfa kendi kullanım alanına göre fotoğrafları çeker
+- ✅ UUID formatı sorunları düzeltildi
+
+### 4. Yeni Kullanım Alanları
+- Ana Sayfa Slider
+- Kumlama Sayfası
+- Tabela Sayfası  
+- Araç Giydirme Sayfası
+- Referanslar Sayfası
 
 ## Test Adımları
+
+### Yeni Fotoğraf Yükleme Testi
+1. Admin paneline gidin
+2. "Fotoğraf Yükleme" bölümüne gidin
+3. Fotoğraf seçin
+4. **Önce kullanım alanı seçin** (örn: "Kumlama Sayfası")
+5. **Sonra kategori seçin** (örn: "Cam Kumlama")
+6. Fotoğrafı yükleyin
+7. İlgili sayfaya gidin ve fotoğrafın görünüp görünmediğini kontrol edin
 
 ### Slider Testi
 1. Admin paneline gidin
 2. "Fotoğraf Yükleme" bölümüne gidin
 3. Fotoğraf seçin
-4. "Ana Sayfa Slider" kullanım alanını işaretleyin
+4. "Ana Sayfa Slider" kullanım alanını seçin
 5. Fotoğrafı yükleyin
 6. Ana sayfaya gidin ve slider'da fotoğrafın görünüp görünmediğini kontrol edin
-
-### Kategori Testi
-1. Admin paneline gidin
-2. "Fotoğraf Yükleme" bölümüne gidin
-3. Bir kategori seçin
-4. Fotoğraf yükleyin
-5. İlgili kategori sayfasına gidin (Kumlamalar, Tabelalar veya Araç Giydirme)
-6. Fotoğrafın doğru kategoride görünüp görünmediğini kontrol edin
 
 ### Tüm Sayfa Testi
 1. Kumlamalar sayfasını açın ve kategori değiştirmeyi test edin
@@ -47,8 +57,10 @@
 
 ## Beklenen Sonuçlar
 
+- ✅ **Yeni mantık: Önce kullanım alanı, sonra kategori seçimi**
 - ✅ Slider fotoğrafları ana sayfada görünür
 - ✅ Kategori fotoğrafları ilgili sayfalarda görünür
 - ✅ **Tüm sayfalarda (Kumlamalar, Tabelalar, Araç Giydirme) kategori değiştirme sorunsuz çalışır**
+- ✅ **UUID formatı sorunları çözüldü**
 - ✅ Konsol hataları azalır veya tamamen ortadan kalkar
 - ✅ Kullanıcı deneyimi iyileşir 

@@ -44,6 +44,8 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
         console.error('🔍 Query details:', { categoryId, usageArea });
         return []; // Return empty array instead of throwing
       }
+      
+      console.log('📸 Fotoğraflar yüklendi:', data?.length || 0, 'adet');
       return data as Photo[] || [];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

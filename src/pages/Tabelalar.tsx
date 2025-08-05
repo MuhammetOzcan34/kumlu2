@@ -16,8 +16,8 @@ const Tabelalar = () => {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
   
-  // Aktif kategoriye göre fotoğrafları çek
-  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory);
+  // Aktif kategoriye göre fotoğrafları çek (tabela kullanım alanı ile)
+  const { data: photos = [], isLoading: photosLoading } = usePhotos(activeCategory, 'tabela');
   
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {

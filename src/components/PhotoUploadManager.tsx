@@ -11,11 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSetting } from '@/hooks/useSettings';
+import { useCategories } from '@/hooks/useCategories';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
 }
-
 
 interface Category {
   id: string;
@@ -29,9 +29,9 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   const [description, setDescription] = useState('');
   const [addLogo, setAddLogo] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedUsageArea, setSelectedUsageArea] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedUsageAreas, setSelectedUsageAreas] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   
   const photoInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,61 +39,35 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   
   const firmaLogo = useSetting('firma_logo_url');
 
+  // Tüm kategorileri çek
+  const { data: allCategories = [] } = useCategories();
+
   const usageAreas = [
-    { id: 'ana-sayfa-slider', label: 'Ana Sayfa Slider' },
-    { id: 'galeri', label: 'Fotoğraf Galerisi' },
-    { id: 'referanslar', label: 'Referanslar Sayfası' },
-    { id: 'hakkimizda', label: 'Hakkımızda Sayfası' },
-    { id: 'iletisim', label: 'İletişim Sayfası' },
-    { id: 'blog', label: 'Blog/Haberler' },
-    { id: 'arac-giydirme', label: 'Araç Giydirme Sayfası' }
+    { id: 'ana-sayfa-slider', label: 'Ana Sayfa Slider', categoryType: null },
+    { id: 'kumlama', label: 'Kumlama Sayfası', categoryType: 'kumlama' },
+    { id: 'tabela', label: 'Tabela Sayfası', categoryType: 'tabela' },
+    { id: 'arac-giydirme', label: 'Araç Giydirme Sayfası', categoryType: 'arac-giydirme' },
+    { id: 'referanslar', label: 'Referanslar Sayfası', categoryType: null }
   ];
 
+  // Kullanım alanı değiştiğinde kategorileri filtrele
   useEffect(() => {
-    loadCategories();
-  }, []);
-
-  // Kategoriler yüklendiğinde ilk kategoriyi otomatik seç
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      const firstCategory = categories[0];
-      if (firstCategory && firstCategory.id) {
-        console.log('🎯 İlk kategori otomatik seçiliyor:', firstCategory.ad);
-        setSelectedCategory(firstCategory.id);
+    if (selectedUsageArea) {
+      const usageArea = usageAreas.find(area => area.id === selectedUsageArea);
+      if (usageArea?.categoryType) {
+        const filtered = allCategories.filter(cat => cat.tip === usageArea.categoryType);
+        setFilteredCategories(filtered);
+        console.log(`📋 ${usageArea.label} için kategoriler:`, filtered);
+      } else {
+        setFilteredCategories([]);
       }
+      // Kategori seçimini temizle
+      setSelectedCategory('');
+    } else {
+      setFilteredCategories([]);
+      setSelectedCategory('');
     }
-  }, [categories, selectedCategory]);
-
-  const loadCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('kategoriler')
-        .select('id, ad, tip')
-        .eq('aktif', true)
-        .order('sira_no');
-
-      if (error) throw error;
-      
-      // Debug: Kategorileri konsola yazdır
-      console.log('📋 Yüklenen kategoriler:', data);
-      
-      // ID'si null olan kategorileri filtrele
-      const validCategories = data?.filter(cat => cat.id && cat.id !== 'unknown') || [];
-      setCategories(validCategories);
-      
-      console.log('✅ Geçerli kategoriler:', validCategories);
-      
-      // Eğer seçili kategori geçersizse, temizle
-      if (selectedCategory && !validCategories.find(cat => cat.id === selectedCategory)) {
-        console.warn('⚠️ Seçili kategori geçersiz, temizleniyor:', selectedCategory);
-        setSelectedCategory('');
-      }
-    } catch (error) {
-      console.error('❌ Kategoriler yüklenirken hata:', error);
-      setCategories([]);
-      setSelectedCategory(''); // Hata durumunda kategori seçimini temizle
-    }
-  };
+  }, [selectedUsageArea, allCategories]);
 
   const addWatermark = (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
     if (!addLogo || !firmaLogo || !logoImg.current) return;
@@ -162,10 +136,14 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     });
   };
 
-
   const handleUpload = async () => {
     if (!photos || photos.length === 0) {
       toast.error('Lütfen en az bir fotoğraf seçin');
+      return;
+    }
+
+    if (!selectedUsageArea) {
+      toast.error('Lütfen bir kullanım alanı seçin');
       return;
     }
 
@@ -198,24 +176,18 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
           if (storageError) throw storageError;
 
-          // Save to database
-          const selectedCategoryData = selectedCategory ? categories.find(c => c.id === selectedCategory) : null;
-          
           // Görsel tipini belirle
           let gorselTipi = 'galeri';
-          let kullanimAlani = selectedUsageAreas;
-          
-          // Eğer kullanım alanı seçilmemişse, varsayılan olarak galeri ekle
-          if (selectedUsageAreas.length === 0) {
-            kullanimAlani = ['galeri'];
-          }
-          
-          if (selectedUsageAreas.includes('ana-sayfa-slider')) {
+          if (selectedUsageArea === 'ana-sayfa-slider') {
             gorselTipi = 'slider';
-          } else if (selectedUsageAreas.includes('referanslar')) {
+          } else if (selectedUsageArea === 'referanslar') {
             gorselTipi = 'referans_logo';
           }
+
+          // Kategori bilgilerini al
+          const selectedCategoryData = selectedCategory ? filteredCategories.find(c => c.id === selectedCategory) : null;
           
+          // Save to database
           const { error: dbError } = await supabase
             .from('fotograflar')
             .insert({
@@ -224,7 +196,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               dosya_yolu: storageData.path,
               kategori_id: selectedCategory || null,
               kategori_adi: selectedCategoryData?.ad || null,
-              kullanim_alani: kullanimAlani,
+              kullanim_alani: [selectedUsageArea],
               gorsel_tipi: gorselTipi,
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
@@ -240,8 +212,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               dosya_yolu: storageData.path,
               kategori_id: selectedCategory,
               kategori_adi: selectedCategoryData?.ad,
-              kullanim_alani: selectedUsageAreas,
-              gorsel_tipi: selectedUsageAreas.includes('referanslar') ? 'referans_logo' : 'galeri'
+              kullanim_alani: [selectedUsageArea],
+              gorsel_tipi: gorselTipi
             });
             throw dbError;
           }
@@ -251,7 +223,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             dosya_yolu: storageData.path,
             kategori_id: selectedCategory,
             kategori_adi: selectedCategoryData?.ad,
-            kullanim_alani: kullanimAlani,
+            kullanim_alani: [selectedUsageArea],
             gorsel_tipi: gorselTipi
           });
           
@@ -271,8 +243,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       setPhotos(null);
       setTitle('');
       setDescription('');
+      setSelectedUsageArea('');
       setSelectedCategory('');
-      setSelectedUsageAreas([]);
       if (photoInputRef.current) photoInputRef.current.value = '';
       
       onPhotoUploaded?.();
@@ -285,7 +257,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       console.log('🔄 Upload işlemi tamamlandı');
     }
   };
-
 
   // Logo yükleme
   useEffect(() => {
@@ -336,55 +307,45 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             )}
           </div>
 
-
-
           <div>
-            <Label htmlFor="category">Kategori</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Label htmlFor="usageArea">Kullanım Alanı</Label>
+            <Select value={selectedUsageArea} onValueChange={setSelectedUsageArea}>
               <SelectTrigger>
-                <SelectValue placeholder="Kategori seçin" />
+                <SelectValue placeholder="Kullanım alanı seçin" />
               </SelectTrigger>
               <SelectContent>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.ad} ({category.tip})
+                {usageAreas.map((area) => (
+                  <SelectItem key={area.id} value={area.id}>
+                    {area.label}
                   </SelectItem>
-                )) || []}
+                ))}
               </SelectContent>
             </Select>
+            <p className="text-sm text-muted-foreground mt-1">
+              Fotoğrafın hangi sayfada gösterileceğini seçin
+            </p>
           </div>
 
-          <div>
-            <Label>Kullanım Alanları</Label>
-            <div className="text-sm text-muted-foreground mb-2">
-              Fotoğrafın hangi sayfalarda gösterileceğini seçin
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {usageAreas.map((area) => (
-                <div key={area.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={area.id}
-                    checked={selectedUsageAreas.includes(area.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedUsageAreas(prev => [...prev, area.id]);
-                      } else {
-                        setSelectedUsageAreas(prev => prev.filter(id => id !== area.id));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={area.id} className="text-sm">
-                    {area.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-            {selectedUsageAreas.length === 0 && (
-              <p className="text-sm text-amber-600 mt-1">
-                ⚠️ En az bir kullanım alanı seçmeniz önerilir
+          {selectedUsageArea && filteredCategories.length > 0 && (
+            <div>
+              <Label htmlFor="category">Kategori</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Kategori seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.ad}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                Bu kullanım alanı için mevcut kategoriler
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch
@@ -399,16 +360,16 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
           <Button
             onClick={handleUpload} 
-            disabled={isUploading || !photos}
+            disabled={isUploading || !photos || !selectedUsageArea}
             className="w-full"
           >
             <Upload className="h-4 w-4 mr-2" />
             {isUploading ? 'Yükleniyor...' : 'Fotoğrafları Yükle'}
           </Button>
           
-          {selectedUsageAreas.length === 0 && photos && (
+          {!selectedUsageArea && photos && (
             <p className="text-sm text-amber-600 text-center">
-              ⚠️ Kullanım alanı seçilmedi. Fotoğraf sadece genel galeriye eklenecek.
+              ⚠️ Lütfen bir kullanım alanı seçin
             </p>
           )}
         </CardContent>
