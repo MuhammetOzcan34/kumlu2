@@ -33,9 +33,17 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
-      return data as Photo[];
+      if (error) {
+        console.error('❌ Photos fetch error:', error);
+        return []; // Return empty array instead of throwing
+      }
+      return data as Photo[] || [];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+    retryDelay: 2000,
   });
 };
 

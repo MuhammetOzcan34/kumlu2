@@ -31,8 +31,16 @@ export const useCategories = (type?: CategoryType) => {
       
       const { data, error } = await query;
       
-      if (error) throw error;
-      return data as Category[];
+      if (error) {
+        console.error('❌ Categories fetch error:', error);
+        return []; // Return empty array instead of throwing
+      }
+      return data as Category[] || [];
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+    retryDelay: 2000,
   });
 };

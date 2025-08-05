@@ -21,7 +21,17 @@ import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
 import KullanimSartlari from "./pages/KullanimSartlari";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+      retryDelay: 1000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,7 +48,7 @@ const App = () => (
           <Route path="/tabelalar" element={<Tabelalar />} />
           <Route path="/referanslar" element={<Referanslar />} />
           <Route path="/video-galeri" element={<VideoGaleri />} />
-          <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
+          {/* Servis Bedeli sayfası sadece admin panelinde erişilebilir */}
           <Route path="/hesaplama" element={<Hesaplama />} />
           <Route path="/iletisim" element={<Iletisim />} />
           <Route path="/auth" element={<Auth />} />

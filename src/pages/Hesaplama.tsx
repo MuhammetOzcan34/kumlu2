@@ -35,6 +35,8 @@ interface HesaplamaSonuc {
     metrekare: number;
     malzemeFiyati: number;
     montajFiyati: number;
+    ekOzellikler: string[];
+    ekOzellikArtisi: number;
   }[];
 }
 
@@ -294,21 +296,12 @@ const Hesaplama = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Alan Bilgileri</h3>
-                    <Button 
-                      onClick={alanEkle}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Alan Ekle
-                    </Button>
                   </div>
 
                   {alanlar.map((alan, index) => (
                     <Card key={alan.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium">Alan {index + 1}</h4>
+                        <h4 className="font-medium">Alan Ölçüsü {index + 1}</h4>
                         {alanlar.length > 1 && (
                           <Button
                             onClick={() => alanSil(alan.id)}
@@ -373,17 +366,39 @@ const Hesaplama = () => {
                         )}
 
                         {/* 3. Ek Özellik Seçimi */}
-                        <div className="space-y-2">
-                          <Label>3. Ek Özellik Seçiniz</Label>
-                          <div className="grid grid-cols-2 gap-4">
-                            {["UV Korumalı", "Yansıtıcı", "Özel Kesim", "Hızlı Teslimat"].map((ozellik) => (
-                              <div key={ozellik} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`${alan.id}-${ozellik}`}
-                                  checked={alan.ekOzellikler.includes(ozellik)}
-                                  onCheckedChange={() => ekOzellikToggle(alan.id, ozellik)}
+                        <div className="space-y-3">
+                          <Label className="text-base font-medium">3. Ek Özellik Seçiniz</Label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[
+                              { name: "UV Korumalı", icon: "☀️", desc: "Güneş ışınlarına karşı koruma" },
+                              { name: "Yansıtıcı", icon: "✨", desc: "Işık yansıtma özelliği" },
+                              { name: "Özel Kesim", icon: "✂️", desc: "Özel şekil kesim" },
+                              { name: "Hızlı Teslimat", icon: "🚀", desc: "Acil teslimat seçeneği" }
+                            ].map((ozellik) => (
+                              <div key={ozellik.name} className="relative">
+                                <input
+                                  type="checkbox"
+                                  id={`${alan.id}-${ozellik.name}`}
+                                  checked={alan.ekOzellikler.includes(ozellik.name)}
+                                  onChange={() => ekOzellikToggle(alan.id, ozellik.name)}
+                                  className="sr-only"
                                 />
-                                <Label htmlFor={`${alan.id}-${ozellik}`} className="text-sm">{ozellik}</Label>
+                                <label
+                                  htmlFor={`${alan.id}-${ozellik.name}`}
+                                  className={`block p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                                    alan.ekOzellikler.includes(ozellik.name)
+                                      ? 'border-primary bg-primary/5 text-primary'
+                                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xl">{ozellik.icon}</span>
+                                    <div>
+                                      <div className="font-medium text-sm">{ozellik.name}</div>
+                                      <div className="text-xs text-muted-foreground">{ozellik.desc}</div>
+                                    </div>
+                                  </div>
+                                </label>
                               </div>
                             ))}
                           </div>
@@ -393,16 +408,47 @@ const Hesaplama = () => {
                   ))}
                 </div>
                 
+                {/* Alan Ekle Butonu - Büyük ve Belirgin */}
+                <div className="flex justify-center py-6">
+                  <Button 
+                    onClick={alanEkle}
+                    size="lg"
+                    className="flex items-center gap-3 px-8 py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Plus className="w-6 h-6" />
+                    Alan Ekle
+                  </Button>
+                </div>
+                
                 {/* 4. Uygulama & Montaj */}
-                <div className="space-y-2">
-                  <Label>4. Uygulama & Montaj</Label>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">4. Uygulama & Montaj</Label>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
                       id="montaj"
                       checked={montajIsteniyor}
-                      onCheckedChange={(checked) => setMontajIsteniyor(checked as boolean)}
+                      onChange={(e) => setMontajIsteniyor(e.target.checked)}
+                      className="sr-only"
                     />
-                    <Label htmlFor="montaj">İstiyorum</Label>
+                    <label
+                      htmlFor="montaj"
+                      className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                        montajIsteniyor
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-2xl">🔧</span>
+                        <div>
+                          <div className="font-semibold text-lg">Montaj Hizmeti</div>
+                          <div className="text-sm text-muted-foreground">
+                            Profesyonel montaj ve uygulama hizmeti
+                          </div>
+                        </div>
+                      </div>
+                    </label>
                   </div>
                   
                   {montajIsteniyor && (
@@ -486,7 +532,7 @@ const Hesaplama = () => {
                       <h4 className="font-semibold">Alan Detayları:</h4>
                       {sonuc.alanDetaylari.map((alan, index) => (
                         <div key={alan.id} className="bg-background p-3 rounded border">
-                          <p className="font-medium">Alan {index + 1}: {alan.malzeme}</p>
+                          <p className="font-medium">Alan Ölçüsü {index + 1}: {alan.malzeme}</p>
                           <p className="text-sm text-muted-foreground">
                             {alan.metrekare.toFixed(2)} m² - 
                             Malzeme: ₺{alan.malzemeFiyati.toFixed(2)}

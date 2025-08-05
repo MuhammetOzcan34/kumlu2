@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -27,7 +28,7 @@ export const ServisBedelleriManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingServisBedeli, setEditingServisBedeli] = useState<ServisBedeli | null>(null);
   const [formData, setFormData] = useState({
-    kategori: "",
+    kategori: "Tüm Kategoriler", // Varsayılan olarak "Tüm Kategoriler" seçili
     hizmet_adi: "",
     birim: "m²",
     birim_fiyat: 0,
@@ -38,7 +39,7 @@ export const ServisBedelleriManager = () => {
 
   const resetForm = () => {
     setFormData({
-      kategori: "",
+      kategori: "Tüm Kategoriler", // Varsayılan olarak "Tüm Kategoriler" seçili
       hizmet_adi: "",
       birim: "m²",
       birim_fiyat: 0,
@@ -144,13 +145,46 @@ export const ServisBedelleriManager = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="kategori">Kategori</Label>
-                <Input
-                  id="kategori"
-                  value={formData.kategori}
-                  onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                  required
-                />
+                <Label>Kategori Seçimi</Label>
+                <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                  {[
+                    "Tüm Kategoriler",
+                    "Kumlama",
+                    "Tabela", 
+                    "Araç Giydirme",
+                    "Dijital Baskı",
+                    "Montaj"
+                  ].map((kategori) => (
+                    <div key={kategori} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`kategori-${kategori}`}
+                        checked={formData.kategori.includes(kategori)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            // "Tüm Kategoriler" seçilirse diğerlerini temizle
+                            if (kategori === "Tüm Kategoriler") {
+                              setFormData({ ...formData, kategori: "Tüm Kategoriler" });
+                            } else {
+                              // Diğer kategoriler seçilirse "Tüm Kategoriler"ı kaldır
+                              const currentKategoriler = formData.kategori === "Tüm Kategoriler" 
+                                ? "" 
+                                : formData.kategori;
+                              const newKategoriler = currentKategoriler 
+                                ? `${currentKategoriler}, ${kategori}` 
+                                : kategori;
+                              setFormData({ ...formData, kategori: newKategoriler });
+                            }
+                          } else {
+                            // Kategori kaldırılırsa
+                            const kategoriler = formData.kategori.split(", ").filter(k => k !== kategori);
+                            setFormData({ ...formData, kategori: kategoriler.length > 0 ? kategoriler.join(", ") : "Tüm Kategoriler" });
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`kategori-${kategori}`} className="text-sm">{kategori}</Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               
               <div className="space-y-2">

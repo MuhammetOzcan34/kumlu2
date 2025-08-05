@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ServisBedeli {
   id: string;
-  kategori: string;
+  kategori: string; // Veritabanında string olarak saklanıyor
   hizmet_adi: string;
   birim: string;
   birim_fiyat: number;

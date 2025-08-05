@@ -22,12 +22,13 @@ export const useSettings = () => {
       });
       
       console.log('✅ Settings loaded:', settings);
-      console.log('🔍 Settings keys:', Object.keys(settings));
-      console.log('🔍 firma_logo_url value:', settings['firma_logo_url']);
       return settings;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: 1000,
   });
 };
 
