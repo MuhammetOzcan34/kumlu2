@@ -14,16 +14,31 @@ export const PWAIconManager = () => {
   }, [companyLogo, companyName]);
 
   const updateFavicon = (logoUrl: string) => {
+    // Logo URL'sini oluştur
+    const getFullLogoUrl = (logoPath: string) => {
+      if (logoPath.startsWith('http')) {
+        return logoPath;
+      }
+      // Eğer sadece dosya adı ise, tam URL oluştur
+      if (logoPath && !logoPath.includes('/')) {
+        return `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
+      }
+      return logoPath;
+    };
+
+    const fullLogoUrl = getFullLogoUrl(logoUrl);
+    console.log('🔗 PWAIconManager - Favicon URL:', fullLogoUrl);
+
     // Update favicon
     const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
     if (favicon) {
-      favicon.href = logoUrl;
+      favicon.href = fullLogoUrl;
     }
 
     // Update apple touch icon
     const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
     if (appleTouchIcon) {
-      appleTouchIcon.href = logoUrl;
+      appleTouchIcon.href = fullLogoUrl;
     }
   };
 

@@ -147,6 +147,21 @@ export const LogoDisplay: React.FC = () => {
   console.log('🔍 LogoDisplay - hasLogo:', hasLogo);
   console.log('🔍 LogoDisplay - companyLogo value:', `"${companyLogo}"`);
 
+  // Logo URL'sini oluştur
+  const getLogoUrl = (logoPath: string) => {
+    if (logoPath.startsWith('http')) {
+      return logoPath;
+    }
+    // Eğer sadece dosya adı ise, tam URL oluştur
+    if (logoPath && !logoPath.includes('/')) {
+      return `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
+    }
+    return logoPath;
+  };
+
+  const logoUrl = hasLogo ? getLogoUrl(companyLogo) : '';
+  console.log('🔗 LogoDisplay - Final URL:', logoUrl);
+
   if (!hasLogo) {
     return (
       <Card className="border-dashed border-muted-foreground/30">
@@ -191,23 +206,26 @@ export const LogoDisplay: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden border">
             <img
-              src={companyLogo.startsWith('http') 
-                ? companyLogo 
-                : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${companyLogo}`
-              }
+              src={logoUrl}
               alt={companyName || "Şirket Logosu"}
               className="w-full h-full object-contain"
+              crossOrigin="anonymous"
               onLoad={() => {
-                console.log('✅ Logo başarıyla yüklendi:', companyLogo);
+                console.log('✅ Logo başarıyla yüklendi:', logoUrl);
               }}
               onError={(e) => {
-                console.error('❌ Logo görüntüleme hatası:', companyLogo);
-                console.error('❌ Logo URL:', companyLogo.startsWith('http') 
-                  ? companyLogo 
-                  : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${companyLogo}`
-                );
+                console.error('❌ Logo görüntüleme hatası:', logoUrl);
+                console.error('❌ Error event:', e);
+                
+                // Hata durumunda placeholder göster
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
+                
+                // Placeholder div oluştur
+                const placeholder = document.createElement('div');
+                placeholder.className = 'w-full h-full bg-red-100 flex items-center justify-center text-red-500 text-xs';
+                placeholder.textContent = 'Logo Hatası';
+                target.parentElement?.appendChild(placeholder);
               }}
             />
           </div>

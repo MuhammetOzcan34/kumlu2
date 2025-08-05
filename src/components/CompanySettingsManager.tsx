@@ -70,7 +70,11 @@ export const CompanySettingsManager: React.FC = () => {
 
   const handleLogoUpload = async (file: File) => {
     try {
+      console.log('📤 Logo yükleme başladı:', file.name, file.size, file.type);
+      
       const fileName = `company-logo-${Date.now()}.${file.name.split('.').pop()}`;
+      
+      console.log('📁 Dosya adı oluşturuldu:', fileName);
       
       const { data, error } = await supabase.storage
         .from('fotograflar')
@@ -79,11 +83,17 @@ export const CompanySettingsManager: React.FC = () => {
           upsert: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Storage upload hatası:', error);
+        throw error;
+      }
 
+      console.log('✅ Logo başarıyla yüklendi:', data.path);
+      console.log('🔗 Tam URL:', `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${data.path}`);
+      
       return data.path;
     } catch (error) {
-      console.error('Logo yükleme hatası:', error);
+      console.error('❌ Logo yükleme hatası:', error);
       throw error;
     }
   };
@@ -96,7 +106,9 @@ export const CompanySettingsManager: React.FC = () => {
       // Yeni logo yüklendi ise önce onu yükle
       if (logoFile) {
         const logoPath = await handleLogoUpload(logoFile);
-        logoUrl = `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${logoPath}`;
+        console.log('📁 Logo yüklendi, path:', logoPath);
+        logoUrl = logoPath; // Sadece dosya adını kaydet, tam URL'yi değil
+        console.log('🔗 Logo URL olarak kaydedilecek:', logoUrl);
         setLogoFile(null);
       }
 
