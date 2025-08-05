@@ -172,6 +172,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           if (storageError) throw storageError;
 
           // Save to database
+          const selectedCategoryData = categories.find(c => c.id === selectedCategory);
           const { error: dbError } = await supabase
             .from('fotograflar')
             .insert({
@@ -179,6 +180,9 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               aciklama: "", // Açıklama boş bırak
               dosya_yolu: storageData.path,
               kategori_id: selectedCategory || null,
+              kategori_adi: selectedCategoryData?.ad || null,
+              kullanim_alani: selectedUsageAreas.length > 0 ? selectedUsageAreas : null,
+              gorsel_tipi: selectedUsageAreas.includes('referanslar') ? 'referans_logo' : 'galeri',
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
               logo_eklendi: addLogo && firmaLogo ? true : false,

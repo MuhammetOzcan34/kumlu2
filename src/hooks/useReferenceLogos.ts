@@ -20,7 +20,7 @@ export const useReferenceLogos = () => {
         .from("fotograflar")
         .select("*")
         .eq("aktif", true)
-        .eq("gorsel_tipi", "referans_logo")
+        .or("gorsel_tipi.eq.referans_logo,kullanim_alani.cs.{referanslar}")
         .order("sira_no", { ascending: true });
       
       if (error) throw error;
