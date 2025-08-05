@@ -149,6 +149,14 @@ const Hesaplama = () => {
     let toplamMetrekare = 0;
     const alanDetaylari: any[] = [];
 
+    // Ek özellik fiyat artışları (Google Sheets'ten)
+    const ekOzellikFiyatlari = {
+      "UV Korumalı": 0.15, // %15 artış
+      "Yansıtıcı": 0.20,   // %20 artış
+      "Özel Kesim": 0.25,  // %25 artış
+      "Hızlı Teslimat": 0.30 // %30 artış
+    };
+
     // Her alan için hesaplama
     alanlar.forEach(alan => {
       const metrekare = (parseFloat(alan.en) * parseFloat(alan.boy)) / 10000; // cm² to m²
@@ -172,8 +180,18 @@ const Hesaplama = () => {
 
       if (!fiyat) return;
 
-      const malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
+      let malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
       const montajFiyati = montajIsteniyor ? metrekare * fiyat.montaj_fiyat : 0;
+
+      // Ek özellikler için fiyat artışı hesapla
+      let ekOzellikArtisi = 0;
+      alan.ekOzellikler.forEach(ozellik => {
+        if (ekOzellikFiyatlari[ozellik as keyof typeof ekOzellikFiyatlari]) {
+          ekOzellikArtisi += malzemeFiyati * ekOzellikFiyatlari[ozellik as keyof typeof ekOzellikFiyatlari];
+        }
+      });
+      
+      malzemeFiyati += ekOzellikArtisi;
 
       toplamMalzemeFiyati += malzemeFiyati;
       toplamMontajFiyati += montajFiyati;
@@ -184,7 +202,9 @@ const Hesaplama = () => {
         malzeme: urun.ad,
         metrekare,
         malzemeFiyati,
-        montajFiyati
+        montajFiyati,
+        ekOzellikler: alan.ekOzellikler,
+        ekOzellikArtisi
       });
     });
 
@@ -472,6 +492,14 @@ const Hesaplama = () => {
                             Malzeme: ₺{alan.malzemeFiyati.toFixed(2)}
                             {montajIsteniyor && ` - Montaj: ₺${alan.montajFiyati.toFixed(2)}`}
                           </p>
+                          {alan.ekOzellikler && alan.ekOzellikler.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs text-muted-foreground">
+                                Ek Özellikler: {alan.ekOzellikler.join(', ')}
+                                {alan.ekOzellikArtisi > 0 && ` (+₺${alan.ekOzellikArtisi.toFixed(2)})`}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
