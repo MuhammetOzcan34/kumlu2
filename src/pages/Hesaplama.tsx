@@ -128,14 +128,17 @@ const Hesaplama = () => {
     ));
   };
 
-  // Ek özellik toggle fonksiyonu
-  const ekOzellikToggle = (ozellik: string, checked: boolean) => {
+  // Ek özellik toggle fonksiyonu (belirli bir alan için)
+  const ekOzellikToggle = (alanId: string, ozellik: string, checked: boolean) => {
     setAlanlar(alanlar.map(alan => {
-      const mevcutOzellikler = alan.ekOzellikler || [];
-      const yeniOzellikler = checked
-        ? [...mevcutOzellikler, ozellik]
-        : mevcutOzellikler.filter(o => o !== ozellik);
-      return { ...alan, ekOzellikler: yeniOzellikler };
+      if (alan.id === alanId) {
+        const mevcutOzellikler = alan.ekOzellikler || [];
+        const yeniOzellikler = checked
+          ? [...mevcutOzellikler, ozellik]
+          : mevcutOzellikler.filter(o => o !== ozellik);
+        return { ...alan, ekOzellikler: yeniOzellikler };
+      }
+      return alan;
     }));
   };
 
@@ -386,7 +389,7 @@ const Hesaplama = () => {
                                 key={ozellik.name}
                                 className={cn(
                                   "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
-                                  alan.ekOzellikler.includes(ozellik.name)
+                                  (alan.ekOzellikler || []).includes(ozellik.name)
                                     ? "bg-primary/10 border-primary"
                                     : "hover:bg-muted/50"
                                 )}
@@ -394,7 +397,7 @@ const Hesaplama = () => {
                                 <div className="flex-shrink-0 text-2xl">{ozellik.icon}</div>
                                 <div className="flex-grow">
                                   <Label
-                                    htmlFor={`ek-ozellik-${ozellik.name}`}
+                                    htmlFor={`ek-ozellik-${alan.id}-${ozellik.name}`}
                                     className="text-base font-medium cursor-pointer"
                                   >
                                     {ozellik.name}
@@ -402,9 +405,9 @@ const Hesaplama = () => {
                                   <p className="text-sm text-muted-foreground">{ozellik.desc}</p>
                                 </div>
                                 <Checkbox
-                                  id={`ek-ozellik-${ozellik.name}`}
-                                  checked={alan.ekOzellikler.includes(ozellik.name)}
-                                  onCheckedChange={(checked: boolean) => ekOzellikToggle(ozellik.name, checked)}
+                                  id={`ek-ozellik-${alan.id}-${ozellik.name}`}
+                                  checked={(alan.ekOzellikler || []).includes(ozellik.name)}
+                                  onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.name, checked)}
                                   className="mt-1"
                                 />
                               </div>
