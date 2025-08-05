@@ -5,7 +5,6 @@ import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { useSetting } from "@/hooks/useSettings";
 import { useHesaplamaUrunleri } from "@/hooks/useHesaplamaUrunleri";
-import { useServisBedelleri } from "@/hooks/useServisBedelleri";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,27 +12,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TeklifFormu } from "@/components/TeklifFormu";
-import { Calculator, AlertCircle, MapPin, Package } from "lucide-react";
+import { Calculator, AlertCircle, Package, Plus, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface AlanBilgisi {
+  id: string;
+  malzeme: string;
+  en: string;
+  boy: string;
+  ekOzellikler: string[];
+}
 
 interface HesaplamaSonuc {
   malzemeFiyati: number;
   montajFiyati: number;
   servisBedeli: number;
   toplamFiyat: number;
-  metrekare: number;
+  toplamMetrekare: number;
+  alanDetaylari: {
+    id: string;
+    malzeme: string;
+    metrekare: number;
+    malzemeFiyati: number;
+    montajFiyati: number;
+  }[];
 }
 
 const Hesaplama = () => {
   const phoneNumber = useSetting("telefon") || "+90 555 123 45 67";
   const { data: urunler, isLoading: urunlerLoading } = useHesaplamaUrunleri();
-  const { data: servisBedelleri, isLoading: servisLoading } = useServisBedelleri();
   
   // Form state'leri
-  const [selectedUrun, setSelectedUrun] = useState("");
-  const [width, setWidth] = useState("");
-  const [height, setHeight] = useState("");
-  const [ekOzellikler, setEkOzellikler] = useState<string[]>([]);
+  const [alanlar, setAlanlar] = useState<AlanBilgisi[]>([
+    { id: '1', malzeme: '', en: '', boy: '', ekOzellikler: [] }
+  ]);
   const [montajIsteniyor, setMontajIsteniyor] = useState(false);
   const [sehir, setSehir] = useState("");
   const [ilce, setIlce] = useState("");
@@ -42,66 +54,161 @@ const Hesaplama = () => {
   const [sonuc, setSonuc] = useState<HesaplamaSonuc | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  // İstanbul ilçeleri
-  const istanbulIlceleri = [
-    "Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", 
-    "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", 
-    "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", 
-    "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", 
-    "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", 
-    "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", 
-    "Üsküdar", "Zeytinburnu"
-  ];
+  // İstanbul ilçeleri ve servis bedelleri (Google Sheets'ten)
+  const istanbulServisBedelleri = {
+    "Adalar": 150,
+    "Arnavutköy": 80,
+    "Ataşehir": 60,
+    "Avcılar": 90,
+    "Bağcılar": 70,
+    "Bahçelievler": 50,
+    "Bakırköy": 40,
+    "Başakşehir": 75,
+    "Bayrampaşa": 65,
+    "Beşiktaş": 30,
+    "Beykoz": 100,
+    "Beylikdüzü": 85,
+    "Beyoğlu": 35,
+    "Büyükçekmece": 95,
+    "Çatalca": 120,
+    "Çekmeköy": 70,
+    "Esenler": 75,
+    "Esenyurt": 80,
+    "Eyüpsultan": 60,
+    "Fatih": 25,
+    "Gaziosmanpaşa": 70,
+    "Güngören": 55,
+    "Kadıköy": 45,
+    "Kağıthane": 65,
+    "Kartal": 75,
+    "Küçükçekmece": 70,
+    "Maltepe": 80,
+    "Pendik": 85,
+    "Sancaktepe": 75,
+    "Sarıyer": 90,
+    "Silivri": 110,
+    "Sultanbeyli": 80,
+    "Sultangazi": 70,
+    "Şile": 130,
+    "Şişli": 40,
+    "Tuzla": 90,
+    "Ümraniye": 65,
+    "Üsküdar": 55,
+    "Zeytinburnu": 50
+  };
+
+  const istanbulIlceleri = Object.keys(istanbulServisBedelleri);
+
+  // Alan ekleme fonksiyonu
+  const alanEkle = () => {
+    const yeniAlan: AlanBilgisi = {
+      id: Date.now().toString(),
+      malzeme: '',
+      en: '',
+      boy: '',
+      ekOzellikler: []
+    };
+    setAlanlar([...alanlar, yeniAlan]);
+  };
+
+  // Alan silme fonksiyonu
+  const alanSil = (id: string) => {
+    if (alanlar.length > 1) {
+      setAlanlar(alanlar.filter(alan => alan.id !== id));
+    }
+  };
+
+  // Alan güncelleme fonksiyonu
+  const alanGuncelle = (id: string, field: keyof AlanBilgisi, value: any) => {
+    setAlanlar(alanlar.map(alan => 
+      alan.id === id ? { ...alan, [field]: value } : alan
+    ));
+  };
+
+  // Ek özellik toggle fonksiyonu
+  const ekOzellikToggle = (alanId: string, ozellik: string) => {
+    setAlanlar(alanlar.map(alan => {
+      if (alan.id === alanId) {
+        const mevcutOzellikler = alan.ekOzellikler;
+        const yeniOzellikler = mevcutOzellikler.includes(ozellik)
+          ? mevcutOzellikler.filter(o => o !== ozellik)
+          : [...mevcutOzellikler, ozellik];
+        return { ...alan, ekOzellikler: yeniOzellikler };
+      }
+      return alan;
+    }));
+  };
 
   const hesaplaFiyat = () => {
-    if (!selectedUrun || !width || !height) return;
-
-    const metrekare = (parseFloat(width) * parseFloat(height)) / 10000; // cm² to m²
-    const urun = urunler?.find(u => u.id === selectedUrun);
-    
-    if (!urun || !urun.fiyatlar?.length) return;
-
-    // Metrekare aralığına göre fiyat bul
-    let fiyat = urun.fiyatlar.find(f => 
-      metrekare >= f.metrekare_min && metrekare <= f.metrekare_max
-    );
-
-    // Eğer aralık bulunamazsa en yakın aralığı kullan
-    if (!fiyat) {
-      fiyat = urun.fiyatlar.reduce((prev, curr) => {
-        const prevDiff = Math.abs(metrekare - (prev.metrekare_min + prev.metrekare_max) / 2);
-        const currDiff = Math.abs(metrekare - (curr.metrekare_min + curr.metrekare_max) / 2);
-        return prevDiff < currDiff ? prev : curr;
-      });
+    if (!alanlar.every(alan => alan.malzeme && alan.en && alan.boy)) {
+      return;
     }
 
-    if (!fiyat) return;
+    let toplamMalzemeFiyati = 0;
+    let toplamMontajFiyati = 0;
+    let toplamMetrekare = 0;
+    const alanDetaylari: any[] = [];
 
-    // Minimum montaj alanı kontrolü
-    const montajMetrekare = montajIsteniyor ? Math.max(metrekare, 10) : 0;
-    
-    const malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
-    const montajFiyati = montajIsteniyor ? montajMetrekare * fiyat.montaj_fiyat : 0;
+    // Her alan için hesaplama
+    alanlar.forEach(alan => {
+      const metrekare = (parseFloat(alan.en) * parseFloat(alan.boy)) / 10000; // cm² to m²
+      const urun = urunler?.find(u => u.id === alan.malzeme);
+      
+      if (!urun || !urun.fiyatlar?.length) return;
+
+      // Metrekare aralığına göre fiyat bul
+      let fiyat = urun.fiyatlar.find(f => 
+        metrekare >= f.metrekare_min && metrekare <= f.metrekare_max
+      );
+
+      // Eğer aralık bulunamazsa en yakın aralığı kullan
+      if (!fiyat) {
+        fiyat = urun.fiyatlar.reduce((prev, curr) => {
+          const prevDiff = Math.abs(metrekare - (prev.metrekare_min + prev.metrekare_max) / 2);
+          const currDiff = Math.abs(metrekare - (curr.metrekare_min + curr.metrekare_max) / 2);
+          return prevDiff < currDiff ? prev : curr;
+        });
+      }
+
+      if (!fiyat) return;
+
+      const malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
+      const montajFiyati = montajIsteniyor ? metrekare * fiyat.montaj_fiyat : 0;
+
+      toplamMalzemeFiyati += malzemeFiyati;
+      toplamMontajFiyati += montajFiyati;
+      toplamMetrekare += metrekare;
+
+      alanDetaylari.push({
+        id: alan.id,
+        malzeme: urun.ad,
+        metrekare,
+        malzemeFiyati,
+        montajFiyati
+      });
+    });
+
+    // Minimum montaj alanı kontrolü (toplam alan için)
+    if (montajIsteniyor && toplamMetrekare < 10) {
+      const ekMontajFiyati = (10 - toplamMetrekare) * (alanDetaylari[0]?.montajFiyati / alanDetaylari[0]?.metrekare || 0);
+      toplamMontajFiyati += ekMontajFiyati;
+    }
     
     // Servis bedeli hesaplama
     let servisBedeli = 0;
-    if (montajIsteniyor && ilce) {
-      const servisBedeliData = servisBedelleri?.find(sb => 
-        sb.hizmet_adi.toLowerCase().includes(ilce.toLowerCase())
-      );
-      if (servisBedeliData) {
-        servisBedeli = servisBedeliData.birim_fiyat;
-      }
+    if (montajIsteniyor && ilce && istanbulServisBedelleri[ilce as keyof typeof istanbulServisBedelleri]) {
+      servisBedeli = istanbulServisBedelleri[ilce as keyof typeof istanbulServisBedelleri];
     }
     
-    const toplamFiyat = malzemeFiyati + montajFiyati + servisBedeli;
+    const toplamFiyat = toplamMalzemeFiyati + toplamMontajFiyati + servisBedeli;
 
     setSonuc({
-      malzemeFiyati,
-      montajFiyati,
+      malzemeFiyati: toplamMalzemeFiyati,
+      montajFiyati: toplamMontajFiyati,
       servisBedeli,
       toplamFiyat,
-      metrekare
+      toplamMetrekare,
+      alanDetaylari
     });
     setShowResult(true);
   };
@@ -120,7 +227,7 @@ const Hesaplama = () => {
     }
   }, [montajIsteniyor]);
 
-  if (urunlerLoading || servisLoading) {
+  if (urunlerLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-lg">Yükleniyor...</div>
@@ -162,69 +269,108 @@ const Hesaplama = () => {
                   Maliyet Hesaplayıcı
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* 1. Malzeme Seçimi */}
-                <div className="space-y-2">
-                  <Label htmlFor="malzeme">1. Malzeme Seçiniz</Label>
-                  <Select value={selectedUrun} onValueChange={setSelectedUrun}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Malzeme türünü seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {urunler?.map((urun) => (
-                        <SelectItem key={urun.id} value={urun.id}>
-                          {urun.ad}
-                        </SelectItem>
-                      )) || []}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* 2. En/Boy Girişi */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="width">2. En Giriniz (cm)</Label>
-                    <Input
-                      id="width"
-                      type="number"
-                      value={width}
-                      onChange={(e) => setWidth(e.target.value)}
-                      placeholder="100"
-                    />
+              <CardContent className="space-y-8">
+                {/* Alan Bilgileri */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Alan Bilgileri</h3>
+                    <Button 
+                      onClick={alanEkle}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Alan Ekle
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="height">Boy Giriniz (cm)</Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      placeholder="50"
-                    />
-                  </div>
-                </div>
-                
-                {/* 3. Ek Özellik Seçimi */}
-                <div className="space-y-2">
-                  <Label>3. Ek Özellik Seçiniz</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {["UV Korumalı", "Yansıtıcı", "Özel Kesim", "Hızlı Teslimat"].map((ozellik) => (
-                      <div key={ozellik} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={ozellik}
-                          checked={ekOzellikler.includes(ozellik)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setEkOzellikler([...ekOzellikler, ozellik]);
-                            } else {
-                              setEkOzellikler(ekOzellikler.filter(o => o !== ozellik));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={ozellik} className="text-sm">{ozellik}</Label>
+
+                  {alanlar.map((alan, index) => (
+                    <Card key={alan.id} className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium">Alan {index + 1}</h4>
+                        {alanlar.length > 1 && (
+                          <Button
+                            onClick={() => alanSil(alan.id)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="space-y-4">
+                        {/* 1. Malzeme Seçimi */}
+                        <div className="space-y-2">
+                          <Label>1. Malzeme Seçiniz</Label>
+                          <Select 
+                            value={alan.malzeme} 
+                            onValueChange={(value) => alanGuncelle(alan.id, 'malzeme', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Malzeme türünü seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {urunler?.map((urun) => (
+                                <SelectItem key={urun.id} value={urun.id}>
+                                  {urun.ad}
+                                </SelectItem>
+                              )) || []}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* 2. En/Boy Girişi */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>2. En Giriniz (cm)</Label>
+                            <Input
+                              type="number"
+                              value={alan.en}
+                              onChange={(e) => alanGuncelle(alan.id, 'en', e.target.value)}
+                              placeholder="100"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Boy Giriniz (cm)</Label>
+                            <Input
+                              type="number"
+                              value={alan.boy}
+                              onChange={(e) => alanGuncelle(alan.id, 'boy', e.target.value)}
+                              placeholder="50"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Metrekare Gösterimi */}
+                        {alan.en && alan.boy && (
+                          <div className="bg-muted p-3 rounded-lg">
+                            <p className="text-sm font-medium">
+                              Alan: {((parseFloat(alan.en) * parseFloat(alan.boy)) / 10000).toFixed(2)} m²
+                            </p>
+                          </div>
+                        )}
+
+                        {/* 3. Ek Özellik Seçimi */}
+                        <div className="space-y-2">
+                          <Label>3. Ek Özellik Seçiniz</Label>
+                          <div className="grid grid-cols-2 gap-4">
+                            {["UV Korumalı", "Yansıtıcı", "Özel Kesim", "Hızlı Teslimat"].map((ozellik) => (
+                              <div key={ozellik} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`${alan.id}-${ozellik}`}
+                                  checked={alan.ekOzellikler.includes(ozellik)}
+                                  onCheckedChange={() => ekOzellikToggle(alan.id, ozellik)}
+                                />
+                                <Label htmlFor={`${alan.id}-${ozellik}`} className="text-sm">{ozellik}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
                 
                 {/* 4. Uygulama & Montaj */}
@@ -243,7 +389,8 @@ const Hesaplama = () => {
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Sadece İstanbul için uygulama & Montaj hizmeti verilmektedir.
+                        Sadece İstanbul için uygulama & Montaj hizmeti verilmektedir. 
+                        En az 10m² olması gerekli, 10m² küçük toplam için 10 m² montaj uygulama fiyatı hesaplanıp eklenmeli.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -288,7 +435,7 @@ const Hesaplama = () => {
                       <SelectContent>
                         {istanbulIlceleri.map((ilce) => (
                           <SelectItem key={ilce} value={ilce}>
-                            {ilce}
+                            {ilce} - ₺{istanbulServisBedelleri[ilce as keyof typeof istanbulServisBedelleri]} servis bedeli
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -299,19 +446,34 @@ const Hesaplama = () => {
                 <Button 
                   onClick={hesaplaFiyat} 
                   className="w-full"
-                  disabled={!selectedUrun || !width || !height}
+                  disabled={!alanlar.every(alan => alan.malzeme && alan.en && alan.boy)}
                 >
                   Hesapla
                 </Button>
                 
                 {showResult && sonuc && (
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 space-y-4">
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 space-y-6">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground mb-1">Hesaplama Sonucu</p>
                       <p className="text-3xl font-bold text-primary">₺{sonuc.toplamFiyat.toFixed(2)}</p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Toplam Alan: {sonuc.metrekare.toFixed(2)} m²
+                        Toplam Alan: {sonuc.toplamMetrekare.toFixed(2)} m²
                       </p>
+                    </div>
+
+                    {/* Alan Detayları */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Alan Detayları:</h4>
+                      {sonuc.alanDetaylari.map((alan, index) => (
+                        <div key={alan.id} className="bg-background p-3 rounded border">
+                          <p className="font-medium">Alan {index + 1}: {alan.malzeme}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {alan.metrekare.toFixed(2)} m² - 
+                            Malzeme: ₺{alan.malzemeFiyati.toFixed(2)}
+                            {montajIsteniyor && ` - Montaj: ₺${alan.montajFiyati.toFixed(2)}`}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -347,6 +509,7 @@ const Hesaplama = () => {
                 <CardTitle>Hesaplama Hakkında</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p>• Birden fazla alan ekleyebilir ve her alan için farklı malzeme seçebilirsiniz</p>
                 <p>• Hesaplama sonuçları tahmini olup, gerçek fiyatlar değişkenlik gösterebilir</p>
                 <p>• Montaj hizmeti sadece İstanbul için verilmektedir</p>
                 <p>• Minimum montaj alanı 10m² olarak hesaplanır</p>
