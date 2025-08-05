@@ -224,104 +224,104 @@ export const HesaplamaUrunleriManager = () => {
         </TabsList>
         
         <TabsContent value="urunler" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Hesaplama Ürünleri</h3>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleOpenDialog()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Yeni Ürün
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingUrun ? "Ürün Düzenle" : "Yeni Ürün Ekle"}
-                  </DialogTitle>
-                  <DialogDescription>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Hesaplama Ürünleri</h3>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Yeni Ürün
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingUrun ? "Ürün Düzenle" : "Yeni Ürün Ekle"}
+              </DialogTitle>
+              <DialogDescription>
                     Hesaplama sayfasında kullanılacak malzeme türünü girin.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
                     <Label htmlFor="ad">Malzeme Adı</Label>
-                    <Input
-                      id="ad"
-                      value={formData.ad}
-                      onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="aciklama">Açıklama</Label>
-                    <Textarea
-                      id="aciklama"
-                      value={formData.aciklama}
-                      onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="kategori">Kategori</Label>
-                      <Input
-                        id="kategori"
-                        value={formData.kategori}
-                        onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
+                <Input
+                  id="ad"
+                  value={formData.ad}
+                  onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="aciklama">Açıklama</Label>
+                <Textarea
+                  id="aciklama"
+                  value={formData.aciklama}
+                  onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="kategori">Kategori</Label>
+                  <Input
+                    id="kategori"
+                    value={formData.kategori}
+                    onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
                         required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="sira_no">Sıra No</Label>
-                      <Input
-                        id="sira_no"
-                        type="number"
-                        value={formData.sira_no}
-                        onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}
-                        min="0"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="sira_no">Sıra No</Label>
+                  <Input
+                    id="sira_no"
+                    type="number"
+                    value={formData.sira_no}
+                    onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}
+                    min="0"
                         required
-                      />
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                      İptal
-                    </Button>
-                    <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                      {editingUrun ? "Güncelle" : "Ekle"}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                  İptal
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingUrun ? "Güncelle" : "Ekle"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
+      <Table>
+        <TableHeader>
+          <TableRow>
                 <TableHead>Malzeme Adı</TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead>Sıra</TableHead>
+            <TableHead>Kategori</TableHead>
+            <TableHead>Sıra</TableHead>
                 <TableHead>Durum</TableHead>
-                <TableHead>İşlemler</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {urunler?.map((urun) => (
-                <TableRow key={urun.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{urun.ad}</div>
-                      {urun.aciklama && (
-                        <div className="text-sm text-muted-foreground">{urun.aciklama}</div>
-                      )}
-                    </div>
-                  </TableCell>
+            <TableHead>İşlemler</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {urunler?.map((urun) => (
+            <TableRow key={urun.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{urun.ad}</div>
+                  {urun.aciklama && (
+                    <div className="text-sm text-muted-foreground">{urun.aciklama}</div>
+                  )}
+                </div>
+              </TableCell>
                   <TableCell>{urun.kategori}</TableCell>
-                  <TableCell>{urun.sira_no}</TableCell>
+              <TableCell>{urun.sira_no}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       urun.aktif ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -329,48 +329,48 @@ export const HesaplamaUrunleriManager = () => {
                       {urun.aktif ? 'Aktif' : 'Pasif'}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenDialog(urun)}
-                      >
-                        <Edit className="w-4 h-4" />
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenDialog(urun)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="w-4 h-4" />
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>İptal</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(urun.id)}>
-                              Sil
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>İptal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(urun.id)}>
+                          Sil
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-          {!urunler?.length && (
-            <div className="text-center py-8 text-muted-foreground">
-              Henüz ürün eklenmemiş. İlk ürünü eklemek için yukarıdaki butonu kullanın.
-            </div>
-          )}
+      {!urunler?.length && (
+        <div className="text-center py-8 text-muted-foreground">
+          Henüz ürün eklenmemiş. İlk ürünü eklemek için yukarıdaki butonu kullanın.
+        </div>
+      )}
         </TabsContent>
 
         <TabsContent value="fiyatlar" className="space-y-4">

@@ -61,7 +61,7 @@ export const ServisBedelleriManager = () => {
         aciklama: servisBedeli.aciklama || "",
         sira_no: servisBedeli.sira_no,
         aktif: servisBedeli.aktif
-      });
+    });
     } else {
       resetForm();
     }
@@ -128,21 +128,21 @@ export const ServisBedelleriManager = () => {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Servis Bedelleri</h3>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
+            <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog()}>
               <Plus className="w-4 h-4 mr-2" />
               Yeni Servis Bedeli
-            </Button>
-          </DialogTrigger>
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
+              <DialogHeader>
               <DialogTitle>
                 {editingServisBedeli ? "Servis Bedeli Düzenle" : "Yeni Servis Bedeli Ekle"}
               </DialogTitle>
-              <DialogDescription>
+                <DialogDescription>
                 Hesaplama sayfasında kullanılacak servis bedeli bilgilerini girin.
-              </DialogDescription>
-            </DialogHeader>
+                </DialogDescription>
+              </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>Kategori Seçimi</Label>
@@ -188,60 +188,60 @@ export const ServisBedelleriManager = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="hizmet_adi">Hizmet Adı</Label>
-                <Input
-                  id="hizmet_adi"
-                  value={formData.hizmet_adi}
+                  <Label htmlFor="hizmet_adi">Hizmet Adı</Label>
+                  <Input
+                    id="hizmet_adi"
+                    value={formData.hizmet_adi}
                   onChange={(e) => setFormData({ ...formData, hizmet_adi: e.target.value })}
                   required
-                />
-              </div>
+                  />
+                </div>
               
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="birim">Birim</Label>
+                    <Label htmlFor="birim">Birim</Label>
                   <Select value={formData.birim} onValueChange={(value) => setFormData({ ...formData, birim: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
                       <SelectItem value="m²">m²</SelectItem>
                       <SelectItem value="adet">adet</SelectItem>
                       <SelectItem value="m">m</SelectItem>
                       <SelectItem value="kg">kg</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="birim_fiyat">Birim Fiyat</Label>
-                  <Input
-                    id="birim_fiyat"
-                    type="number"
+                    <Input
+                      id="birim_fiyat"
+                      type="number"
                     value={formData.birim_fiyat}
                     onChange={(e) => setFormData({ ...formData, birim_fiyat: Number(e.target.value) })}
                     min="0"
-                    step="0.01"
+                      step="0.01"
                     required
+                    />
+                  </div>
+                </div>
+              
+              <div className="space-y-2">
+                  <Label htmlFor="aciklama">Açıklama</Label>
+                  <Textarea
+                    id="aciklama"
+                    value={formData.aciklama}
+                  onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                   />
                 </div>
-              </div>
               
               <div className="space-y-2">
-                <Label htmlFor="aciklama">Açıklama</Label>
-                <Textarea
-                  id="aciklama"
-                  value={formData.aciklama}
-                  onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="sira_no">Sıra No</Label>
-                <Input
-                  id="sira_no"
-                  type="number"
-                  value={formData.sira_no}
+                  <Label htmlFor="sira_no">Sıra No</Label>
+                  <Input
+                    id="sira_no"
+                    type="number"
+                    value={formData.sira_no}
                   onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}
                   min="0"
                 />
@@ -256,9 +256,9 @@ export const ServisBedelleriManager = () => {
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
       <Table>
         <TableHeader>
@@ -281,8 +281,8 @@ export const ServisBedelleriManager = () => {
                   <div className="font-medium">{servisBedeli.hizmet_adi}</div>
                   {servisBedeli.aciklama && (
                     <div className="text-sm text-muted-foreground">{servisBedeli.aciklama}</div>
-                  )}
-                </div>
+                        )}
+                      </div>
               </TableCell>
               <TableCell>₺{servisBedeli.birim_fiyat}</TableCell>
               <TableCell>{servisBedeli.birim}</TableCell>
@@ -296,38 +296,38 @@ export const ServisBedelleriManager = () => {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                      <Button
+                        variant="outline"
+                        size="sm"
                     onClick={() => handleOpenDialog(servisBedeli)}
-                  >
+                      >
                     <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
                         <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                            <AlertDialogDescription>
                           Bu servis bedelini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>İptal</AlertDialogCancel>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>İptal</AlertDialogCancel>
                         <AlertDialogAction onClick={() => handleDelete(servisBedeli.id)}>
-                          Sil
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                              Sil
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
               </TableCell>
             </TableRow>
-          ))}
+                ))}
         </TableBody>
       </Table>
 
@@ -336,6 +336,6 @@ export const ServisBedelleriManager = () => {
           Henüz servis bedeli eklenmemiş. İlk servis bedelini eklemek için yukarıdaki butonu kullanın.
         </div>
       )}
-    </div>
+            </div>
   );
 };

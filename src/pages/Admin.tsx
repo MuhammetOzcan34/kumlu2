@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { EkOzelliklerManager } from "@/components/EkOzelliklerManager";
 
 export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
@@ -289,10 +290,10 @@ export default function Admin() {
                     <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
                     <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
                   </div>
-                                  <div className="flex w-full">
-                  <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
-                </div>
+                  <div className="flex w-full">
+                    <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
+                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
+                  </div>
                 <div className="flex w-full">
                   <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
                 </div>
@@ -301,6 +302,7 @@ export default function Admin() {
                     <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
                   </div>
                   <div className="flex w-full">
+                    <TabsTrigger value="ek-ozellikler" className="text-xs px-2 py-1 h-8 flex-1">Ek Özellikler</TabsTrigger>
                     <TabsTrigger value="profil" className="text-xs px-2 py-1 h-8 flex-1">Profil</TabsTrigger>
                   </div>
                 </TabsList>
@@ -415,6 +417,7 @@ export default function Admin() {
               {activeTab === "instagram" && <InstagramSettingsManager />}
               {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
               {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
+              {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
               {activeTab === "profil" && (
                 <Card>
                   <CardHeader>
@@ -606,6 +609,7 @@ export default function Admin() {
                     {activeTab === "instagram" && <InstagramSettingsManager />}
                     {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
                     {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
+                    {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
                     {activeTab === "profil" && (
                       <Card>
                         <CardHeader>

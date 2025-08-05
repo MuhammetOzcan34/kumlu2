@@ -90,7 +90,7 @@ export const CompanySettingsManager: React.FC = () => {
 
       console.log('✅ Logo başarıyla yüklendi:', data.path);
       console.log('🔗 Tam URL:', `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${data.path}`);
-      
+
       return data.path;
     } catch (error) {
       console.error('❌ Logo yükleme hatası:', error);
