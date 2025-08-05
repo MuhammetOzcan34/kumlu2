@@ -53,7 +53,6 @@ const adminMenuItems = [
     icon: Image, 
     description: "Galeri yönetimi" 
   },
-
   { 
     title: "Video Galeri", 
     value: "video-galeri", 
@@ -77,6 +76,12 @@ const adminMenuItems = [
     value: "whatsapp", 
     icon: MessageCircle, 
     description: "WhatsApp ayarları" 
+  },
+  { 
+    title: "Servis Bedelleri", 
+    value: "servis-bedelleri", 
+    icon: Wrench, 
+    description: "Servis ve montaj bedelleri" 
   },
   { 
     title: "Instagram", 

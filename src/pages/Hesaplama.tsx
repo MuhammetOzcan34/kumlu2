@@ -131,7 +131,7 @@ const Hesaplama = () => {
   // Ek özellik toggle fonksiyonu
   const ekOzellikToggle = (ozellik: string, checked: boolean) => {
     setAlanlar(alanlar.map(alan => {
-      const mevcutOzellikler = alan.ekOzellikler;
+      const mevcutOzellikler = alan.ekOzellikler || [];
       const yeniOzellikler = checked
         ? [...mevcutOzellikler, ozellik]
         : mevcutOzellikler.filter(o => o !== ozellik);
@@ -404,7 +404,7 @@ const Hesaplama = () => {
                                 <Checkbox
                                   id={`ek-ozellik-${ozellik.name}`}
                                   checked={alan.ekOzellikler.includes(ozellik.name)}
-                                  onCheckedChange={(checked) => ekOzellikToggle(ozellik.name, checked)}
+                                  onCheckedChange={(checked: boolean) => ekOzellikToggle(ozellik.name, checked)}
                                   className="mt-1"
                                 />
                               </div>
