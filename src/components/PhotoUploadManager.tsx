@@ -179,9 +179,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               aciklama: "", // Açıklama boş bırak
               dosya_yolu: storageData.path,
               kategori_id: selectedCategory || null,
-              kategori_adi: categories.find(c => c.id === selectedCategory)?.ad || null,
-              kullanim_alani: selectedUsageAreas,
-              gorsel_tipi: selectedUsageAreas.includes('arac-giydirme') ? 'arac_giydirme' : selectedUsageAreas.includes('ana-sayfa-slider') ? 'slider' : 'galeri',
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
               logo_eklendi: addLogo && firmaLogo ? true : false,
