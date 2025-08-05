@@ -62,9 +62,18 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         .order('sira_no');
 
       if (error) throw error;
-      setCategories(data || []);
+      
+      // Debug: Kategorileri konsola yazdır
+      console.log('📋 Yüklenen kategoriler:', data);
+      
+      // ID'si null olan kategorileri filtrele
+      const validCategories = data?.filter(cat => cat.id && cat.id !== 'unknown') || [];
+      setCategories(validCategories);
+      
+      console.log('✅ Geçerli kategoriler:', validCategories);
     } catch (error) {
-      console.error('Kategoriler yüklenirken hata:', error);
+      console.error('❌ Kategoriler yüklenirken hata:', error);
+      setCategories([]);
     }
   };
 
@@ -172,7 +181,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           if (storageError) throw storageError;
 
           // Save to database
-          const selectedCategoryData = categories.find(c => c.id === selectedCategory);
+          const selectedCategoryData = selectedCategory ? categories.find(c => c.id === selectedCategory) : null;
           const { error: dbError } = await supabase
             .from('fotograflar')
             .insert({
@@ -190,7 +199,18 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               sira_no: 0
             });
 
-          if (dbError) throw dbError;
+          if (dbError) {
+            console.error('❌ Veritabanı hatası:', dbError);
+            console.error('📊 Gönderilen veri:', {
+              baslik: file.name.replace(/\.[^/.]+$/, ""),
+              dosya_yolu: storageData.path,
+              kategori_id: selectedCategory,
+              kategori_adi: selectedCategoryData?.ad,
+              kullanim_alani: selectedUsageAreas,
+              gorsel_tipi: selectedUsageAreas.includes('referanslar') ? 'referans_logo' : 'galeri'
+            });
+            throw dbError;
+          }
           console.log(`✅ Tamamlandı: ${fileName}`);
           
           return fileName;
@@ -284,7 +304,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id || 'unknown'}>
+                  <SelectItem key={category.id} value={category.id}>
                     {category.ad} ({category.tip})
                   </SelectItem>
                 )) || []}
