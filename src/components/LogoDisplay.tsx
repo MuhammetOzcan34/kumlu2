@@ -9,6 +9,9 @@ export const LogoDisplay: React.FC = () => {
 
   console.log('🔍 LogoDisplay - companyLogo:', companyLogo);
   console.log('🔍 LogoDisplay - companyName:', companyName);
+  console.log('🔍 LogoDisplay - companyLogo type:', typeof companyLogo);
+  console.log('🔍 LogoDisplay - companyLogo length:', companyLogo?.length);
+  console.log('🔍 LogoDisplay - companyLogo trimmed:', companyLogo?.trim());
 
   // Logo değiştiğinde favicon ve PWA ikonlarını güncelle - güvenli yaklaşım
   useEffect(() => {
@@ -139,7 +142,12 @@ export const LogoDisplay: React.FC = () => {
     }
   };
 
-  if (!companyLogo || !companyLogo.trim()) {
+  // Debug için logo durumunu kontrol et
+  const hasLogo = companyLogo && companyLogo.trim().length > 0;
+  console.log('🔍 LogoDisplay - hasLogo:', hasLogo);
+  console.log('🔍 LogoDisplay - companyLogo value:', `"${companyLogo}"`);
+
+  if (!hasLogo) {
     return (
       <Card className="border-dashed border-muted-foreground/30">
         <CardHeader>
@@ -189,8 +197,15 @@ export const LogoDisplay: React.FC = () => {
               }
               alt={companyName || "Şirket Logosu"}
               className="w-full h-full object-contain"
+              onLoad={() => {
+                console.log('✅ Logo başarıyla yüklendi:', companyLogo);
+              }}
               onError={(e) => {
-                console.error('Logo görüntüleme hatası:', companyLogo);
+                console.error('❌ Logo görüntüleme hatası:', companyLogo);
+                console.error('❌ Logo URL:', companyLogo.startsWith('http') 
+                  ? companyLogo 
+                  : `https://aqewamsbifugrevmoiqj.supabase.co/storage/v1/object/public/fotograflar/${companyLogo}`
+                );
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
               }}

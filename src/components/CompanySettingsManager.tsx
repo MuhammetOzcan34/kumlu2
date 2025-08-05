@@ -135,6 +135,7 @@ export const CompanySettingsManager: React.FC = () => {
         firma_logo_url: logoUrl
       }));
 
+      console.log('✅ Logo URL kaydedildi:', logoUrl);
       toast.success('Firma bilgileri başarıyla kaydedildi');
       
       // Invalidate settings cache to trigger refetch

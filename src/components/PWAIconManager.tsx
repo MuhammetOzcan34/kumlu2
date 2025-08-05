@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSetting } from '@/hooks/useSettings';
 
 export const PWAIconManager = () => {
-  const companyLogo = useSetting('firma_logo');
+  const companyLogo = useSetting('firma_logo_url');
   const companyName = useSetting('firma_adi');
 
   useEffect(() => {

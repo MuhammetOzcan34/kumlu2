@@ -22,6 +22,8 @@ export const useSettings = () => {
       });
       
       console.log('✅ Settings loaded:', settings);
+      console.log('🔍 Settings keys:', Object.keys(settings));
+      console.log('🔍 firma_logo_url value:', settings['firma_logo_url']);
       return settings;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
