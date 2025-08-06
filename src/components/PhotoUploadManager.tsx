@@ -35,7 +35,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   
   const photoInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const logoImg = useRef<HTMLImageElement>(null);
+  const logoImg = useRef<HTMLImageElement | null>(null);
+  const logoLoadPromise = useRef<Promise<HTMLImageElement | null> | null>(null);
   
   const firmaLogo = useSetting('firma_logo_url');
 
@@ -128,34 +129,18 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
   const resizeImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080): Promise<Blob> => {
     return new Promise(async (resolve, reject) => {
-      console.log('🖼️ Resim işleme başladı:', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        maxWidth,
-        maxHeight
-      });
-      
-      // Logo yükleme durumunu kontrol et ve bekle
-      if (addLogo && firmaLogo && !logoImg.current) {
-        console.log('⏳ Logo henüz yüklenmemiş, bekleniyor...');
-        
-        // Logo yükleme için maksimum 5 saniye bekle
-        let attempts = 0;
-        const maxAttempts = 50; // 50 * 100ms = 5 saniye
-        
-        while (!logoImg.current && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          attempts++;
+      console.log('🖼️ Resim işleme başladı:', { fileName: file.name });
+
+      try {
+        if (addLogo && logoLoadPromise.current) {
+          console.log('⏳ Logo yüklenmesi bekleniyor...');
+          await logoLoadPromise.current;
+          console.log('✅ Logo yüklendi, işleme devam ediliyor.');
         }
-        
-        if (!logoImg.current) {
-          console.warn('⚠️ Logo yükleme timeout, filigran olmadan devam ediliyor');
-        } else {
-          console.log('✅ Logo yükleme tamamlandı, filigran eklenecek');
-        }
+      } catch (error) {
+        console.warn('⚠️ Logo yüklenemediği için filigran eklenmeyecek.', error);
       }
-      
+
       const canvas = canvasRef.current!;
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
@@ -355,50 +340,45 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   // Logo yükleme
   useEffect(() => {
     console.log('🔄 Logo yükleme useEffect tetiklendi:', { firmaLogo, addLogo });
-    
+
     if (firmaLogo && addLogo) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      img.onload = () => {
-        logoImg.current = img;
-        console.log('✅ Logo filigran için hazır:', {
-          width: img.width,
-          height: img.height,
-          src: img.src
-        });
-      };
-      
-      img.onerror = (error) => {
-        console.error('❌ Logo yüklenemedi:', {
-          error,
-          src: img.src,
-          firmaLogo
-        });
-        console.warn('⚠️ Logo yüklenemedi, filigran eklenmeyecek');
-      };
-      
-      // Logo URL'sini doğru şekilde oluştur
-      const logoUrl = firmaLogo.startsWith('http')
-        ? firmaLogo
-        : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`;
-      
-      // Önbellek sorunlarını önlemek için timestamp ekle
-      const finalUrl = `${logoUrl}?v=${Date.now()}`;
-      
-      console.log('🔗 Logo URL oluşturuldu:', {
-        originalPath: firmaLogo,
-        logoUrl,
-        finalUrl
+      logoLoadPromise.current = new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+          logoImg.current = img;
+          console.log('✅ Logo filigran için hazır:', {
+            width: img.width,
+            height: img.height,
+            src: img.src
+          });
+          resolve(img);
+        };
+
+        img.onerror = (error) => {
+          console.error('❌ Logo yüklenemedi:', {
+            error,
+            src: img.src,
+            firmaLogo
+          });
+          console.warn('⚠️ Logo yüklenemedi, filigran eklenmeyecek');
+          logoImg.current = null;
+          reject(new Error('Logo yüklenemedi'));
+        };
+
+        const logoUrl = firmaLogo.startsWith('http')
+          ? firmaLogo
+          : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`;
+
+        const finalUrl = `${logoUrl}?v=${Date.now()}`;
+        console.log('🔗 Logo URL oluşturuldu:', { finalUrl });
+        img.src = finalUrl;
       });
-      
-      img.src = finalUrl;
     } else {
-      console.log('⚠️ Logo yükleme atlandı:', {
-        firmaLogo: !!firmaLogo,
-        addLogo
-      });
+      console.log('⚠️ Logo yükleme atlandı.');
       logoImg.current = null;
+      logoLoadPromise.current = Promise.resolve(null);
     }
   }, [firmaLogo, addLogo]);
 
