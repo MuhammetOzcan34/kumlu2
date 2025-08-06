@@ -15,6 +15,7 @@ import { TeklifFormu } from "@/components/TeklifFormu";
 import { Calculator, AlertCircle, Package, Plus, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AlanBilgisi {
   id: string;
@@ -56,6 +57,16 @@ const Hesaplama = () => {
   // Sonuç state'i
   const [sonuc, setSonuc] = useState<HesaplamaSonuc | null>(null);
   const [showResult, setShowResult] = useState(false);
+  
+  // Ek özellikler state'i
+  const [ekOzellikler, setEkOzellikler] = useState<{id:string;ad:string;aciklama:string;carpani:number;aktif:boolean;}[]>([]);
+  
+  // Ek özellikleri yükle
+  useEffect(() => {
+    supabase.from('ek_ozellikler').select('*').eq('aktif', true).order('ad').then(({data}) => {
+      setEkOzellikler(data || []);
+    });
+  }, []);
 
   // İstanbul ilçeleri ve servis bedelleri (Google Sheets'ten)
   const istanbulServisBedelleri = {
@@ -199,14 +210,6 @@ const Hesaplama = () => {
 
       // Ek özellikler için fiyat artışı hesapla
       let ekOzellikArtisi = 0;
-      import { supabase } from "@/integrations/supabase/client";
-      const [ekOzellikler, setEkOzellikler] = useState<{id:string;ad:string;aciklama:string;carpani:number;aktif:boolean;}[]>([]);
-      useEffect(() => {
-        supabase.from('ek_ozellikler').select('*').eq('aktif', true).order('ad').then(({data}) => {
-          setEkOzellikler(data || []);
-        });
-      }, []);
-      {/* 3. Ek Özellik Seçimi */}
       <div className="space-y-3">
         <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -660,18 +663,3 @@ const Hesaplama = () => {
 };
 
 export default Hesaplama;
-
-// Hesaplama fonksiyonunda ek özellik fiyatı eklemesi
-let ekOzellikArtisi = 0;
-if (alan.ekOzellikler && ekOzellikler.length > 0) {
-  alan.ekOzellikler.forEach(secili => {
-    const ozellik = ekOzellikler.find(o => o.ad === secili.ad);
-    if (ozellik && secili.miktar > 0) {
-      let miktar = secili.miktar;
-      if (ozellik.birim === 'metre') {
-        miktar = metrekare;
-      }
-      ekOzellikArtisi += (ozellik.tutar || 0) * miktar;
-    }
-  });
-}

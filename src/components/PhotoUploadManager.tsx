@@ -70,36 +70,83 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   }, [selectedUsageArea, allCategories]);
 
   const addWatermark = (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
-    if (!addLogo || !firmaLogo || !logoImg.current) return;
+    console.log('🔍 Filigran ekleme kontrolü:', {
+      addLogo,
+      firmaLogo,
+      logoImgExists: !!logoImg.current,
+      canvasSize: { width: canvas.width, height: canvas.height }
+    });
     
-    // Logo boyutunu %42 yap
-    const logoWidth = canvas.width * 0.42; // %42 boyut
-    const logoHeight = (logoImg.current.height / logoImg.current.width) * logoWidth;
+    if (!addLogo) {
+      console.log('⚠️ Logo ekleme kapalı');
+      return;
+    }
     
-    // Canvas'ı kaydet
-    ctx.save();
+    if (!firmaLogo) {
+      console.log('⚠️ Firma logosu bulunamadı');
+      return;
+    }
     
-    // Ortaya çevir ve çapraz açı ver (-30 derece)
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(-Math.PI / 6); // -30 derece
-    ctx.translate(-logoWidth / 2, -logoHeight / 2);
+    if (!logoImg.current) {
+      console.log('⚠️ Logo resmi yüklenmemiş');
+      return;
+    }
     
-    // Logo şeffaflığı - %12 görünürlük
-    ctx.globalAlpha = 0.12; // %12 görünürlük
-    ctx.drawImage(logoImg.current, 0, 0, logoWidth, logoHeight);
-    
-    // Canvas'ı geri yükle
-    ctx.restore();
+    try {
+      // Logo boyutunu %42 yap
+      const logoWidth = canvas.width * 0.42; // %42 boyut
+      const logoHeight = (logoImg.current.height / logoImg.current.width) * logoWidth;
+      
+      console.log('📐 Logo boyutları:', {
+        originalWidth: logoImg.current.width,
+        originalHeight: logoImg.current.height,
+        newWidth: logoWidth,
+        newHeight: logoHeight
+      });
+      
+      // Canvas'ı kaydet
+      ctx.save();
+      
+      // Ortaya çevir ve çapraz açı ver (-30 derece)
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(-Math.PI / 6); // -30 derece
+      ctx.translate(-logoWidth / 2, -logoHeight / 2);
+      
+      // Logo şeffaflığı - %12 görünürlük
+      ctx.globalAlpha = 0.12; // %12 görünürlük
+      ctx.drawImage(logoImg.current, 0, 0, logoWidth, logoHeight);
+      
+      console.log('✅ Filigran başarıyla eklendi');
+      
+      // Canvas'ı geri yükle
+      ctx.restore();
+    } catch (error) {
+      console.error('❌ Filigran ekleme hatası:', error);
+      ctx.restore(); // Hata durumunda da restore et
+    }
   };
 
   const resizeImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080): Promise<Blob> => {
     return new Promise((resolve, reject) => {
+      console.log('🖼️ Resim işleme başladı:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        maxWidth,
+        maxHeight
+      });
+      
       const canvas = canvasRef.current!;
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
       
       img.onload = () => {
         try {
+          console.log('📸 Orijinal resim yüklendi:', {
+            originalWidth: img.width,
+            originalHeight: img.height
+          });
+          
           // Calculate new dimensions
           let { width, height } = img;
           
@@ -107,6 +154,13 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             const ratio = Math.min(maxWidth / width, maxHeight / height);
             width *= ratio;
             height *= ratio;
+            console.log('📏 Resim boyutlandırıldı:', {
+              newWidth: width,
+              newHeight: height,
+              ratio
+            });
+          } else {
+            console.log('📏 Resim boyutlandırma gerekmiyor');
           }
           
           canvas.width = width;
@@ -114,25 +168,38 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           
           // Draw resized image
           ctx.drawImage(img, 0, 0, width, height);
+          console.log('✅ Resim canvas\'a çizildi');
           
           // Logo filigran ekle
+          console.log('🏷️ Filigran ekleme başlıyor...');
           addWatermark(canvas, ctx);
           
           canvas.toBlob((blob) => {
             if (blob) {
+              console.log('✅ Canvas blob\'a dönüştürüldü:', {
+                blobSize: blob.size,
+                blobType: blob.type
+              });
               resolve(blob);
             } else {
+              console.error('❌ Canvas to blob conversion failed');
               reject(new Error('Canvas to blob conversion failed'));
             }
           }, 'image/jpeg', 0.85);
         } catch (error) {
-          console.error('Image processing error:', error);
+          console.error('❌ Image processing error:', error);
           reject(error);
         }
       };
       
-      img.onerror = () => reject(new Error('Image load failed'));
-      img.src = URL.createObjectURL(file);
+      img.onerror = (error) => {
+        console.error('❌ Image load failed:', error);
+        reject(new Error('Image load failed'));
+      };
+      
+      const objectUrl = URL.createObjectURL(file);
+      console.log('🔗 Object URL oluşturuldu:', objectUrl);
+      img.src = objectUrl;
     });
   };
 
@@ -267,14 +334,27 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
 
   // Logo yükleme
   useEffect(() => {
+    console.log('🔄 Logo yükleme useEffect tetiklendi:', { firmaLogo, addLogo });
+    
     if (firmaLogo && addLogo) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      
       img.onload = () => {
         logoImg.current = img;
-        console.log('✅ Logo filigran için hazır');
+        console.log('✅ Logo filigran için hazır:', {
+          width: img.width,
+          height: img.height,
+          src: img.src
+        });
       };
-      img.onerror = () => {
+      
+      img.onerror = (error) => {
+        console.error('❌ Logo yüklenemedi:', {
+          error,
+          src: img.src,
+          firmaLogo
+        });
         console.warn('⚠️ Logo yüklenemedi, filigran eklenmeyecek');
       };
       
@@ -284,7 +364,21 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`;
       
       // Önbellek sorunlarını önlemek için timestamp ekle
-      img.src = `${logoUrl}?v=${Date.now()}`;
+      const finalUrl = `${logoUrl}?v=${Date.now()}`;
+      
+      console.log('🔗 Logo URL oluşturuldu:', {
+        originalPath: firmaLogo,
+        logoUrl,
+        finalUrl
+      });
+      
+      img.src = finalUrl;
+    } else {
+      console.log('⚠️ Logo yükleme atlandı:', {
+        firmaLogo: !!firmaLogo,
+        addLogo
+      });
+      logoImg.current = null;
     }
   }, [firmaLogo, addLogo]);
 

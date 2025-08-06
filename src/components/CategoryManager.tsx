@@ -63,7 +63,7 @@ export const CategoryManager: React.FC = () => {
 
       if (error) throw error;
       
-      console.log('✅ CategoryManager - Kategoriler başarıyla yüklendi:', data?.length || 0, 'adet');
+      console.log('✅ CategoryManager - Kategoriler başarıyla yüklendi:', (data || []).length, 'adet');
       console.log('📊 CategoryManager - Kategori verileri:', data);
       
       // Verileri state'e kaydet
