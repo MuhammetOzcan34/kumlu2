@@ -53,17 +53,23 @@ export const CategoryManager: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      console.log('📋 Kategoriler yükleniyor...');
+      console.log('📋 CategoryManager - Kategoriler yükleniyor...');
+      setIsLoading(true); // Yükleme başladığında loading durumunu true yap
+      
       const { data, error } = await supabase
         .from('kategoriler')
         .select('*')
         .order('sira_no', { ascending: true });
 
       if (error) throw error;
-      console.log('✅ Kategoriler başarıyla yüklendi:', data?.length || 0, 'adet');
+      
+      console.log('✅ CategoryManager - Kategoriler başarıyla yüklendi:', data?.length || 0, 'adet');
+      console.log('📊 CategoryManager - Kategori verileri:', data);
+      
+      // Verileri state'e kaydet
       setCategories(data || []);
     } catch (error) {
-      console.error('❌ Kategoriler yüklenirken hata:', error);
+      console.error('❌ CategoryManager - Kategoriler yüklenirken hata:', error);
       toast.error('Kategoriler yüklenemedi');
     } finally {
       setIsLoading(false);
@@ -144,42 +150,61 @@ export const CategoryManager: React.FC = () => {
     try {
       if (editingCategory) {
         // Güncelleme
-        console.log('📝 Kategori güncelleniyor:', editingCategory.id);
-        const { error } = await supabase
+        console.log('📝 CategoryManager - Kategori güncelleniyor:', editingCategory.id, formData);
+        const { error, data } = await supabase
           .from('kategoriler')
           .update(formData)
-          .eq('id', editingCategory.id);
+          .eq('id', editingCategory.id)
+          .select();
 
         if (error) throw error;
-        console.log('✅ Kategori başarıyla güncellendi:', formData.ad);
+        console.log('✅ CategoryManager - Kategori başarıyla güncellendi:', data?.[0]?.id, formData.ad);
         toast.success('Kategori başarıyla güncellendi');
       } else {
         // Yeni ekleme
-        console.log('➕ Yeni kategori ekleniyor:', formData.ad);
+        console.log('➕ CategoryManager - Yeni kategori ekleniyor:', formData);
         const { error, data } = await supabase
           .from('kategoriler')
           .insert(formData)
           .select();
 
         if (error) throw error;
-        console.log('✅ Kategori başarıyla eklendi:', data?.[0]?.id);
+        console.log('✅ CategoryManager - Kategori başarıyla eklendi:', data?.[0]?.id, formData.ad);
         toast.success('Kategori başarıyla eklendi');
       }
 
       closeDialog();
-      // Kategorileri yeniden yükle
+      
+      // Kategorileri yeniden yükle - daha uzun bir bekleme süresi
+      console.log('⏱️ CategoryManager - Kategoriler yeniden yüklenecek (1 saniye bekleniyor)');
       setTimeout(() => {
         loadCategories();
-      }, 500); // Veritabanının güncellenme süresi için kısa bir bekleme
+      }, 1000); // Veritabanının güncellenme süresi için daha uzun bir bekleme
     } catch (error) {
-      console.error('❌ Kategori kaydetme hatası:', error);
+      console.error('❌ CategoryManager - Kategori kaydetme hatası:', error);
       toast.error('Kategori kaydedilemedi');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
-      console.log('🗑️ Kategori siliniyor:', id);
+      console.log('🗑️ CategoryManager - Kategori siliniyor:', id);
+      
+      // Önce kategoriyi kontrol et
+      const { data: categoryData, error: checkError } = await supabase
+        .from('kategoriler')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (checkError) {
+        console.error('❌ CategoryManager - Kategori bulunamadı:', id, checkError);
+        throw new Error('Kategori bulunamadı');
+      }
+      
+      console.log('🔍 CategoryManager - Silinecek kategori:', categoryData);
+      
+      // Kategoriyi sil
       const { error } = await supabase
         .from('kategoriler')
         .delete()
@@ -187,15 +212,16 @@ export const CategoryManager: React.FC = () => {
 
       if (error) throw error;
       
-      console.log('✅ Kategori başarıyla silindi:', id);
+      console.log('✅ CategoryManager - Kategori başarıyla silindi:', id);
       toast.success('Kategori başarıyla silindi');
       
-      // Kategorileri yeniden yükle
+      // Kategorileri yeniden yükle - daha uzun bir bekleme süresi
+      console.log('⏱️ CategoryManager - Kategoriler yeniden yüklenecek (1.5 saniye bekleniyor)');
       setTimeout(() => {
         loadCategories();
-      }, 500); // Veritabanının güncellenme süresi için kısa bir bekleme
+      }, 1500); // Veritabanının güncellenme süresi için daha uzun bir bekleme
     } catch (error) {
-      console.error('❌ Kategori silme hatası:', error);
+      console.error('❌ CategoryManager - Kategori silme hatası:', error);
       toast.error('Kategori silinemedi');
     }
   };

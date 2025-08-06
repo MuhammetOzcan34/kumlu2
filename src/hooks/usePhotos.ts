@@ -29,18 +29,21 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
           // Önce categoryId'nin string olduğundan emin ol
           if (typeof categoryId === 'string') {
             // Null, undefined veya boş string kontrolü
+            // Trim işleminden önce categoryId'nin string olduğundan emin olalım
             const trimmedCategoryId = categoryId.trim();
+            console.log('🔍 Kategori ID kontrolü:', { categoryId, trimmedCategoryId, type: typeof categoryId });
+            
             if (trimmedCategoryId !== '' && trimmedCategoryId !== 'undefined') {
               query = query.eq("kategori_id", trimmedCategoryId);
-              console.log('🔍 Kategori ID ile filtreleniyor:', trimmedCategoryId);
+              console.log('✅ Kategori ID ile filtreleniyor:', trimmedCategoryId);
             } else {
               console.log('⚠️ Boş veya geçersiz kategori ID, filtreleme yapılmıyor');
             }
           } else {
-            console.warn('⚠️ Kategori ID string değil:', typeof categoryId);
+            console.warn('⚠️ Kategori ID string değil:', typeof categoryId, categoryId);
           }
         } catch (error) {
-          console.warn('⚠️ Kategori ID işlenirken hata:', error);
+          console.warn('⚠️ Kategori ID işlenirken hata:', error, 'ID:', categoryId, 'Tip:', typeof categoryId);
           // Hata durumunda sorguyu devam ettir, filtreleme yapma
         }
       } else {

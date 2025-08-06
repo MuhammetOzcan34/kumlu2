@@ -56,39 +56,56 @@ export default function Admin() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('🔄 Admin - Sayfa yükleniyor...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔐 Admin - Auth durumu değişti:', event);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
+          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
           navigate("/auth");
         } else {
+          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
           setTimeout(() => {
             loadUserProfile(session.user.id);
-          }, 0);
+          }, 500); // Biraz daha uzun bir bekleme süresi
         }
       }
     );
 
     // Check for existing session
+    console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
       setSession(session);
       setUser(session?.user ?? null);
       
       if (!session?.user) {
+        console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
         navigate("/auth");
       } else {
+        console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
         loadUserProfile(session.user.id);
       }
+    }).catch(error => {
+      console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
+      setLoading(true); // Yükleme başladığında loading durumunu true yap
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -96,41 +113,79 @@ export default function Admin() {
         .single();
 
       if (error) {
-        console.error("Profile load error:", error);
+        console.error("❌ Admin - Profil yükleme hatası:", error);
         return;
       }
 
+      console.log('✅ Admin - Kullanıcı profili yüklendi:', data);
       setProfile(data);
       
       // Load data only if user is admin
       if (data?.role === "admin") {
+        console.log('🔑 Admin - Kullanıcı admin rolüne sahip, yönetim verileri yükleniyor');
         await loadAdminData();
+      } else {
+        console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', data?.role);
       }
     } catch (error) {
-      console.error("Profile load error:", error);
+      console.error("❌ Admin - Profil yükleme hatası:", error);
     } finally {
       setLoading(false);
+      console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
   };
 
   const loadAdminData = async () => {
     try {
-      const [kategorilerRes, fotograflarRes, ayarlarRes, kampanyalarRes] = await Promise.all([
-        supabase.from("kategoriler").select("*").order("sira_no"),
-        supabase.from("fotograflar").select("*").order("sira_no"),
-        supabase.from("ayarlar").select("*").order("anahtar"),
-        supabase.from("reklam_kampanyalari").select(`
-          *,
-          kategoriler(ad)
-        `).order("created_at", { ascending: false })
-      ]);
-
-      if (kategorilerRes.data) setKategoriler(kategorilerRes.data);
-      if (fotograflarRes.data) setFotograflar(fotograflarRes.data);
-      if (ayarlarRes.data) setAyarlar(ayarlarRes.data);
-      if (kampanyalarRes.data) setKampanyalar(kampanyalarRes.data);
+      console.log('🔄 Admin - Yönetim verileri yükleniyor...');
+      
+      // Kategorileri yükle
+      console.log('📋 Admin - Kategoriler yükleniyor...');
+      const kategorilerRes = await supabase.from("kategoriler").select("*").order("sira_no");
+      if (kategorilerRes.error) {
+        console.error('❌ Admin - Kategoriler yüklenirken hata:', kategorilerRes.error);
+      } else {
+        console.log(`✅ Admin - ${kategorilerRes.data?.length || 0} kategori yüklendi`);
+        setKategoriler(kategorilerRes.data || []);
+      }
+      
+      // Fotoğrafları yükle
+      console.log('🖼️ Admin - Fotoğraflar yükleniyor...');
+      const fotograflarRes = await supabase.from("fotograflar").select("*").order("sira_no");
+      if (fotograflarRes.error) {
+        console.error('❌ Admin - Fotoğraflar yüklenirken hata:', fotograflarRes.error);
+      } else {
+        console.log(`✅ Admin - ${fotograflarRes.data?.length || 0} fotoğraf yüklendi`);
+        setFotograflar(fotograflarRes.data || []);
+      }
+      
+      // Ayarları yükle
+      console.log('⚙️ Admin - Ayarlar yükleniyor...');
+      const ayarlarRes = await supabase.from("ayarlar").select("*").order("anahtar");
+      if (ayarlarRes.error) {
+        console.error('❌ Admin - Ayarlar yüklenirken hata:', ayarlarRes.error);
+      } else {
+        console.log(`✅ Admin - ${ayarlarRes.data?.length || 0} ayar yüklendi`);
+        setAyarlar(ayarlarRes.data || []);
+      }
+      
+      // Kampanyaları yükle
+      console.log('📢 Admin - Kampanyalar yükleniyor...');
+      const kampanyalarRes = await supabase.from("reklam_kampanyalari").select(`
+        *,
+        kategoriler(ad)
+      `).order("created_at", { ascending: false });
+      
+      if (kampanyalarRes.error) {
+        console.error('❌ Admin - Kampanyalar yüklenirken hata:', kampanyalarRes.error);
+      } else {
+        console.log(`✅ Admin - ${kampanyalarRes.data?.length || 0} kampanya yüklendi`);
+        setKampanyalar(kampanyalarRes.data || []);
+      }
+      
+      console.log('✅ Admin - Tüm yönetim verileri başarıyla yüklendi');
     } catch (error) {
-      console.error("Data load error:", error);
+      console.error("❌ Admin - Veri yükleme hatası:", error);
     }
   };
 
@@ -390,7 +445,28 @@ export default function Admin() {
                 </Card>
               )}
               
-              {activeTab === "kategoriler" && <CategoryManager />}
+              {activeTab === "kategoriler" && (
+                <div className="space-y-6">
+                  <CategoryManager />
+                  {/* Kategori yönetimi için debug bilgileri */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Kategori Yönetimi Bilgileri</CardTitle>
+                      <CardDescription>Kategori yönetimi ile ilgili debug bilgileri</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm">
+                        <p>Kategori yönetimi sayfasında herhangi bir sorun yaşarsanız, lütfen aşağıdaki adımları izleyin:</p>
+                        <ol className="list-decimal pl-5 space-y-1 mt-2">
+                          <li>Sayfayı yenileyin</li>
+                          <li>Tarayıcı önbelleğini temizleyin</li>
+                          <li>Farklı bir tarayıcı deneyin</li>
+                        </ol>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               {activeTab === "fotograflar" && (
                 <div className="space-y-6">
                   <PhotoUploadManager onPhotoUploaded={loadAdminData} />

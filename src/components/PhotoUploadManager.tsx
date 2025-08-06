@@ -185,7 +185,14 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           }
 
           // Kategori bilgilerini al
+          console.log('🔍 Seçilen kategori kontrolü:', { 
+            selectedCategory, 
+            type: typeof selectedCategory, 
+            isValid: selectedCategory && typeof selectedCategory === 'string' && selectedCategory.trim() !== '' && selectedCategory.trim() !== 'undefined'
+          });
+          
           const selectedCategoryData = selectedCategory ? filteredCategories.find(c => c.id === selectedCategory) : null;
+          console.log('📋 Seçilen kategori verisi:', selectedCategoryData);
           
           // Save to database
           const { error: dbError } = await supabase
@@ -194,7 +201,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               baslik: file.name.replace(/\.[^/.]+$/, ""), // Dosya adını uzantısız olarak başlık yap
               aciklama: "", // Açıklama boş bırak
               dosya_yolu: storageData.path,
-              kategori_id: selectedCategory && selectedCategory.trim() !== '' ? selectedCategory : null,
+              kategori_id: selectedCategory && typeof selectedCategory === 'string' && selectedCategory.trim() !== '' && selectedCategory.trim() !== 'undefined' ? selectedCategory.trim() : null,
               kategori_adi: selectedCategoryData?.ad || null,
               kullanim_alani: [selectedUsageArea],
               gorsel_tipi: gorselTipi,
