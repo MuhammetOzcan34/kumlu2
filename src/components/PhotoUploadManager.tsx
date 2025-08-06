@@ -127,7 +127,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   };
 
   const resizeImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       console.log('🖼️ Resim işleme başladı:', {
         fileName: file.name,
         fileSize: file.size,
@@ -135,6 +135,26 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         maxWidth,
         maxHeight
       });
+      
+      // Logo yükleme durumunu kontrol et ve bekle
+      if (addLogo && firmaLogo && !logoImg.current) {
+        console.log('⏳ Logo henüz yüklenmemiş, bekleniyor...');
+        
+        // Logo yükleme için maksimum 5 saniye bekle
+        let attempts = 0;
+        const maxAttempts = 50; // 50 * 100ms = 5 saniye
+        
+        while (!logoImg.current && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!logoImg.current) {
+          console.warn('⚠️ Logo yükleme timeout, filigran olmadan devam ediliyor');
+        } else {
+          console.log('✅ Logo yükleme tamamlandı, filigran eklenecek');
+        }
+      }
       
       const canvas = canvasRef.current!;
       const ctx = canvas.getContext('2d')!;
