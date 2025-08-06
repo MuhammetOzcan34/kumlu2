@@ -357,7 +357,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         };
 
         img.onerror = (error) => {
-          console.error('❌ Logo yüklenemedi:', {
+          console.error('❌ Logo yüklenemedi. Bu genellikle bir CORS sorunudur. Supabase Storage bucket ayarlarınızı kontrol edin.', {
             error,
             src: img.src,
             firmaLogo
