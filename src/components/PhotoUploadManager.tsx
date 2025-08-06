@@ -94,8 +94,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     }
     
     try {
-      // Logo boyutunu %42 yap
-      const logoWidth = canvas.width * 0.42; // %42 boyut
+      // Logo boyutunu %60 yap (daha büyük)
+      const logoWidth = canvas.width * 0.6; // %60 boyut
       const logoHeight = (logoImg.current.height / logoImg.current.width) * logoWidth;
       
       console.log('📐 Logo boyutları:', {
@@ -113,8 +113,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       ctx.rotate(-Math.PI / 6); // -30 derece
       ctx.translate(-logoWidth / 2, -logoHeight / 2);
       
-      // Logo şeffaflığı - %30 görünürlük
-      ctx.globalAlpha = 0.3; // %30 görünürlük
+      // Logo şeffaflığı - %50 görünürlük (daha belirgin)
+      ctx.globalAlpha = 0.5; // %50 görünürlük
       ctx.drawImage(logoImg.current, 0, 0, logoWidth, logoHeight);
       
       console.log('✅ Filigran başarıyla eklendi');
