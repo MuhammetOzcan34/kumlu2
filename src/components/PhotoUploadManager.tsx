@@ -113,8 +113,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       ctx.rotate(-Math.PI / 6); // -30 derece
       ctx.translate(-logoWidth / 2, -logoHeight / 2);
       
-      // Logo şeffaflığı - %12 görünürlük
-      ctx.globalAlpha = 0.12; // %12 görünürlük
+      // Logo şeffaflığı - %30 görünürlük
+      ctx.globalAlpha = 0.3; // %30 görünürlük
       ctx.drawImage(logoImg.current, 0, 0, logoWidth, logoHeight);
       
       console.log('✅ Filigran başarıyla eklendi');
