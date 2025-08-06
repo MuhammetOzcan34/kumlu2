@@ -188,11 +188,51 @@ const Hesaplama = () => {
 
       // Ek özellikler için fiyat artışı hesapla
       let ekOzellikArtisi = 0;
-      alan.ekOzellikler.forEach(ozellik => {
-        if (ekOzellikFiyatlari[ozellik as keyof typeof ekOzellikFiyatlari]) {
-          ekOzellikArtisi += malzemeFiyati * ekOzellikFiyatlari[ozellik as keyof typeof ekOzellikFiyatlari];
-        }
-      });
+      import { supabase } from "@/integrations/supabase/client";
+      const [ekOzellikler, setEkOzellikler] = useState<{id:string;ad:string;aciklama:string;carpani:number;aktif:boolean;}[]>([]);
+      useEffect(() => {
+        supabase.from('ek_ozellikler').select('*').eq('aktif', true).order('ad').then(({data}) => {
+          setEkOzellikler(data || []);
+        });
+      }, []);
+      {/* 3. Ek Özellik Seçimi */}
+      <div className="space-y-3">
+        <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {ekOzellikler.map((ozellik) => (
+            <div
+              key={ozellik.id}
+              className={cn(
+                "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
+                (alan.ekOzellikler || []).includes(ozellik.ad)
+                  ? "bg-primary/10 border-primary"
+                  : "hover:bg-muted/50"
+              )}
+            >
+              <div className="flex-shrink-0 text-2xl">✨</div>
+              <div className="flex-grow">
+                <Label
+                  htmlFor={`ek-ozellik-${alan.id}-${ozellik.ad}`}
+                  className="text-base font-medium cursor-pointer"
+                >
+                  {ozellik.ad}
+                </Label>
+                <p className="text-sm text-muted-foreground">{ozellik.aciklama}</p>
+                <p className="text-xs text-muted-foreground">Çarpan: %{ozellik.carpani}</p>
+              </div>
+              <Checkbox
+                id={`ek-ozellik-${alan.id}-${ozellik.ad}`}
+                checked={(alan.ekOzellikler || []).includes(ozellik.ad)}
+                onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.ad, checked)}
+                className="mt-1"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Ek özellik fiyat artışları (dinamik) */}
+      const ekOzellikFiyatlari: Record<string, number> = {};
+      ekOzellikler.forEach(o => { ekOzellikFiyatlari[o.ad] = o.carpani / 100; });
       
       malzemeFiyati += ekOzellikArtisi;
 
