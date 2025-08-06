@@ -24,17 +24,27 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
         .order("created_at", { ascending: false });
       
       // Kategori ID'sinin geçerli olup olmadığını kontrol et
-      if (categoryId && typeof categoryId === 'string') {
+      if (categoryId) {
         try {
-          // Null, undefined veya boş string kontrolü
-          const trimmedCategoryId = categoryId.trim();
-          if (trimmedCategoryId !== '') {
-            query = query.eq("kategori_id", trimmedCategoryId);
+          // Önce categoryId'nin string olduğundan emin ol
+          if (typeof categoryId === 'string') {
+            // Null, undefined veya boş string kontrolü
+            const trimmedCategoryId = categoryId.trim();
+            if (trimmedCategoryId !== '' && trimmedCategoryId !== 'undefined') {
+              query = query.eq("kategori_id", trimmedCategoryId);
+              console.log('🔍 Kategori ID ile filtreleniyor:', trimmedCategoryId);
+            } else {
+              console.log('⚠️ Boş veya geçersiz kategori ID, filtreleme yapılmıyor');
+            }
+          } else {
+            console.warn('⚠️ Kategori ID string değil:', typeof categoryId);
           }
         } catch (error) {
-          console.warn('⚠️ Geçersiz kategori ID:', categoryId);
+          console.warn('⚠️ Kategori ID işlenirken hata:', error);
           // Hata durumunda sorguyu devam ettir, filtreleme yapma
         }
+      } else {
+        console.log('ℹ️ Kategori ID belirtilmemiş, tüm fotoğraflar getiriliyor');
       }
       
       if (usageArea) {

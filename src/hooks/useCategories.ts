@@ -19,28 +19,38 @@ export const useCategories = (type?: CategoryType) => {
   return useQuery({
     queryKey: ["categories", type],
     queryFn: async () => {
-      let query = supabase
-        .from("kategoriler")
-        .select("*")
-        .eq("aktif", true)
-        .order("sira_no", { ascending: true });
-      
-      if (type) {
-        query = query.eq("tip", type as any); // Temporary fix for enum type mismatch
+      try {
+        console.log('🔍 Kategoriler çekiliyor...', type ? `Tip: ${type}` : 'Tüm kategoriler');
+        
+        let query = supabase
+          .from("kategoriler")
+          .select("*")
+          .eq("aktif", true)
+          .order("sira_no", { ascending: true });
+        
+        if (type) {
+          query = query.eq("tip", type as any); // Temporary fix for enum type mismatch
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('❌ Categories fetch error:', error);
+          return []; // Return empty array instead of throwing
+        }
+        
+        const categories = data as Category[] || [];
+        console.log(`✅ ${categories.length} kategori yüklendi`, type ? `(${type} tipi)` : '');
+        return categories;
+      } catch (error) {
+        console.error('❌ useCategories hook error:', error);
+        return []; // Hata durumunda boş dizi döndür
       }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('❌ Categories fetch error:', error);
-        return []; // Return empty array instead of throwing
-      }
-      return data as Category[] || [];
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
-    refetchOnWindowFocus: false,
-    retry: 1,
-    retryDelay: 2000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: true, // Sayfa odaklandığında yeniden yükle
+    retry: 2,
+    retryDelay: 1000,
   });
 };

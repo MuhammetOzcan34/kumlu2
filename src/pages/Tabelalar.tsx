@@ -18,9 +18,15 @@ const Tabelalar = () => {
   
   // Aktif kategoriye göre fotoğrafları çek (tabela kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
-    activeCategory && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
+    activeCategory && typeof activeCategory === 'string' && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
     'tabela'
   );
+  
+  // Debug: Aktif kategori ve fotoğraf sayısını logla
+  useEffect(() => {
+    console.log('🔍 Tabelalar - Aktif kategori:', activeCategory, typeof activeCategory);
+    console.log('🔍 Tabelalar - Fotoğraf sayısı:', photos.length);
+  }, [activeCategory, photos.length]);
   
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {

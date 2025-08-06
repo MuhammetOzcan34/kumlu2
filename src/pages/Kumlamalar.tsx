@@ -20,7 +20,7 @@ const Kumlamalar = () => {
   
   // Aktif kategoriye göre fotoğrafları çek (kumlama kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
-    activeCategory && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
+    activeCategory && typeof activeCategory === 'string' && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
     'kumlama'
   );
   

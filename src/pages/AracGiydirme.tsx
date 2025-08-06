@@ -24,9 +24,15 @@ const AracGiydirme = () => {
   
   // Aktif kategoriye göre fotoğrafları çek (arac-giydirme kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
-    activeCategory && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
+    activeCategory && typeof activeCategory === 'string' && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
     'arac-giydirme'
   );
+  
+  // Debug: Aktif kategori ve fotoğraf sayısını logla
+  useEffect(() => {
+    console.log('🔍 AracGiydirme - Aktif kategori:', activeCategory, typeof activeCategory);
+    console.log('🔍 AracGiydirme - Fotoğraf sayısı:', photos.length);
+  }, [activeCategory, photos.length]);
   
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {

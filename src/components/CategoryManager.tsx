@@ -53,15 +53,17 @@ export const CategoryManager: React.FC = () => {
 
   const loadCategories = async () => {
     try {
+      console.log('📋 Kategoriler yükleniyor...');
       const { data, error } = await supabase
         .from('kategoriler')
         .select('*')
         .order('sira_no', { ascending: true });
 
       if (error) throw error;
+      console.log('✅ Kategoriler başarıyla yüklendi:', data?.length || 0, 'adet');
       setCategories(data || []);
     } catch (error) {
-      console.error('Kategoriler yüklenirken hata:', error);
+      console.error('❌ Kategoriler yüklenirken hata:', error);
       toast.error('Kategoriler yüklenemedi');
     } finally {
       setIsLoading(false);
@@ -142,33 +144,42 @@ export const CategoryManager: React.FC = () => {
     try {
       if (editingCategory) {
         // Güncelleme
+        console.log('📝 Kategori güncelleniyor:', editingCategory.id);
         const { error } = await supabase
           .from('kategoriler')
           .update(formData)
           .eq('id', editingCategory.id);
 
         if (error) throw error;
+        console.log('✅ Kategori başarıyla güncellendi:', formData.ad);
         toast.success('Kategori başarıyla güncellendi');
       } else {
         // Yeni ekleme
-        const { error } = await supabase
+        console.log('➕ Yeni kategori ekleniyor:', formData.ad);
+        const { error, data } = await supabase
           .from('kategoriler')
-          .insert(formData);
+          .insert(formData)
+          .select();
 
         if (error) throw error;
+        console.log('✅ Kategori başarıyla eklendi:', data?.[0]?.id);
         toast.success('Kategori başarıyla eklendi');
       }
 
       closeDialog();
-      await loadCategories();
+      // Kategorileri yeniden yükle
+      setTimeout(() => {
+        loadCategories();
+      }, 500); // Veritabanının güncellenme süresi için kısa bir bekleme
     } catch (error) {
-      console.error('Kategori kaydetme hatası:', error);
+      console.error('❌ Kategori kaydetme hatası:', error);
       toast.error('Kategori kaydedilemedi');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
+      console.log('🗑️ Kategori siliniyor:', id);
       const { error } = await supabase
         .from('kategoriler')
         .delete()
@@ -176,10 +187,15 @@ export const CategoryManager: React.FC = () => {
 
       if (error) throw error;
       
+      console.log('✅ Kategori başarıyla silindi:', id);
       toast.success('Kategori başarıyla silindi');
-      loadCategories();
+      
+      // Kategorileri yeniden yükle
+      setTimeout(() => {
+        loadCategories();
+      }, 500); // Veritabanının güncellenme süresi için kısa bir bekleme
     } catch (error) {
-      console.error('Kategori silme hatası:', error);
+      console.error('❌ Kategori silme hatası:', error);
       toast.error('Kategori silinemedi');
     }
   };
