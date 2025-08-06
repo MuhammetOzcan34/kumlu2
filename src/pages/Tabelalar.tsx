@@ -18,7 +18,7 @@ const Tabelalar = () => {
   
   // Aktif kategoriye göre fotoğrafları çek (tabela kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
-    activeCategory && activeCategory.trim() !== '' ? activeCategory : undefined, 
+    activeCategory && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
     'tabela'
   );
   

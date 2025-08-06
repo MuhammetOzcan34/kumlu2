@@ -24,7 +24,7 @@ const AracGiydirme = () => {
   
   // Aktif kategoriye göre fotoğrafları çek (arac-giydirme kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
-    activeCategory && activeCategory.trim() !== '' ? activeCategory : undefined, 
+    activeCategory && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 
     'arac-giydirme'
   );
   

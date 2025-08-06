@@ -23,16 +23,17 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
         .eq("aktif", true)
         .order("created_at", { ascending: false });
       
-      if (categoryId) {
-        // Kategori ID'sinin geçerli olup olmadığını kontrol et
+      // Kategori ID'sinin geçerli olup olmadığını kontrol et
+      if (categoryId && typeof categoryId === 'string') {
         try {
           // Null, undefined veya boş string kontrolü
-          if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
-            query = query.eq("kategori_id", categoryId);
+          const trimmedCategoryId = categoryId.trim();
+          if (trimmedCategoryId !== '') {
+            query = query.eq("kategori_id", trimmedCategoryId);
           }
         } catch (error) {
           console.warn('⚠️ Geçersiz kategori ID:', categoryId);
-          return [];
+          // Hata durumunda sorguyu devam ettir, filtreleme yapma
         }
       }
       
