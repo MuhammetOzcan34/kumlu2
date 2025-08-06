@@ -1,0 +1,14 @@
+{
+  "name": "Kumlu Folyo - Profesyonel Hizmetler",
+  "short_name": "KumluFolyo",
+  "description": "Profesyonel cam kumlama, tabela ve dijital baskı hizmetleri",
+  "theme_color": "#FF6B35",
+  "background_color": "#1a1a1a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [],
+  "categories": ["business", "utilities"],
+  "lang": "tr"
+}
