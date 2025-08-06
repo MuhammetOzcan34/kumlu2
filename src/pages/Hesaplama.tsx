@@ -21,7 +21,7 @@ interface AlanBilgisi {
   malzeme: string;
   en: string;
   boy: string;
-  ekOzellikler: string[];
+  ekOzellikler: { ad: string; miktar: number }[];
 }
 
 interface HesaplamaSonuc {
@@ -134,8 +134,19 @@ const Hesaplama = () => {
       if (alan.id === alanId) {
         const mevcutOzellikler = alan.ekOzellikler || [];
         const yeniOzellikler = checked
-          ? [...mevcutOzellikler, ozellik]
-          : mevcutOzellikler.filter(o => o !== ozellik);
+          ? [...mevcutOzellikler, { ad: ozellik, miktar: 1 }]
+          : mevcutOzellikler.filter(o => o.ad !== ozellik);
+        return { ...alan, ekOzellikler: yeniOzellikler };
+      }
+      return alan;
+    }));
+  };
+  const ekOzellikMiktarGuncelle = (alanId: string, ozellik: string, miktar: number) => {
+    setAlanlar(alanlar.map(alan => {
+      if (alan.id === alanId) {
+        const yeniOzellikler = (alan.ekOzellikler || []).map(o =>
+          o.ad === ozellik ? { ...o, miktar } : o
+        );
         return { ...alan, ekOzellikler: yeniOzellikler };
       }
       return alan;
@@ -419,39 +430,46 @@ const Hesaplama = () => {
                         <div className="space-y-3">
                           <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
-                              { name: "UV Korumalı", icon: "☀️", desc: "Güneş ışınlarına karşı koruma" },
-                              { name: "Yansıtıcı", icon: "✨", desc: "Işık yansıtma özelliği" },
-                              { name: "Özel Kesim", icon: "✂️", desc: "Özel şekil kesim" },
-                              { name: "Hızlı Teslimat", icon: "🚀", desc: "Acil teslimat seçeneği" }
-                            ].map((ozellik) => (
-                              <div
-                                key={ozellik.name}
-                                className={cn(
-                                  "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
-                                  (alan.ekOzellikler || []).includes(ozellik.name)
-                                    ? "bg-primary/10 border-primary"
-                                    : "hover:bg-muted/50"
-                                )}
-                              >
-                                <div className="flex-shrink-0 text-2xl">{ozellik.icon}</div>
-                                <div className="flex-grow">
-                                  <Label
-                                    htmlFor={`ek-ozellik-${alan.id}-${ozellik.name}`}
-                                    className="text-base font-medium cursor-pointer"
-                                  >
-                                    {ozellik.name}
-                                  </Label>
-                                  <p className="text-sm text-muted-foreground">{ozellik.desc}</p>
+                            {ekOzellikler.map((ozellik) => {
+                              const seciliAlan = alan.ekOzellikler.find(o => o.ad === ozellik.ad);
+                              return (
+                                <div
+                                  key={ozellik.id}
+                                  className={cn(
+                                    "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
+                                    seciliAlan ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                                  )}
+                                >
+                                  <div className="flex-shrink-0 text-2xl">✨</div>
+                                  <div className="flex-grow">
+                                    <Label
+                                      htmlFor={`ek-ozellik-${alan.id}-${ozellik.ad}`}
+                                      className="text-base font-medium cursor-pointer"
+                                    >
+                                      {ozellik.ad}
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">{ozellik.aciklama}</p>
+                                    <p className="text-xs text-muted-foreground">Tutar: ₺{ozellik.tutar} / {ozellik.birim}</p>
+                                    {seciliAlan && (
+                                      <Input
+                                        type="number"
+                                        min={1}
+                                        value={seciliAlan.miktar}
+                                        onChange={e => ekOzellikMiktarGuncelle(alan.id, ozellik.ad, Number(e.target.value))}
+                                        className="mt-2 w-24"
+                                        placeholder={`Miktar (${ozellik.birim})`}
+                                      />
+                                    )}
+                                  </div>
+                                  <Checkbox
+                                    id={`ek-ozellik-${alan.id}-${ozellik.ad}`}
+                                    checked={!!seciliAlan}
+                                    onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.ad, checked)}
+                                    className="mt-1"
+                                  />
                                 </div>
-                                <Checkbox
-                                  id={`ek-ozellik-${alan.id}-${ozellik.name}`}
-                                  checked={(alan.ekOzellikler || []).includes(ozellik.name)}
-                                  onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.name, checked)}
-                                  className="mt-1"
-                                />
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -642,3 +660,18 @@ const Hesaplama = () => {
 };
 
 export default Hesaplama;
+
+// Hesaplama fonksiyonunda ek özellik fiyatı eklemesi
+let ekOzellikArtisi = 0;
+if (alan.ekOzellikler && ekOzellikler.length > 0) {
+  alan.ekOzellikler.forEach(secili => {
+    const ozellik = ekOzellikler.find(o => o.ad === secili.ad);
+    if (ozellik && secili.miktar > 0) {
+      let miktar = secili.miktar;
+      if (ozellik.birim === 'metre') {
+        miktar = metrekare;
+      }
+      ekOzellikArtisi += (ozellik.tutar || 0) * miktar;
+    }
+  });
+}

@@ -11,14 +11,16 @@ interface EkOzellik {
   id: string;
   ad: string;
   aciklama: string;
-  carpani: number;
+  tutar?: number;
+  birim?: string;
+  carpani?: number;
   aktif: boolean;
 }
 
 export const EkOzelliklerManager: React.FC = () => {
   const [ekOzellikler, setEkOzellikler] = useState<EkOzellik[]>([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<Partial<EkOzellik>>({ ad: '', aciklama: '', carpani: 0, aktif: true });
+  const [form, setForm] = useState<Partial<EkOzellik>>({ ad: '', aciklama: '', tutar: 0, birim: 'adet', aktif: true });
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchEkOzellikler = async () => {
@@ -86,13 +88,17 @@ export const EkOzelliklerManager: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-2 mb-6">
           <Input name="ad" value={form.ad || ''} onChange={handleChange} placeholder="Ek Özellik Adı" required />
           <Textarea name="aciklama" value={form.aciklama || ''} onChange={handleChange} placeholder="Açıklama" />
-          <Input name="carpani" type="number" value={form.carpani || 0} onChange={handleChange} placeholder="Çarpan (%)" />
+          <Input name="tutar" type="number" value={form.tutar || 0} onChange={handleChange} placeholder="Tutar (₺)" />
+          <select name="birim" value={form.birim || 'adet'} onChange={handleChange} className="border rounded px-2 py-1">
+            <option value="adet">Adet</option>
+            <option value="metre">Metre</option>
+          </select>
           <div className="flex items-center gap-2">
             <Switch checked={form.aktif ?? true} onCheckedChange={handleSwitch} />
             <span>Aktif</span>
           </div>
           <Button type="submit" disabled={loading}>{editingId ? 'Güncelle' : 'Ekle'}</Button>
-          {editingId && <Button type="button" variant="outline" onClick={() => { setForm({ ad: '', aciklama: '', carpani: 0, aktif: true }); setEditingId(null); }}>Vazgeç</Button>}
+          {editingId && <Button type="button" variant="outline" onClick={() => { setForm({ ad: '', aciklama: '', tutar: 0, birim: 'adet', aktif: true }); setEditingId(null); }}>Vazgeç</Button>}
         </form>
         <div className="space-y-2">
           {ekOzellikler.map((ozellik) => (
@@ -100,7 +106,7 @@ export const EkOzelliklerManager: React.FC = () => {
               <div>
                 <div className="font-medium">{ozellik.ad}</div>
                 <div className="text-xs text-muted-foreground">{ozellik.aciklama}</div>
-                <div className="text-xs">Çarpan: %{ozellik.carpani}</div>
+                <div className="text-xs">Tutar: ₺{ozellik.tutar ?? 0} / {ozellik.birim ?? 'adet'}</div>
                 <div className="text-xs">{ozellik.aktif ? 'Aktif' : 'Pasif'}</div>
               </div>
               <div className="flex gap-2">
@@ -113,4 +119,4 @@ export const EkOzelliklerManager: React.FC = () => {
       </CardContent>
     </Card>
   );
-}; 
+};
