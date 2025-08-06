@@ -367,12 +367,15 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           reject(new Error('Logo yüklenemedi'));
         };
 
-        const logoUrl = firmaLogo.startsWith('http')
-          ? firmaLogo
-          : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`;
-
-        const finalUrl = `${logoUrl}?v=${Date.now()}`;
-        console.log('🔗 Logo URL oluşturuldu:', { finalUrl });
+        // Edge Function URL'sini oluştur
+        const supabaseUrl = supabase.storage.url;
+        // URL'nin sonundaki '/' karakterini temizle
+        const cleanSupabaseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
+        
+        const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
+        const finalUrl = `${functionUrl}?path=${encodeURIComponent(firmaLogo)}&v=${Date.now()}`;
+        
+        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
         img.src = finalUrl;
       });
     } else {
