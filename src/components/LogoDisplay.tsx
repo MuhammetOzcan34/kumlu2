@@ -54,8 +54,7 @@ export const LogoDisplay: React.FC = () => {
       const faviconLinks = document.querySelectorAll('link[rel="icon"]');
       faviconLinks.forEach((link) => {
         const linkElement = link as HTMLLinkElement;
-        linkElement.href = fullLogoUrl;
-        // Cache'i temizlemek için timestamp ekle
+        // Cache'i temizlemek için doğrudan timestamp ekle
         linkElement.href = `${fullLogoUrl}?v=${Date.now()}`;
       });
 
@@ -189,7 +188,8 @@ export const LogoDisplay: React.FC = () => {
     return logoPath;
   };
 
-  const logoUrl = hasLogo ? getLogoUrl(companyLogo) : '';
+  // Önbellek sorunlarını önlemek için timestamp ekle
+  const logoUrl = hasLogo ? `${getLogoUrl(companyLogo)}?v=${Date.now()}` : '';
   console.log('🔗 LogoDisplay - Final URL:', logoUrl);
 
   if (!hasLogo) {

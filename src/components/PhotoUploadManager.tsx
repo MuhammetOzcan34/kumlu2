@@ -277,7 +277,14 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       img.onerror = () => {
         console.warn('⚠️ Logo yüklenemedi, filigran eklenmeyecek');
       };
-      img.src = firmaLogo;
+      
+      // Logo URL'sini doğru şekilde oluştur
+      const logoUrl = firmaLogo.startsWith('http')
+        ? firmaLogo
+        : `https://kepfuptrmccexgyzhcti.supabase.co/storage/v1/object/public/fotograflar/${firmaLogo}`;
+      
+      // Önbellek sorunlarını önlemek için timestamp ekle
+      img.src = `${logoUrl}?v=${Date.now()}`;
     }
   }, [firmaLogo, addLogo]);
 
