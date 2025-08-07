@@ -70,7 +70,17 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
           logoUrl
         });
         
-        // Yerel logo dosyasını yüklemeyi dene
+        // İkinci fallback: Doğrudan Supabase Storage URL'i dene
+        if (logoUrl && !img.src.includes('storage/v1/object/public')) {
+          console.log('🔄 Doğrudan Supabase Storage URL deneniyor...');
+          const directUrl = logoUrl.includes('storage/v1/object/public') 
+            ? logoUrl 
+            : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
+          img.src = directUrl;
+          return;
+        }
+        
+        // Son fallback: Yerel logo dosyası
         console.log('🔄 Yerel logo dosyası yükleniyor...');
         img.src = '/default-logo.svg';
       };
@@ -97,6 +107,59 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         success: false, 
         error: error instanceof Error ? error : new Error('Bilinmeyen logo yükleme hatası')
       });
+    }
+  });
+};
+
+/**
+ * Production-safe logo yükleme fonksiyonu
+ */
+export const loadLogoSafe = async (logoUrl?: string): Promise<LogoLoadResult> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    let attemptCount = 0;
+    const maxAttempts = 3;
+    
+    const tryLoad = (url: string) => {
+      attemptCount++;
+      console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts}:`, url);
+      
+      img.onload = () => {
+        console.log('✅ Logo başarıyla yüklendi');
+        resolve({ success: true, image: img });
+      };
+      
+      img.onerror = () => {
+        if (attemptCount < maxAttempts) {
+          // Sonraki denemeyi yap
+          setTimeout(() => {
+            if (attemptCount === 1 && logoUrl) {
+              // Doğrudan Supabase URL dene
+              const directUrl = `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
+              tryLoad(directUrl);
+            } else {
+              // Yerel logo kullan
+              tryLoad('/default-logo.svg');
+            }
+          }, 1000);
+        } else {
+          console.error('❌ Tüm logo yükleme denemeleri başarısız');
+          resolve({ success: false, error: new Error('Logo yüklenemedi') });
+        }
+      };
+      
+      img.src = url;
+    };
+    
+    if (logoUrl) {
+      // Edge Function ile başla
+      const functionUrl = `${SUPABASE_BASE_URL}/functions/v1/image-proxy`;
+      const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
+      tryLoad(finalUrl);
+    } else {
+      tryLoad('/default-logo.svg');
     }
   });
 };
