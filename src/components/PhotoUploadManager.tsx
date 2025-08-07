@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
 import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
+import { loadLogo, processImage } from '@/lib/watermark';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
@@ -35,7 +36,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const logoImg = useRef<HTMLImageElement | null>(null);
   const logoLoadPromise = useRef<Promise<HTMLImageElement | null> | null>(null);
   
@@ -71,143 +71,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     }
   }, [selectedUsageArea, allCategories]);
 
-  const addWatermark = (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
-    console.log('🔍 Filigran ekleme kontrolü:', {
-      addLogo,
-      firmaLogo,
-      logoImgExists: !!logoImg.current,
-      canvasSize: { width: canvas.width, height: canvas.height }
-    });
-    
-    if (!addLogo) {
-      console.log('⚠️ Logo ekleme kapalı');
-      return;
-    }
-    
-    if (!firmaLogo) {
-      console.log('⚠️ Firma logosu bulunamadı');
-      return;
-    }
-    
-    if (!logoImg.current) {
-      console.log('⚠️ Logo resmi yüklenmemiş');
-      return;
-    }
-    
-    try {
-      // Logo boyutunu %60 yap (daha büyük)
-      const logoWidth = canvas.width * 0.6; // %60 boyut
-      const logoHeight = (logoImg.current.height / logoImg.current.width) * logoWidth;
-      
-      console.log('📐 Logo boyutları:', {
-        originalWidth: logoImg.current.width,
-        originalHeight: logoImg.current.height,
-        newWidth: logoWidth,
-        newHeight: logoHeight
-      });
-      
-      // Canvas'ı kaydet
-      ctx.save();
-      
-      // Ortaya çevir ve çapraz açı ver (-30 derece)
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate(-Math.PI / 6); // -30 derece
-      ctx.translate(-logoWidth / 2, -logoHeight / 2);
-      
-      // Logo şeffaflığı - %50 görünürlük (daha belirgin)
-      ctx.globalAlpha = 0.5; // %50 görünürlük
-      ctx.drawImage(logoImg.current, 0, 0, logoWidth, logoHeight);
-      
-      console.log('✅ Filigran başarıyla eklendi');
-      
-      // Canvas'ı geri yükle
-      ctx.restore();
-    } catch (error) {
-      console.error('❌ Filigran ekleme hatası:', error);
-      ctx.restore(); // Hata durumunda da restore et
-    }
-  };
-
-  const resizeImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1080): Promise<Blob> => {
-    return new Promise(async (resolve, reject) => {
-      console.log('🖼️ Resim işleme başladı:', { fileName: file.name });
-
-      try {
-        if (addLogo && logoLoadPromise.current) {
-          console.log('⏳ Logo yüklenmesi bekleniyor...');
-          await logoLoadPromise.current;
-          console.log('✅ Logo yüklendi, işleme devam ediliyor.');
-        }
-      } catch (error) {
-        console.warn('⚠️ Logo yüklenemediği için filigran eklenmeyecek.', error);
-      }
-
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext('2d')!;
-      const img = new Image();
-      
-      img.onload = () => {
-        try {
-          console.log('📸 Orijinal resim yüklendi:', {
-            originalWidth: img.width,
-            originalHeight: img.height
-          });
-          
-          // Calculate new dimensions
-          let { width, height } = img;
-          
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width *= ratio;
-            height *= ratio;
-            console.log('📏 Resim boyutlandırıldı:', {
-              newWidth: width,
-              newHeight: height,
-              ratio
-            });
-          } else {
-            console.log('📏 Resim boyutlandırma gerekmiyor');
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          // Draw resized image
-          ctx.drawImage(img, 0, 0, width, height);
-          console.log('✅ Resim canvas\'a çizildi');
-          
-          // Logo filigran ekle
-          console.log('🏷️ Filigran ekleme başlıyor...');
-          addWatermark(canvas, ctx);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              console.log('✅ Canvas blob\'a dönüştürüldü:', {
-                blobSize: blob.size,
-                blobType: blob.type
-              });
-              resolve(blob);
-            } else {
-              console.error('❌ Canvas to blob conversion failed');
-              reject(new Error('Canvas to blob conversion failed'));
-            }
-          }, 'image/jpeg', 0.85);
-        } catch (error) {
-          console.error('❌ Image processing error:', error);
-          reject(error);
-        }
-      };
-      
-      img.onerror = (error) => {
-        console.error('❌ Image load failed:', error);
-        reject(new Error('Image load failed'));
-      };
-      
-      const objectUrl = URL.createObjectURL(file);
-      console.log('🔗 Object URL oluşturuldu:', objectUrl);
-      img.src = objectUrl;
-    });
-  };
+  // Filigran ve resim işleme fonksiyonları watermark.ts modülüne taşındı
 
   const handleUpload = async () => {
     if (!photos || photos.length === 0) {
@@ -224,12 +88,45 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     console.log('🔄 Upload başlatılıyor...', photos.length, 'fotoğraf');
 
     try {
+      // Logo yükleme işlemini bir kez yap ve tüm fotoğraflar için kullan
+      let logoImage: HTMLImageElement | null = null;
+      
+      if (addLogo && firmaLogo) {
+        console.log('🔄 Logo yükleme işlemi başlatılıyor...');
+        try {
+          const logoResult = await loadLogo(firmaLogo);
+          if (logoResult.success && logoResult.image) {
+            logoImage = logoResult.image;
+            console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
+          } else {
+            console.warn('⚠️ Logo yüklenemedi:', logoResult.error?.message);
+            toast.warning('Logo yüklenemedi, fotoğraflar filigransız yüklenecek');
+          }
+        } catch (error) {
+          console.error('❌ Logo yükleme hatası:', error);
+          toast.warning('Logo yüklenemedi, fotoğraflar filigransız yüklenecek');
+        }
+      } else {
+        console.log('ℹ️ Logo ekleme kapalı veya logo URL\'si yok');
+      }
+
       const uploadPromises = Array.from(photos).map(async (file, index) => {
         try {
           console.log(`📸 İşleniyor ${index + 1}/${photos.length}:`, file.name);
           
-          // Resize and add watermark
-          const processedBlob = await resizeImage(file);
+          // Resize and add watermark using the new module
+          const processedBlob = await processImage(
+            file, 
+            addLogo ? logoImage : null, // Logo eklenecekse ve logo yüklendiyse gönder
+            1920, // maxWidth
+            1080, // maxHeight
+            {
+              size: 0.6,      // Görüntünün %60'ı kadar
+              opacity: 0.5,    // %50 opaklık
+              angle: -30,      // -30 derece açı
+              position: 'center'
+            }
+          );
           
           // Generate unique filename
           const timestamp = Date.now();
@@ -280,7 +177,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               gorsel_tipi: gorselTipi,
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
-              logo_eklendi: addLogo && firmaLogo ? true : false,
+              logo_eklendi: addLogo && logoImage !== null, // Logo eklenip eklenmediğini doğru şekilde kaydet
               aktif: true,
               sira_no: 0
             });
@@ -331,64 +228,17 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       
     } catch (error) {
       console.error('❌ Upload hatası:', error);
-      toast.error('Fotoğraf yüklenirken hata oluştu: ' + error.message);
+      toast.error('Fotoğraf yüklenirken hata oluştu: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsUploading(false);
       console.log('🔄 Upload işlemi tamamlandı');
     }
   };
 
-  // Logo yükleme
-  useEffect(() => {
-    console.log('🔄 Logo yükleme useEffect tetiklendi:', { firmaLogo, addLogo });
-
-    if (firmaLogo && addLogo) {
-      logoLoadPromise.current = new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-
-        img.onload = () => {
-          logoImg.current = img;
-          console.log('✅ Logo filigran için hazır:', {
-            width: img.width,
-            height: img.height,
-            src: img.src
-          });
-          resolve(img);
-        };
-
-        img.onerror = (error) => {
-          console.error('❌ Logo yüklenemedi. Bu genellikle bir CORS sorunudur. Supabase Storage bucket ayarlarınızı kontrol edin.', {
-            error,
-            src: img.src,
-            firmaLogo
-          });
-          console.warn('⚠️ Logo yüklenemedi, filigran eklenmeyecek');
-          logoImg.current = null;
-          reject(new Error('Logo yüklenemedi'));
-        };
-
-        // Edge Function URL'sini oluştur
-        // URL'nin sonundaki '/' karakterini temizle
-        const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') ? SUPABASE_BASE_URL.slice(0, -1) : SUPABASE_BASE_URL;
-        
-        const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
-        const finalUrl = `${functionUrl}?path=${encodeURIComponent(firmaLogo)}&v=${Date.now()}`;
-        
-        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
-        img.src = finalUrl;
-      });
-    } else {
-      console.log('⚠️ Logo yükleme atlandı.');
-      logoImg.current = null;
-      logoLoadPromise.current = Promise.resolve(null);
-    }
-  }, [firmaLogo, addLogo]);
+  // Logo yükleme useEffect kaldırıldı - artık watermark.ts modülü kullanılıyor
 
   return (
     <div className="space-y-6">
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      
       {/* Photo Upload */}
       <Card>
         <CardHeader>
