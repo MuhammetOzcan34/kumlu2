@@ -48,45 +48,62 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
  * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
+// loadLogo fonksiyonunu güncelleyin
 export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
   return new Promise((resolve) => {
     try {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      let attemptCount = 0;
+      const maxAttempts = 3;
 
-      img.onload = () => {
-        console.log('✅ Logo başarıyla yüklendi:', {
-          width: img.width,
-          height: img.height,
-          src: img.src
-        });
-        resolve({ success: true, image: img });
-      };
+      const tryLoad = (url: string, isLastAttempt: boolean = false) => {
+        attemptCount++;
+        console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts}:`, url);
+        
+        img.onload = () => {
+          console.log('✅ Logo başarıyla yüklendi:', {
+            width: img.width,
+            height: img.height,
+            src: img.src
+          });
+          resolve({ success: true, image: img });
+        };
 
-      img.onerror = (error) => {
-        console.error('❌ Logo yüklenemedi:', {
-          error,
-          src: img.src,
-          logoUrl
-        });
+        img.onerror = (error) => {
+          console.error('❌ Logo yüklenemedi:', {
+            error,
+            src: img.src,
+            logoUrl,
+            attempt: attemptCount
+          });
+          
+          if (!isLastAttempt && attemptCount < maxAttempts) {
+            // Sonraki denemeyi yap
+            setTimeout(() => {
+              if (attemptCount === 1 && logoUrl) {
+                // İkinci deneme: Doğrudan Supabase Storage URL'i
+                const directUrl = logoUrl.includes('storage/v1/object/public') 
+                  ? logoUrl 
+                  : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
+                tryLoad(directUrl);
+              } else {
+                // Son deneme: Yerel logo
+                tryLoad('/default-logo.svg', true);
+              }
+            }, 1000);
+          } else {
+            // Tüm denemeler başarısız
+            console.error('❌ Tüm logo yükleme denemeleri başarısız');
+            resolve({ success: false, error: new Error('Logo yüklenemedi') });
+          }
+        };
         
-        // İkinci fallback: Doğrudan Supabase Storage URL'i dene
-        if (logoUrl && !img.src.includes('storage/v1/object/public')) {
-          console.log('🔄 Doğrudan Supabase Storage URL deneniyor...');
-          const directUrl = logoUrl.includes('storage/v1/object/public') 
-            ? logoUrl 
-            : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
-          img.src = directUrl;
-          return;
-        }
-        
-        // Son fallback: Yerel logo dosyası
-        console.log('🔄 Yerel logo dosyası yükleniyor...');
-        img.src = '/default-logo.svg';
+        img.src = url;
       };
 
       if (logoUrl) {
-        // Önce Edge Function ile dene
+        // İlk deneme: Edge Function ile
         const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
           ? SUPABASE_BASE_URL.slice(0, -1) 
           : SUPABASE_BASE_URL;
@@ -95,11 +112,11 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
         
         console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
-        img.src = finalUrl;
+        tryLoad(finalUrl);
       } else {
-        // Yerel logo dosyasını kullan
+        // Logo URL yok, yerel logo kullan
         console.log('ℹ️ Logo URL belirtilmemiş, yerel logo kullanılıyor');
-        img.src = '/default-logo.svg';
+        tryLoad('/default-logo.svg', true);
       }
     } catch (error) {
       console.error('❌ Logo yükleme hatası:', error);
@@ -110,6 +127,9 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
     }
   });
 };
+
+// loadLogoSafe fonksiyonunu kaldırın veya loadLogo'ya alias yapın
+export const loadLogoSafe = loadLogo;
 
 /**
  * Production-safe logo yükleme fonksiyonu

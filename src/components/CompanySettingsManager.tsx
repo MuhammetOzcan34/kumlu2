@@ -107,6 +107,7 @@ export const CompanySettingsManager: React.FC = () => {
       if (logoFile) {
         const logoPath = await handleLogoUpload(logoFile);
         console.log('📁 Logo yüklendi, path:', logoPath);
+        // Satır 110'da sadece path kaydediliyor
         logoUrl = logoPath; // Sadece dosya adını kaydet, tam URL'yi değil
         console.log('🔗 Logo URL olarak kaydedilecek:', logoUrl);
         setLogoFile(null);

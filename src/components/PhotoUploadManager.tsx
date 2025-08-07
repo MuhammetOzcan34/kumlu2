@@ -93,9 +93,12 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       
       if (addLogo) {
         console.log('🔄 Logo yükleme işlemi başlatılıyor...');
+        console.log('📋 firmaLogo değeri:', firmaLogo);
+        console.log('📋 firmaLogo tipi:', typeof firmaLogo);
+        console.log('📋 firmaLogo boş mu?:', !firmaLogo || firmaLogo.trim() === '');
+        
         try {
-          // firmaLogo varsa kullan, yoksa yerel logo otomatik kullanılacak
-          const logoResult = await loadLogoSafe(firmaLogo);
+          const logoResult = await loadLogo(firmaLogo);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
             console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
