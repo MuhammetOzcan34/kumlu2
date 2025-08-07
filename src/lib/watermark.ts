@@ -35,7 +35,7 @@ interface LogoLoadResult {
  * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
-  size: 0.15,      // Görüntünün %15'i kadar (kullanıcı talebi)
+  size: 0.10,      // Görüntünün %10'u kadar (kullanıcı talebi)
   opacity: 0.18,   // %18 opaklık (kullanıcı talebi)
   angle: -30,      // -30 derece açı
   position: 'pattern', // Fotoğraf genelinde dağılım
