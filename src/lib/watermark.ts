@@ -35,8 +35,8 @@ interface LogoLoadResult {
  * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
-  size: 0.15,      // Görüntünün %15'i kadar (kullanıcı talebi)
-  opacity: 0.25,   // %25 opaklık (kullanıcı talebi)
+  size: 0.15,      // Görüntünün %15'i kadar
+  opacity: 0.25,   // %25 opaklık
   angle: -30,      // -30 derece açı
   position: 'pattern', // Fotoğraf genelinde dağılım
   patternRows: 4,  // 4 satır
@@ -44,11 +44,10 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
 };
 
 /**
- * Logo URL'sinden veya yerel dosyadan bir görüntü yükler
+ * Güçlü fallback sistemi ile logo yükleme fonksiyonu
  * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
-// loadLogo fonksiyonunu güncelleyin
 export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
   return new Promise((resolve) => {
     try {
@@ -65,7 +64,8 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
           console.log('✅ Logo başarıyla yüklendi:', {
             width: img.width,
             height: img.height,
-            src: img.src
+            src: img.src,
+            attempt: attemptCount
           });
           resolve({ success: true, image: img });
         };
@@ -86,9 +86,11 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
                 const directUrl = logoUrl.includes('storage/v1/object/public') 
                   ? logoUrl 
                   : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
+                console.log('🔄 Doğrudan Supabase URL deneniyor:', directUrl);
                 tryLoad(directUrl);
               } else {
                 // Son deneme: Yerel logo
+                console.log('🔄 Yerel logo deneniyor');
                 tryLoad('/default-logo.svg', true);
               }
             }, 1000);
@@ -102,7 +104,7 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         img.src = url;
       };
 
-      if (logoUrl) {
+      if (logoUrl && logoUrl.trim()) {
         // İlk deneme: Edge Function ile
         const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
           ? SUPABASE_BASE_URL.slice(0, -1) 
@@ -111,7 +113,11 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
         const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
         
-        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
+        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { 
+          logoUrl, 
+          finalUrl,
+          supabaseUrl: SUPABASE_BASE_URL 
+        });
         tryLoad(finalUrl);
       } else {
         // Logo URL yok, yerel logo kullan
@@ -128,61 +134,8 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
   });
 };
 
-// loadLogoSafe fonksiyonunu kaldırın veya loadLogo'ya alias yapın
+// Geriye uyumluluk için alias
 export const loadLogoSafe = loadLogo;
-
-/**
- * Production-safe logo yükleme fonksiyonu
- */
-export const loadLogoSafe = async (logoUrl?: string): Promise<LogoLoadResult> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    
-    let attemptCount = 0;
-    const maxAttempts = 3;
-    
-    const tryLoad = (url: string) => {
-      attemptCount++;
-      console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts}:`, url);
-      
-      img.onload = () => {
-        console.log('✅ Logo başarıyla yüklendi');
-        resolve({ success: true, image: img });
-      };
-      
-      img.onerror = () => {
-        if (attemptCount < maxAttempts) {
-          // Sonraki denemeyi yap
-          setTimeout(() => {
-            if (attemptCount === 1 && logoUrl) {
-              // Doğrudan Supabase URL dene
-              const directUrl = `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
-              tryLoad(directUrl);
-            } else {
-              // Yerel logo kullan
-              tryLoad('/default-logo.svg');
-            }
-          }, 1000);
-        } else {
-          console.error('❌ Tüm logo yükleme denemeleri başarısız');
-          resolve({ success: false, error: new Error('Logo yüklenemedi') });
-        }
-      };
-      
-      img.src = url;
-    };
-    
-    if (logoUrl) {
-      // Edge Function ile başla
-      const functionUrl = `${SUPABASE_BASE_URL}/functions/v1/image-proxy`;
-      const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
-      tryLoad(finalUrl);
-    } else {
-      tryLoad('/default-logo.svg');
-    }
-  });
-};
 
 /**
  * Bir görüntüye filigran ekler - Shutterstock tarzı pattern desteği
@@ -198,110 +151,84 @@ export const applyWatermark = (
   options: WatermarkOptions = {}
 ): void => {
   // Varsayılan ayarları birleştir
-  const settings = { ...DEFAULT_OPTIONS, ...options };
+  const opts = { ...DEFAULT_OPTIONS, ...options };
   
-  try {
-    // Logo boyutunu hesapla
-    const logoWidth = canvas.width * settings.size!;
-    const logoHeight = (logoImage.height / logoImage.width) * logoWidth;
+  // Canvas boyutları
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+  
+  // Logo boyutunu hesapla
+  const logoSize = Math.min(canvasWidth, canvasHeight) * (opts.size || 0.15);
+  const aspectRatio = logoImage.width / logoImage.height;
+  const logoWidth = logoSize;
+  const logoHeight = logoSize / aspectRatio;
+  
+  // Opaklığı ayarla
+  ctx.globalAlpha = opts.opacity || 0.25;
+  
+  if (opts.position === 'pattern') {
+    // Pattern modunda birden fazla logo çiz
+    const rows = opts.patternRows || 4;
+    const cols = opts.patternCols || 3;
     
-    console.log('📐 Logo boyutları:', {
-      originalWidth: logoImage.width,
-      originalHeight: logoImage.height,
-      newWidth: logoWidth,
-      newHeight: logoHeight,
-      canvasSize: { width: canvas.width, height: canvas.height }
-    });
+    const spacingX = canvasWidth / (cols + 1);
+    const spacingY = canvasHeight / (rows + 1);
     
-    // Canvas'ı kaydet
-    ctx.save();
-    
-    // Logo şeffaflığı ayarla
-    ctx.globalAlpha = settings.opacity!;
-    
-    if (settings.position === 'pattern') {
-      // Shutterstock tarzı pattern oluştur
-      const rows = settings.patternRows || 4;
-      const cols = settings.patternCols || 3;
-      
-      const spacingX = canvas.width / (cols + 1);
-      const spacingY = canvas.height / (rows + 1);
-      
-      for (let row = 1; row <= rows; row++) {
-        for (let col = 1; col <= cols; col++) {
-          ctx.save();
-          
-          const x = col * spacingX;
-          const y = row * spacingY;
-          
-          // Her logo için merkez noktasına git
-          ctx.translate(x, y);
-          // Açı ver
-          ctx.rotate((settings.angle! * Math.PI) / 180);
-          
-          // Logoyu merkeze çiz
-          ctx.drawImage(
-            logoImage, 
-            -logoWidth / 2, 
-            -logoHeight / 2, 
-            logoWidth, 
-            logoHeight
-          );
-          
-          ctx.restore();
-        }
+    for (let row = 1; row <= rows; row++) {
+      for (let col = 1; col <= cols; col++) {
+        const x = col * spacingX - logoWidth / 2;
+        const y = row * spacingY - logoHeight / 2;
+        
+        ctx.save();
+        ctx.translate(x + logoWidth / 2, y + logoHeight / 2);
+        ctx.rotate((opts.angle || -30) * Math.PI / 180);
+        ctx.drawImage(logoImage, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
+        ctx.restore();
       }
-    } else {
-      // Tek logo yerleştirme (eski sistem)
-      let x = 0;
-      let y = 0;
-      
-      switch (settings.position) {
-        case 'top-left':
-          x = 0;
-          y = 0;
-          break;
-        case 'top-right':
-          x = canvas.width - logoWidth;
-          y = 0;
-          break;
-        case 'bottom-left':
-          x = 0;
-          y = canvas.height - logoHeight;
-          break;
-        case 'bottom-right':
-          x = canvas.width - logoWidth;
-          y = canvas.height - logoHeight;
-          break;
-        case 'center':
-        default:
-          // Ortaya yerleştir
-          ctx.translate(canvas.width / 2, canvas.height / 2);
-          // Açı ver
-          ctx.rotate((settings.angle! * Math.PI) / 180);
-          x = -logoWidth / 2;
-          y = -logoHeight / 2;
-          break;
-      }
-      
-      // Logoyu çiz
-      ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+    }
+  } else {
+    // Tek logo pozisyonu
+    let x: number, y: number;
+    
+    switch (opts.position) {
+      case 'top-left':
+        x = 20;
+        y = 20;
+        break;
+      case 'top-right':
+        x = canvasWidth - logoWidth - 20;
+        y = 20;
+        break;
+      case 'bottom-left':
+        x = 20;
+        y = canvasHeight - logoHeight - 20;
+        break;
+      case 'bottom-right':
+        x = canvasWidth - logoWidth - 20;
+        y = canvasHeight - logoHeight - 20;
+        break;
+      case 'center':
+      default:
+        x = (canvasWidth - logoWidth) / 2;
+        y = (canvasHeight - logoHeight) / 2;
+        break;
     }
     
-    console.log('✅ Filigran başarıyla eklendi');
-    
-    // Canvas'ı geri yükle
+    ctx.save();
+    ctx.translate(x + logoWidth / 2, y + logoHeight / 2);
+    ctx.rotate((opts.angle || -30) * Math.PI / 180);
+    ctx.drawImage(logoImage, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
     ctx.restore();
-  } catch (error) {
-    console.error('❌ Filigran ekleme hatası:', error);
-    ctx.restore(); // Hata durumunda da restore et
   }
+  
+  // Opaklığı sıfırla
+  ctx.globalAlpha = 1.0;
 };
 
 /**
  * Bir görüntüyü yeniden boyutlandırır ve isteğe bağlı olarak filigran ekler
  * @param file Görüntü dosyası
- * @param logoImage Filigran olarak eklenecek logo (isteğe bağlı)
+ * @param logoImage Logo görüntüsü (opsiyonel)
  * @param maxWidth Maksimum genişlik
  * @param maxHeight Maksimum yükseklik
  * @param watermarkOptions Filigran ayarları
@@ -315,89 +242,70 @@ export const processImage = async (
   watermarkOptions: WatermarkOptions = {}
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
-    try {
-      console.log('🖼️ Resim işleme başladı:', { fileName: file.name });
-      
-      // Canvas oluştur
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('Canvas context oluşturulamadı');
-      }
-      
-      const img = new Image();
-      
-      img.onload = () => {
-        try {
-          console.log('📸 Orijinal resim yüklendi:', {
-            originalWidth: img.width,
-            originalHeight: img.height
-          });
-          
-          // Yeni boyutları hesapla
-          let { width, height } = img;
-          
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width *= ratio;
-            height *= ratio;
-            console.log('📏 Resim boyutlandırıldı:', {
-              newWidth: width,
-              newHeight: height,
-              ratio
-            });
-          } else {
-            console.log('📏 Resim boyutlandırma gerekmiyor');
-          }
-          
-          // Canvas boyutunu ayarla
-          canvas.width = width;
-          canvas.height = height;
-          
-          // Resmi çiz
-          ctx.drawImage(img, 0, 0, width, height);
-          console.log('✅ Resim canvas\'a çizildi');
-          
-          // Logo filigran ekle (eğer logo varsa)
-          if (logoImage) {
-            console.log('🏷️ Filigran ekleme başlıyor...');
-            applyWatermark(canvas, ctx, logoImage, watermarkOptions);
-          } else {
-            console.log('ℹ️ Logo olmadığı için filigran eklenmedi');
-          }
-          
-          // Canvas'ı blob'a dönüştür
-          canvas.toBlob((blob) => {
-            if (blob) {
-              console.log('✅ Canvas blob\'a dönüştürüldü:', {
-                blobSize: blob.size,
-                blobType: blob.type
-              });
-              resolve(blob);
-            } else {
-              console.error('❌ Canvas to blob conversion failed');
-              reject(new Error('Canvas to blob conversion failed'));
-            }
-          }, 'image/jpeg', 0.85);
-        } catch (error) {
-          console.error('❌ Image processing error:', error);
-          reject(error);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        // Canvas oluştur
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          reject(new Error('Canvas context alınamadı'));
+          return;
         }
-      };
-      
-      img.onerror = (error) => {
-        console.error('❌ Image load failed:', error);
-        reject(new Error('Image load failed'));
-      };
-      
-      // Dosyayı URL'ye dönüştür ve yükle
-      const objectUrl = URL.createObjectURL(file);
-      console.log('🔗 Object URL oluşturuldu:', objectUrl);
-      img.src = objectUrl;
-    } catch (error) {
-      console.error('❌ Resim işleme hatası:', error);
-      reject(error);
-    }
+        
+        // Boyutları hesapla
+        let { width, height } = img;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Görüntüyü çiz
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Filigran ekle (eğer logo varsa)
+        if (logoImage) {
+          console.log('🎨 Filigran ekleniyor:', {
+            logoWidth: logoImage.width,
+            logoHeight: logoImage.height,
+            canvasWidth: width,
+            canvasHeight: height,
+            options: watermarkOptions
+          });
+          applyWatermark(canvas, ctx, logoImage, watermarkOptions);
+        } else {
+          console.log('ℹ️ Logo bulunamadı, filigransız işleniyor');
+        }
+        
+        // Blob'a dönüştür
+        canvas.toBlob((blob) => {
+          if (blob) {
+            console.log('✅ Görüntü işleme tamamlandı:', {
+              originalSize: file.size,
+              processedSize: blob.size,
+              hasWatermark: !!logoImage
+            });
+            resolve(blob);
+          } else {
+            reject(new Error('Blob oluşturulamadı'));
+          }
+        }, 'image/jpeg', 0.9);
+      } catch (error) {
+        console.error('❌ Görüntü işleme hatası:', error);
+        reject(error);
+      }
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Görüntü yüklenemedi'));
+    };
+    
+    img.src = URL.createObjectURL(file);
   });
 };

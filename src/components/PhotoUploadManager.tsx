@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
 import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
-import { loadLogoSafe, processImage } from '@/lib/watermark';
+import { loadLogo, processImage } from '@/lib/watermark';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
@@ -342,3 +342,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     </div>
   );
 };
+
+// handleUpload fonksiyonunda:
+const logoImage = await loadLogo(firmaLogo);
