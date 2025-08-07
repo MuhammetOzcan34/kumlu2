@@ -39,17 +39,12 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
 };
 
 /**
- * Logo URL'sinden bir görüntü yükler
- * @param logoUrl Logo URL'si
+ * Logo URL'sinden veya yerel dosyadan bir görüntü yükler
+ * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
-export const loadLogo = async (logoUrl: string): Promise<LogoLoadResult> => {
+export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
   return new Promise((resolve) => {
-    if (!logoUrl) {
-      console.warn('⚠️ Logo URL belirtilmemiş');
-      return resolve({ success: false, error: new Error('Logo URL belirtilmemiş') });
-    }
-
     try {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -69,22 +64,28 @@ export const loadLogo = async (logoUrl: string): Promise<LogoLoadResult> => {
           src: img.src,
           logoUrl
         });
-        resolve({ 
-          success: false, 
-          error: new Error('Logo yüklenemedi: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'))
-        });
+        
+        // Yerel logo dosyasını yüklemeyi dene
+        console.log('🔄 Yerel logo dosyası yükleniyor...');
+        img.src = '/default-logo.svg';
       };
 
-      // Edge Function URL'sini oluştur
-      const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
-        ? SUPABASE_BASE_URL.slice(0, -1) 
-        : SUPABASE_BASE_URL;
-      
-      const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
-      const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
-      
-      console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
-      img.src = finalUrl;
+      if (logoUrl) {
+        // Önce Edge Function ile dene
+        const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
+          ? SUPABASE_BASE_URL.slice(0, -1) 
+          : SUPABASE_BASE_URL;
+        
+        const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
+        const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
+        
+        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { finalUrl });
+        img.src = finalUrl;
+      } else {
+        // Yerel logo dosyasını kullan
+        console.log('ℹ️ Logo URL belirtilmemiş, yerel logo kullanılıyor');
+        img.src = '/default-logo.svg';
+      }
     } catch (error) {
       console.error('❌ Logo yükleme hatası:', error);
       resolve({ 

@@ -91,9 +91,10 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       // Logo yükleme işlemini bir kez yap ve tüm fotoğraflar için kullan
       let logoImage: HTMLImageElement | null = null;
       
-      if (addLogo && firmaLogo) {
+      if (addLogo) {
         console.log('🔄 Logo yükleme işlemi başlatılıyor...');
         try {
+          // firmaLogo varsa kullan, yoksa yerel logo otomatik kullanılacak
           const logoResult = await loadLogo(firmaLogo);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
@@ -107,7 +108,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           toast.warning('Logo yüklenemedi, fotoğraflar filigransız yüklenecek');
         }
       } else {
-        console.log('ℹ️ Logo ekleme kapalı veya logo URL\'si yok');
+        console.log('ℹ️ Logo ekleme kapalı');
       }
 
       const uploadPromises = Array.from(photos).map(async (file, index) => {
