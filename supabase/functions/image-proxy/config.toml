@@ -1,0 +1,2 @@
+[functions.image-proxy]
+verify_jwt = false
