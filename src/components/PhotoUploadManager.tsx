@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
 import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
-import { loadLogo, processImage } from '@/lib/watermark';
+import { loadLogoSafe, processImage } from '@/lib/watermark';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
@@ -95,7 +95,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         console.log('🔄 Logo yükleme işlemi başlatılıyor...');
         try {
           // firmaLogo varsa kullan, yoksa yerel logo otomatik kullanılacak
-          const logoResult = await loadLogo(firmaLogo);
+          const logoResult = await loadLogoSafe(firmaLogo);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
             console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
