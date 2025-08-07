@@ -342,6 +342,3 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     </div>
   );
 };
-
-// handleUpload fonksiyonunda:
-const logoImage = await loadLogo(firmaLogo);
