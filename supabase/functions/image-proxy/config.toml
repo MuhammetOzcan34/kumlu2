@@ -1,2 +1,5 @@
+config.toml:
+```toml
 [functions.image-proxy]
 verify_jwt = false
+```
