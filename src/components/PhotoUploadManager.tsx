@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
+import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
@@ -368,9 +369,8 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         };
 
         // Edge Function URL'sini oluştur
-        const supabaseUrl = supabase.storage.url;
         // URL'nin sonundaki '/' karakterini temizle
-        const cleanSupabaseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
+        const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') ? SUPABASE_BASE_URL.slice(0, -1) : SUPABASE_BASE_URL;
         
         const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
         const finalUrl = `${functionUrl}?path=${encodeURIComponent(firmaLogo)}&v=${Date.now()}`;
