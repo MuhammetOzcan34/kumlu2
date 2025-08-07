@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
+  build: {
+    target: 'esnext' // Üst düzey await desteği için hedefi güncelle
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
