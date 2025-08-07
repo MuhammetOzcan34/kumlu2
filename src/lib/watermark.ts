@@ -16,7 +16,10 @@ interface WatermarkOptions {
   /** Filigran açısı (derece cinsinden) */
   angle?: number;
   /** Filigran pozisyonu */
-  position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'pattern';
+  /** Pattern için satır ve sütun sayısı */
+  patternRows?: number;
+  patternCols?: number;
 }
 
 /**
@@ -29,13 +32,15 @@ interface LogoLoadResult {
 }
 
 /**
- * Varsayılan filigran ayarları
+ * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
-  size: 0.6,      // Görüntünün %60'ı kadar
-  opacity: 0.5,    // %50 opaklık
+  size: 0.15,      // Görüntünün %15'i kadar (kullanıcı talebi)
+  opacity: 0.18,   // %18 opaklık (kullanıcı talebi)
   angle: -30,      // -30 derece açı
-  position: 'center'
+  position: 'pattern', // Fotoğraf genelinde dağılım
+  patternRows: 4,  // 4 satır
+  patternCols: 3   // 3 sütun
 };
 
 /**
@@ -97,7 +102,7 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
 };
 
 /**
- * Bir görüntüye filigran ekler
+ * Bir görüntüye filigran ekler - Shutterstock tarzı pattern desteği
  * @param canvas Hedef canvas
  * @param ctx Canvas bağlamı
  * @param logoImage Logo görüntüsü
@@ -128,43 +133,77 @@ export const applyWatermark = (
     // Canvas'ı kaydet
     ctx.save();
     
-    // Pozisyona göre yerleştirme
-    let x = 0;
-    let y = 0;
-    
-    switch (settings.position) {
-      case 'top-left':
-        x = 0;
-        y = 0;
-        break;
-      case 'top-right':
-        x = canvas.width - logoWidth;
-        y = 0;
-        break;
-      case 'bottom-left':
-        x = 0;
-        y = canvas.height - logoHeight;
-        break;
-      case 'bottom-right':
-        x = canvas.width - logoWidth;
-        y = canvas.height - logoHeight;
-        break;
-      case 'center':
-      default:
-        // Ortaya yerleştir
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        // Açı ver
-        ctx.rotate((settings.angle! * Math.PI) / 180);
-        x = -logoWidth / 2;
-        y = -logoHeight / 2;
-        break;
-    }
-    
     // Logo şeffaflığı ayarla
     ctx.globalAlpha = settings.opacity!;
     
-    // Logoyu çiz
-    ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+    if (settings.position === 'pattern') {
+      // Shutterstock tarzı pattern oluştur
+      const rows = settings.patternRows || 4;
+      const cols = settings.patternCols || 3;
+      
+      const spacingX = canvas.width / (cols + 1);
+      const spacingY = canvas.height / (rows + 1);
+      
+      for (let row = 1; row <= rows; row++) {
+        for (let col = 1; col <= cols; col++) {
+          ctx.save();
+          
+          const x = col * spacingX;
+          const y = row * spacingY;
+          
+          // Her logo için merkez noktasına git
+          ctx.translate(x, y);
+          // Açı ver
+          ctx.rotate((settings.angle! * Math.PI) / 180);
+          
+          // Logoyu merkeze çiz
+          ctx.drawImage(
+            logoImage, 
+            -logoWidth / 2, 
+            -logoHeight / 2, 
+            logoWidth, 
+            logoHeight
+          );
+          
+          ctx.restore();
+        }
+      }
+    } else {
+      // Tek logo yerleştirme (eski sistem)
+      let x = 0;
+      let y = 0;
+      
+      switch (settings.position) {
+        case 'top-left':
+          x = 0;
+          y = 0;
+          break;
+        case 'top-right':
+          x = canvas.width - logoWidth;
+          y = 0;
+          break;
+        case 'bottom-left':
+          x = 0;
+          y = canvas.height - logoHeight;
+          break;
+        case 'bottom-right':
+          x = canvas.width - logoWidth;
+          y = canvas.height - logoHeight;
+          break;
+        case 'center':
+        default:
+          // Ortaya yerleştir
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          // Açı ver
+          ctx.rotate((settings.angle! * Math.PI) / 180);
+          x = -logoWidth / 2;
+          y = -logoHeight / 2;
+          break;
+      }
+      
+      // Logoyu çiz
+      ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+    }
     
     console.log('✅ Filigran başarıyla eklendi');
     
