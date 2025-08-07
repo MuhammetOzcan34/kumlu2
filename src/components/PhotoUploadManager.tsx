@@ -91,7 +91,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       // Logo yükleme işlemini bir kez yap ve tüm fotoğraflar için kullan
       let logoImage: HTMLImageElement | null = null;
       
-      if (addLogo) {
+      if (addLogo && firmaLogo) {
         console.log('🔄 Logo yükleme işlemi başlatılıyor...');
         console.log('📋 firmaLogo değeri:', firmaLogo);
         console.log('📋 firmaLogo tipi:', typeof firmaLogo);
