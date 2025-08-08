@@ -3,16 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Upload, Image as ImageIcon, Settings } from 'lucide-react';
+import { Upload, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
-import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
 import { loadLogo, processImage } from '@/lib/watermark';
 
 interface PhotoUploadManagerProps {
@@ -27,8 +24,6 @@ interface Category {
 
 export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoUploaded }) => {
   const [photos, setPhotos] = useState<FileList | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [addLogo, setAddLogo] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedUsageArea, setSelectedUsageArea] = useState<string>('');
@@ -36,8 +31,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const logoImg = useRef<HTMLImageElement | null>(null);
-  const logoLoadPromise = useRef<Promise<HTMLImageElement | null> | null>(null);
   
   const firmaLogo = useSetting('firma_logo_url');
 
@@ -71,8 +64,6 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     }
   }, [selectedUsageArea, allCategories]);
 
-  // Filigran ve resim işleme fonksiyonları watermark.ts modülüne taşındı
-
   const handleUpload = async () => {
     if (!photos || photos.length === 0) {
       toast.error('Lütfen en az bir fotoğraf seçin');
@@ -94,11 +85,9 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       if (addLogo && firmaLogo) {
         console.log('🔄 Logo yükleme işlemi başlatılıyor...');
         console.log('📋 firmaLogo değeri:', firmaLogo);
-        console.log('📋 firmaLogo tipi:', typeof firmaLogo);
-        console.log('📋 firmaLogo boş mu?:', !firmaLogo || firmaLogo.trim() === '');
+        
         try {
           const logoResult = await loadLogo(firmaLogo);
-          console.log('🧩 loadLogo sonucu:', logoResult);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
             console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
@@ -117,20 +106,23 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       const uploadPromises = Array.from(photos).map(async (file, index) => {
         try {
           console.log(`📸 İşleniyor ${index + 1}/${photos.length}:`, file.name);
-          console.log('🧩 processImage çağrısı öncesi logoImage:', logoImage);
+          
+          // Resize and add watermark using the new module
           const processedBlob = await processImage(
             file,
-            addLogo ? logoImage : null,
-            1920,
-            1080,
+            addLogo ? logoImage : null, // Logo eklenecekse ve logo yüklendiyse gönder
+            1920, // maxWidth
+            1080, // maxHeight
             {
-              size: 0.6,
-              opacity: 0.5,
-              angle: -30,
-              position: 'center'
+              size: 0.15,      // Görüntünün %15'i kadar
+              opacity: 0.25,    // %25 opaklık
+              angle: -30,      // -30 derece açı
+              position: 'pattern',
+              patternRows: 4,
+              patternCols: 3
             }
           );
-          console.log('🧩 processImage sonrası processedBlob:', processedBlob);
+          
           // Generate unique filename
           const timestamp = Date.now();
           const randomId = Math.random().toString(36).substring(2);
@@ -180,164 +172,138 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               gorsel_tipi: gorselTipi,
               mime_type: 'image/jpeg',
               boyut: processedBlob.size,
-              logo_eklendi: addLogo && logoImage !== null, // Logo eklenip eklenmediğini doğru şekilde kaydet
+              logo_eklendi: addLogo && logoImage !== null,
               aktif: true,
               sira_no: 0
             });
 
-          if (dbError) {
-            console.error('❌ Veritabanı hatası:', dbError);
-            console.error('📊 Gönderilen veri:', {
-              baslik: file.name.replace(/\.[^/.]+$/, ""),
-              dosya_yolu: storageData.path,
-              kategori_id: selectedCategory,
-              kategori_adi: selectedCategoryData?.ad,
-              kullanim_alani: [selectedUsageArea],
-              gorsel_tipi: gorselTipi
-            });
-            throw dbError;
-          }
-          console.log(`✅ Tamamlandı: ${fileName}`);
-          console.log('📊 Veritabanına kaydedilen veri:', {
-            baslik: file.name.replace(/\.[^/.]+$/, ""),
-            dosya_yolu: storageData.path,
-            kategori_id: selectedCategory,
-            kategori_adi: selectedCategoryData?.ad,
-            kullanim_alani: [selectedUsageArea],
-            gorsel_tipi: gorselTipi
-          });
+          if (dbError) throw dbError;
           
-          return fileName;
+          console.log(`✅ Tamamlandı: ${fileName}`);
+          return { success: true, fileName };
         } catch (error) {
-          console.error(`❌ Hata (${index + 1}):`, error);
-          throw error;
+          console.error(`❌ Hata (${file.name}):`, error);
+          return { success: false, fileName: file.name, error };
         }
       });
 
-      await Promise.all(uploadPromises);
-      console.log('🎉 Tüm fotoğraflar başarıyla yüklendi');
+      const results = await Promise.all(uploadPromises);
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
 
-      toast.success(`${photos.length} fotoğraf başarıyla yüklendi`);
-      
-      // Reset form
-      setPhotos(null);
-      setTitle('');
-      setDescription('');
-      setSelectedUsageArea('');
-      setSelectedCategory('');
-      if (photoInputRef.current) photoInputRef.current.value = '';
-      
-      onPhotoUploaded?.();
-      
+      if (successful > 0) {
+        toast.success(`${successful} fotoğraf başarıyla yüklendi${failed > 0 ? `, ${failed} fotoğraf başarısız` : ''}`);
+        onPhotoUploaded?.();
+        
+        // Form temizle
+        setPhotos(null);
+        setSelectedUsageArea('');
+        setSelectedCategory('');
+        if (photoInputRef.current) {
+          photoInputRef.current.value = '';
+        }
+      } else {
+        toast.error('Hiçbir fotoğraf yüklenemedi');
+      }
     } catch (error) {
       console.error('❌ Upload hatası:', error);
-      toast.error('Fotoğraf yüklenirken hata oluştu: ' + (error instanceof Error ? error.message : String(error)));
+      toast.error('Fotoğraf yükleme sırasında hata oluştu');
     } finally {
       setIsUploading(false);
-      console.log('🔄 Upload işlemi tamamlandı');
     }
   };
 
-  // Logo yükleme useEffect kaldırıldı - artık watermark.ts modülü kullanılıyor
-
   return (
-    <div className="space-y-6">
-      {/* Photo Upload */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5" />
-            Fotoğraf Yükleme
-          </CardTitle>
-          <CardDescription>
-            Fotoğraflar otomatik olarak boyutlandırılır {addLogo && firmaLogo && "ve logo filigranı eklenir"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="photos">Fotoğraflar</Label>
-            <Input
-              id="photos"
-              type="file"
-              multiple
-              accept="image/*"
-              ref={photoInputRef}
-              onChange={(e) => setPhotos(e.target.files)}
-            />
-            {photos && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {photos.length} fotoğraf seçildi
-              </p>
-            )}
-          </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Fotoğraf Yükleme
+        </CardTitle>
+        <CardDescription>
+          Fotoğrafları seçin, kullanım alanını belirtin ve yükleyin
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label htmlFor="photos">Fotoğraflar</Label>
+          <Input
+            id="photos"
+            type="file"
+            multiple
+            accept="image/*"
+            ref={photoInputRef}
+            onChange={(e) => setPhotos(e.target.files)}
+            className="mt-1"
+          />
+          {photos && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {photos.length} fotoğraf seçildi
+            </p>
+          )}
+        </div>
 
+        <div>
+          <Label htmlFor="usage-area">Kullanım Alanı</Label>
+          <Select value={selectedUsageArea} onValueChange={setSelectedUsageArea}>
+            <SelectTrigger>
+              <SelectValue placeholder="Kullanım alanı seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {usageAreas.map((area) => (
+                <SelectItem key={area.id} value={area.id}>
+                  {area.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredCategories.length > 0 && (
           <div>
-            <Label htmlFor="usageArea">Kullanım Alanı</Label>
-            <Select value={selectedUsageArea} onValueChange={setSelectedUsageArea}>
+            <Label htmlFor="category">Kategori</Label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Kullanım alanı seçin" />
+                <SelectValue placeholder="Kategori seçin (opsiyonel)" />
               </SelectTrigger>
               <SelectContent>
-                {usageAreas.map((area) => (
-                  <SelectItem key={area.id} value={area.id}>
-                    {area.label}
+                {filteredCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.ad}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground mt-1">
-              Fotoğrafın hangi sayfada gösterileceğini seçin
-            </p>
           </div>
+        )}
 
-          {selectedUsageArea && filteredCategories.length > 0 && (
-            <div>
-              <Label htmlFor="category">Kategori</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Kategori seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.ad}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground mt-1">
-                Bu kullanım alanı için mevcut kategoriler
-              </p>
-            </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="add-logo"
+            checked={addLogo}
+            onCheckedChange={setAddLogo}
+          />
+          <Label htmlFor="add-logo">Fotoğraflara logo filigranı ekle</Label>
+        </div>
+
+        <Button 
+          onClick={handleUpload} 
+          disabled={!photos || photos.length === 0 || !selectedUsageArea || isUploading}
+          className="w-full"
+        >
+          {isUploading ? (
+            <>
+              <ImageIcon className="mr-2 h-4 w-4 animate-spin" />
+              Yükleniyor...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Fotoğrafları Yükle
+            </>
           )}
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="addLogo"
-              checked={addLogo}
-              onCheckedChange={setAddLogo}
-            />
-            <Label htmlFor="addLogo" className="text-sm">
-              Logo filigranı ekle {firmaLogo ? '✅' : '❌'}
-            </Label>
-          </div>
-
-          <Button
-            onClick={handleUpload} 
-            disabled={isUploading || !photos || !selectedUsageArea}
-            className="w-full"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {isUploading ? 'Yükleniyor...' : 'Fotoğrafları Yükle'}
-          </Button>
-          
-          {!selectedUsageArea && photos && (
-            <p className="text-sm text-amber-600 text-center">
-              ⚠️ Lütfen bir kullanım alanı seçin
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
