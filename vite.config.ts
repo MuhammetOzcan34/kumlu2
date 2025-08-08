@@ -1,25 +1,28 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
-  build: {
-    target: 'esnext' // Üst düzey await desteği için hedefi güncelle
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(async ({ mode }) => {
+  const plugins = [react()];
+
+  if (mode === 'development') {
+    const { componentTagger } = await import("lovable-tagger");
+    plugins.push(componentTagger());
+  }
+
+  return {
+    server: {
+      host: "::",
+      port: 8080,
     },
-  },
-}));
+    plugins: plugins,
+    build: {
+      target: 'esnext' // Üst düzey await desteği için hedefi güncelle
+    },
+    resolve: {
+      alias: {
+        "@": "/src",
+      },
+    },
+  };
+});
