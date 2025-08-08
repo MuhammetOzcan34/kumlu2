@@ -71,13 +71,24 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         };
 
         img.onerror = (error) => {
+          // Hata detaylarını daha kapsamlı yaz
           console.error('❌ Logo yüklenemedi:', {
             error,
             src: img.src,
             logoUrl,
             attempt: attemptCount
           });
-          
+          // Ağ isteği detaylarını ekle
+          fetch(url)
+            .then(async response => {
+              console.error('🔍 HTTP yanıt durumu:', response.status, response.statusText);
+              console.error('🔍 Content-Type:', response.headers.get('Content-Type'));
+              const body = await response.text();
+              console.error('🔍 Yanıt gövdesi:', body.slice(0, 200)); // İlk 200 karakter
+            })
+            .catch(fetchError => {
+              console.error('🔍 fetch ile hata:', fetchError);
+            });
           if (!isLastAttempt && attemptCount < maxAttempts) {
             // Sonraki denemeyi yap
             setTimeout(() => {
