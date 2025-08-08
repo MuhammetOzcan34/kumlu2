@@ -15,7 +15,8 @@ import {
   MessageCircle,
   Palette,
   Instagram,
-  Plus
+  Plus,
+  Droplets // Watermark ikonu için eklendi
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -101,6 +102,12 @@ const adminMenuItems = [
     value: "ek-ozellikler", 
     icon: Plus, 
     description: "Hesaplama ek özellikleri" 
+  },
+  { 
+    title: "Watermark", 
+    value: "watermark", 
+    icon: Droplets, 
+    description: "Filigran ayarları" 
   },
   { 
     title: "Profil", 

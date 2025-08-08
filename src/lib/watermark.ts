@@ -248,5 +248,104 @@ export const processImage = async (
   });
 };
 
-// Geriye uyumluluk için alias
-export const loadLogoSafe = loadLogo;
+/**
+ * Supabase ayarlarından filigran konfigürasyonunu alır
+ */
+/**
+ * Supabase ayarlarından filigran konfigürasyonunu alır
+ */
+export const getWatermarkConfig = async () => {
+  const { data, error } = await supabase
+    .from('ayarlar') // 'settings' yerine 'ayarlar'
+    .select('anahtar, deger')
+    .in('anahtar', ['watermark_enabled', 'watermark_logo_url', 'watermark_opacity', 'watermark_size', 'watermark_position']);
+
+  if (error) {
+    console.error('Filigran ayarları alınamadı:', error);
+    return null;
+  }
+
+  const config: any = {};
+  data?.forEach(setting => {
+    config[setting.anahtar] = setting.deger;
+  });
+
+  return {
+    enabled: config.watermark_enabled === 'true',
+    logoUrl: config.watermark_logo_url || '',
+    opacity: parseFloat(config.watermark_opacity || '0.25'),
+    size: parseFloat(config.watermark_size || '0.15'),
+    position: config.watermark_position || 'pattern'
+  };
+};
+
+/**
+ * Filigran logosu yükleme fonksiyonu - Watermark klasöründen
+ */
+export const loadWatermarkLogo = async (): Promise<LogoLoadResult> => {
+  try {
+    const config = await getWatermarkConfig();
+    
+    if (!config?.enabled) {
+      return { success: false, error: new Error('Filigran devre dışı') };
+    }
+
+    let logoUrl = config.logoUrl;
+    
+    // Eğer logo URL'si yoksa, watermark klasöründen varsayılan logoyu al
+    if (!logoUrl) {
+      const { data } = await supabase.storage
+        .from('fotograflar')
+        .getPublicUrl('watermark/watermark-logo.png');
+      logoUrl = data.publicUrl;
+    }
+
+    return loadLogo(logoUrl);
+  } catch (error) {
+    console.error('Filigran logosu yüklenirken hata:', error);
+    return { success: false, error: error as Error };
+  }
+};
+
+/**
+ * Filigran ile görüntü işleme fonksiyonu
+ */
+export const processImageWithWatermark = async (
+  file: File,
+  maxWidth: number = 1920,
+  maxHeight: number = 1080
+): Promise<Blob> => {
+  try {
+    const config = await getWatermarkConfig();
+    
+    if (!config?.enabled) {
+      // Filigran devre dışıysa sadece yeniden boyutlandır
+      return processImage(file, null, maxWidth, maxHeight);
+    }
+
+    const logoResult = await loadWatermarkLogo();
+    
+    if (!logoResult.success || !logoResult.image) {
+      console.warn('Filigran logosu yüklenemedi, filigransız işleniyor');
+      return processImage(file, null, maxWidth, maxHeight);
+    }
+
+    const watermarkOptions = {
+      size: config.size,
+      opacity: config.opacity,
+      position: config.position as any,
+      angle: -30,
+      patternRows: 4,
+      patternCols: 3
+    };
+
+    return processImage(file, logoResult.image, maxWidth, maxHeight, watermarkOptions);
+  } catch (error) {
+    console.error('Filigran işleme hatası:', error);
+    // Hata durumunda filigransız işle
+    return processImage(file, null, maxWidth, maxHeight);
+  }
+};
+
+// Geriye uyumluluk için eski fonksiyonları yeni fonksiyonlara yönlendir
+export const loadLogoSafe = loadWatermarkLogo;

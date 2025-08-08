@@ -40,6 +40,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EkOzelliklerManager } from "@/components/EkOzelliklerManager";
 
+import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
+
 export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -738,3 +740,11 @@ export default function Admin() {
     </div>
   );
 }
+// Import ekle
+import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
+
+// TabsList'e ekle
+<TabsTrigger value="watermark" className="text-xs px-2 py-1 h-8 flex-1">Watermark</TabsTrigger>
+
+// TabsContent ekle
+{activeTab === "watermark" && <WatermarkSettingsManager />}

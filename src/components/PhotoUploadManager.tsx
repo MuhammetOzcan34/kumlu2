@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSetting } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
-import { loadLogo, processImage } from '@/lib/watermark';
+import { loadLogo, processImage, processImageWithWatermark } from '@/lib/watermark';
 
 interface PhotoUploadManagerProps {
   onPhotoUploaded?: () => void;
@@ -117,25 +117,20 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         console.log('ℹ️ Logo ekleme kapalı, filigran uygulanmayacak.');
       }
 
+      // handleUpload fonksiyonunda:
       const uploadPromises = Array.from(photos).map(async (file, index) => {
         try {
           console.log(`[${index + 1}/${photos.length}] 📸 Görüntü işleniyor:`, file.name);
           
-          // Yeniden boyutlandırma ve filigran ekleme
-          const processedBlob = await processImage(
-            file,
-            logoImage, // Logo yüklendiyse gönder, değilse null gider
-            1920, // maxWidth
-            1080, // maxHeight
-            {
-              size: 0.15,      // Görüntünün %15'i kadar
-              opacity: 0.25,    // %25 opaklık
-              angle: -30,      // -30 derece açı
-              position: 'pattern',
-              patternRows: 4,
-              patternCols: 3
-            }
-          );
+          let processedBlob: Blob;
+          
+          if (addLogo) {
+            // Yeni filigran sistemi kullan
+            processedBlob = await processImageWithWatermark(file, 1920, 1080);
+          } else {
+            // Filigransız işle
+            processedBlob = await processImage(file, null, 1920, 1080);
+          }
           
           // Generate unique filename
           const timestamp = Date.now();
