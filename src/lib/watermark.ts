@@ -44,7 +44,7 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
 };
 
 /**
- * Güçlü fallback sistemi ile logo yükleme fonksiyonu
+ * Optimize edilmiş logo yükleme fonksiyonu - Güçlü fallback sistemi
  * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
@@ -54,14 +54,14 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       let attemptCount = 0;
-      const maxAttempts = 4; // Deneme sayısını artırdık
+      const maxAttempts = 3; // Optimize edilmiş deneme sayısı
 
-      const tryLoad = (url: string, isLastAttempt: boolean = false) => {
+      const tryLoad = (url: string, attemptType: string) => {
         attemptCount++;
-        console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts}:`, url);
+        console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts} (${attemptType}):`, url);
         
         img.onload = () => {
-          console.log('✅ Logo başarıyla yüklendi:', {
+          console.log(`✅ Logo başarıyla yüklendi (${attemptType}):`, {
             width: img.width,
             height: img.height,
             src: img.src,
@@ -71,70 +71,55 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         };
 
         img.onerror = (error) => {
-          console.error('❌ Logo yüklenemedi:', {
+          console.error(`❌ Logo yüklenemedi (${attemptType}):`, {
             error,
             src: img.src,
             logoUrl,
             attempt: attemptCount
           });
           
-          if (!isLastAttempt && attemptCount < maxAttempts) {
-            // Sonraki denemeyi yap
+          // Sonraki denemeye geç
+          if (attemptCount < maxAttempts) {
             setTimeout(() => {
               if (attemptCount === 1 && logoUrl) {
-                // İkinci deneme: Edge Function (cache buster ile)
-                const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
-                  ? SUPABASE_BASE_URL.slice(0, -1) 
-                  : SUPABASE_BASE_URL;
-                
-                const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
-                const cacheBuster = `v=${Date.now()}&r=${Math.random()}`;
-                const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&${cacheBuster}`;
-                
-                console.log('🔄 Edge Function (cache buster) deneniyor:', finalUrl);
-                tryLoad(finalUrl);
-              } else if (attemptCount === 2 && logoUrl) {
-                // Üçüncü deneme: Doğrudan Supabase Storage URL'i
+                // İkinci deneme: Doğrudan Supabase Storage URL'i
                 const directUrl = logoUrl.includes('storage/v1/object/public') 
                   ? logoUrl 
                   : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
                 console.log('🔄 Doğrudan Supabase URL deneniyor:', directUrl);
-                tryLoad(directUrl);
+                tryLoad(directUrl, 'Doğrudan Supabase');
               } else {
                 // Son deneme: Yerel logo
                 console.log('🔄 Yerel logo deneniyor');
-                tryLoad('/default-logo.svg', true);
+                tryLoad('/default-logo.svg', 'Yerel Logo');
               }
-            }, 1000 * attemptCount); // Artan bekleme süresi
+            }, 500 * attemptCount); // Kısa bekleme süresi
           } else {
             // Tüm denemeler başarısız
             console.error('❌ Tüm logo yükleme denemeleri başarısız');
-            resolve({ success: false, error: new Error('Logo yüklenemedi') });
+            resolve({ success: false, error: new Error('Logo yüklenemedi - tüm denemeler başarısız') });
           }
         };
-        
+
         img.src = url;
       };
 
       if (logoUrl && logoUrl.trim()) {
-        // İlk deneme: Edge Function ile
-        const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
-          ? SUPABASE_BASE_URL.slice(0, -1) 
-          : SUPABASE_BASE_URL;
+        // İlk deneme: Doğrudan Supabase Storage URL'i (Edge Function atlanıyor)
+        const directUrl = logoUrl.includes('storage/v1/object/public') 
+          ? logoUrl 
+          : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
         
-        const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
-        const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&v=${Date.now()}`;
-        
-        console.log('🔗 Logo için Edge Function URL oluşturuldu:', { 
+        console.log('🔗 Logo için doğrudan Supabase URL oluşturuldu:', { 
           logoUrl, 
-          finalUrl,
+          directUrl,
           supabaseUrl: SUPABASE_BASE_URL 
         });
-        tryLoad(finalUrl);
+        tryLoad(directUrl, 'Doğrudan Supabase');
       } else {
         // Logo URL yok, yerel logo kullan
         console.log('ℹ️ Logo URL belirtilmemiş, yerel logo kullanılıyor');
-        tryLoad('/default-logo.svg', true);
+        tryLoad('/default-logo.svg', 'Yerel Logo');
       }
     } catch (error) {
       console.error('❌ Logo yükleme hatası:', error);
@@ -145,9 +130,6 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
     }
   });
 };
-
-// Geriye uyumluluk için alias
-export const loadLogoSafe = loadLogo;
 
 /**
  * Bir görüntüye filigran ekler - Shutterstock tarzı pattern desteği
@@ -162,34 +144,31 @@ export const applyWatermark = (
   logoImage: HTMLImageElement,
   options: WatermarkOptions = {}
 ): void => {
-  // Varsayılan ayarları birleştir
   const opts = { ...DEFAULT_OPTIONS, ...options };
   
-  // Canvas boyutları
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
   
   // Logo boyutunu hesapla
   const logoSize = Math.min(canvasWidth, canvasHeight) * (opts.size || 0.15);
-  const aspectRatio = logoImage.width / logoImage.height;
   const logoWidth = logoSize;
-  const logoHeight = logoSize / aspectRatio;
+  const logoHeight = (logoImage.height / logoImage.width) * logoSize;
   
-  // Opaklığı ayarla
+  // Opaklık ve açı ayarları
   ctx.globalAlpha = opts.opacity || 0.25;
   
   if (opts.position === 'pattern') {
-    // Pattern modunda birden fazla logo çiz
+    // Pattern filigran - Shutterstock tarzı
     const rows = opts.patternRows || 4;
     const cols = opts.patternCols || 3;
     
-    const spacingX = canvasWidth / (cols + 1);
-    const spacingY = canvasHeight / (rows + 1);
+    const stepX = canvasWidth / (cols + 1);
+    const stepY = canvasHeight / (rows + 1);
     
     for (let row = 1; row <= rows; row++) {
       for (let col = 1; col <= cols; col++) {
-        const x = col * spacingX - logoWidth / 2;
-        const y = row * spacingY - logoHeight / 2;
+        const x = stepX * col - logoWidth / 2;
+        const y = stepY * row - logoHeight / 2;
         
         ctx.save();
         ctx.translate(x + logoWidth / 2, y + logoHeight / 2);
@@ -199,8 +178,8 @@ export const applyWatermark = (
       }
     }
   } else {
-    // Tek logo pozisyonu
-    let x: number, y: number;
+    // Tek pozisyon filigran
+    let x, y;
     
     switch (opts.position) {
       case 'top-left':
@@ -262,11 +241,10 @@ export const processImage = async (
         const ctx = canvas.getContext('2d');
         
         if (!ctx) {
-          reject(new Error('Canvas context alınamadı'));
-          return;
+          throw new Error('Canvas context alınamadı');
         }
         
-        // Boyutları hesapla
+        // Boyutları hesapla (aspect ratio korunarak)
         let { width, height } = img;
         
         if (width > maxWidth || height > maxHeight) {
@@ -281,33 +259,33 @@ export const processImage = async (
         // Görüntüyü çiz
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Filigran ekle (eğer logo varsa)
+        // Filigran ekle (logo varsa)
         if (logoImage) {
-          console.log('🎨 Filigran ekleniyor:', {
-            logoWidth: logoImage.width,
-            logoHeight: logoImage.height,
-            canvasWidth: width,
-            canvasHeight: height,
-            options: watermarkOptions
-          });
+          console.log('🎨 Filigran ekleniyor...');
           applyWatermark(canvas, ctx, logoImage, watermarkOptions);
+          console.log('✅ Filigran başarıyla eklendi');
         } else {
-          console.log('ℹ️ Logo bulunamadı, filigransız işleniyor');
+          console.log('ℹ️ Logo olmadığı için filigran eklenmiyor');
         }
         
         // Blob'a dönüştür
-        canvas.toBlob((blob) => {
-          if (blob) {
-            console.log('✅ Görüntü işleme tamamlandı:', {
-              originalSize: file.size,
-              processedSize: blob.size,
-              hasWatermark: !!logoImage
-            });
-            resolve(blob);
-          } else {
-            reject(new Error('Blob oluşturulamadı'));
-          }
-        }, 'image/jpeg', 0.9);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              console.log('✅ Görüntü işleme tamamlandı:', {
+                originalSize: file.size,
+                processedSize: blob.size,
+                dimensions: `${width}x${height}`,
+                hasWatermark: !!logoImage
+              });
+              resolve(blob);
+            } else {
+              reject(new Error('Blob oluşturulamadı'));
+            }
+          },
+          'image/jpeg',
+          0.9 // Kalite
+        );
       } catch (error) {
         console.error('❌ Görüntü işleme hatası:', error);
         reject(error);
@@ -321,3 +299,6 @@ export const processImage = async (
     img.src = URL.createObjectURL(file);
   });
 };
+
+// Geriye uyumluluk için alias
+export const loadLogoSafe = loadLogo;
