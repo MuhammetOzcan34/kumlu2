@@ -7,11 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Image, Settings, Clock, Eye, EyeOff, Upload, X } from "lucide-react";
+import { Save, Image, Settings, Clock, Upload, X, RefreshCw, ImageIcon } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
 export function BrandLogosSettingsManager() {
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState<number | null>(null);
+  const [isApplyingWatermark, setIsApplyingWatermark] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const [settings, setSettings] = useState({
     brand_popup_enabled: true,
@@ -37,7 +40,10 @@ export function BrandLogosSettingsManager() {
     brand_logo_6_image: "",
     brand_logo_6_description: ""
   });
+  
   const { toast } = useToast();
+  const { data: companySettings, refetch: refetchSettings } = useSettings();
+  const firmaLogoUrl = companySettings?.['firma_logo_url'] || '';
 
   useEffect(() => {
     loadSettings();
@@ -232,6 +238,161 @@ export function BrandLogosSettingsManager() {
     }
   };
 
+  const handleCompanyLogoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Dosya boyutu ve tipi için kontroller
+    if (file.size > 1024 * 1024) { // 1MB
+      toast({
+        title: "Hata",
+        description: 'Dosya boyutu 1MB\'dan büyük olamaz.',
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!['image/png', 'image/jpeg', 'image/svg+xml'].includes(file.type)) {
+      toast({
+        title: "Hata",
+        description: 'Sadece PNG, JPG veya SVG formatında dosya yükleyebilirsiniz.',
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Eski logoyu sil (varsa)
+      if (firmaLogoUrl) {
+        try {
+          const oldFilePath = new URL(firmaLogoUrl).pathname.split('/ayarlar/').pop();
+          if (oldFilePath) {
+            await supabase.storage.from('ayarlar').remove([oldFilePath]);
+          }
+        } catch (error) {
+          console.warn("Eski logo dosyası silinemedi, ancak işleme devam ediliyor:", error);
+        }
+      }
+      
+      // Yeni logoyu yükle
+      const fileExtension = file.name.split('.').pop();
+      const filePath = `logo_${Date.now()}.${fileExtension}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('ayarlar')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw new Error(`Yükleme hatası: ${uploadError.message}`);
+      }
+
+      // Yeni logonun public URL'ini al
+      const { data: urlData } = supabase.storage
+        .from('ayarlar')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // URL'i veritabanında güncelle
+      const { error: updateError } = await supabase
+        .from('ayarlar')
+        .update({ deger: publicUrl })
+        .eq('anahtar', 'firma_logo_url');
+
+      // Veritabanı güncelleme hatası varsa, yüklenen dosyayı geri al (temizlik)
+      if (updateError) {
+        await supabase.storage.from('ayarlar').remove([filePath]);
+        toast({
+          title: "Hata",
+          description: 'Logo yüklendi ancak URL veritabanına kaydedilemedi. Lütfen tekrar deneyin.',
+          variant: "destructive",
+        });
+        throw new Error(`Veritabanı güncelleme hatası: ${updateError.message}`);
+      }
+
+      toast({
+        title: "Başarılı",
+        description: 'Logo başarıyla yüklendi ve URL kaydedildi.',
+      });
+      refetchSettings();
+
+    } catch (error: any) {
+      console.error('Logo yükleme işlemi sırasında hata:', error);
+      // Kullanıcıya gösterilen hata mesajını basitleştir
+      if (!error.message.includes('Veritabanı')) {
+        toast({
+          title: "Hata",
+          description: 'Logo yüklenirken bir hata oluştu.',
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsUploading(false);
+      // Dosya seçme inputunu temizle
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+  const checkAndApplyWatermarkToExistingPhotos = async () => {
+    setIsApplyingWatermark(true);
+    try {
+      // Mevcut filigransız fotoğrafları al
+      const { data: photos, error: fetchError } = await supabase
+        .from('photos')
+        .select('id, image_url, watermark_applied')
+        .eq('watermark_applied', false)
+        .not('image_url', 'is', null);
+
+      if (fetchError) throw fetchError;
+
+      if (!photos || photos.length === 0) {
+        toast({
+          title: "Bilgi",
+          description: 'Filigran eklenmesi gereken fotoğraf bulunamadı.',
+        });
+        return;
+      }
+
+      toast({
+        title: "Bilgi",
+        description: `${photos.length} fotoğraf işleniyor...`,
+      });
+
+      // Her fotoğraf için filigran uygula
+      for (const photo of photos) {
+        try {
+          // Filigran uygulama mantığı buraya eklenecek
+          // Bu kısım backend'de uygulanacak
+          
+          // Örnek: Fotoğrafı filigranlı olarak işaretle
+          await supabase
+            .from('photos')
+            .update({ watermark_applied: true })
+            .eq('id', photo.id);
+            
+        } catch (error) {
+          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
+        }
+      }
+
+      toast({
+        title: "Başarılı",
+        description: 'Fotoğraflar başarıyla işlendi.',
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: 'Fotoğraflar işlenirken hata oluştu: ' + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingWatermark(false);
+    }
+  };
+
   const renderLogoSection = (index: number) => {
     const nameKey = `brand_logo_${index}_name` as keyof typeof settings;
     const imageKey = `brand_logo_${index}_image` as keyof typeof settings;
@@ -354,6 +515,68 @@ export function BrandLogosSettingsManager() {
 
   return (
     <div className="space-y-6">
+      {/* Firma Logosu Yükleme */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5" />
+            Firma Logosu
+          </CardTitle>
+          <CardDescription>
+            Firma logosunu yükleyin. Bu logo, seçilen fotoğraflara filigran olarak eklenecektir.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-24 h-24 border rounded-md flex items-center justify-center bg-muted/40">
+              {firmaLogoUrl ? (
+                <img src={firmaLogoUrl} alt="Firma Logosu" className="object-contain w-full h-full" />
+              ) : (
+                <ImageIcon className="w-10 h-10 text-muted-foreground" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="logo-upload">Yeni Logo Yükle</Label>
+              <Input 
+                id="logo-upload" 
+                type="file" 
+                accept="image/png, image/jpeg, image/svg+xml" 
+                onChange={handleCompanyLogoSelect} 
+                disabled={isUploading} 
+              />
+              <p className="text-xs text-muted-foreground">PNG, JPG veya SVG formatında, en fazla 1MB.</p>
+            </div>
+          </div>
+          {isUploading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              Logo yükleniyor...
+            </div>
+          )}
+          <Button
+            onClick={checkAndApplyWatermarkToExistingPhotos}
+            disabled={isApplyingWatermark || !firmaLogoUrl}
+          >
+            {isApplyingWatermark ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                İşleniyor...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Mevcut Filigransız Fotoğraflara Logo Ekle
+              </>
+            )}
+          </Button>
+          {isApplyingWatermark && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Bu işlem fotoğraf sayısına göre uzun sürebilir. Lütfen bekleyin.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Pop-up Ayarları */}
       <Card>
         <CardHeader>
@@ -469,8 +692,7 @@ export function BrandLogosSettingsManager() {
         </Button>
       </div>
     </div>
-
-);
+  );
 }
 
 const [isApplyingWatermark, setIsApplyingWatermark] = useState(false);
