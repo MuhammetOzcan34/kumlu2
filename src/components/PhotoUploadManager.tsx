@@ -96,9 +96,9 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
         console.log('📋 firmaLogo değeri:', firmaLogo);
         console.log('📋 firmaLogo tipi:', typeof firmaLogo);
         console.log('📋 firmaLogo boş mu?:', !firmaLogo || firmaLogo.trim() === '');
-        
         try {
           const logoResult = await loadLogo(firmaLogo);
+          console.log('🧩 loadLogo sonucu:', logoResult);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
             console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
@@ -117,21 +117,20 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       const uploadPromises = Array.from(photos).map(async (file, index) => {
         try {
           console.log(`📸 İşleniyor ${index + 1}/${photos.length}:`, file.name);
-          
-          // Resize and add watermark using the new module
+          console.log('🧩 processImage çağrısı öncesi logoImage:', logoImage);
           const processedBlob = await processImage(
-            file, 
-            addLogo ? logoImage : null, // Logo eklenecekse ve logo yüklendiyse gönder
-            1920, // maxWidth
-            1080, // maxHeight
+            file,
+            addLogo ? logoImage : null,
+            1920,
+            1080,
             {
-              size: 0.6,      // Görüntünün %60'ı kadar
-              opacity: 0.5,    // %50 opaklık
-              angle: -30,      // -30 derece açı
+              size: 0.6,
+              opacity: 0.5,
+              angle: -30,
               position: 'center'
             }
           );
-          
+          console.log('🧩 processImage sonrası processedBlob:', processedBlob);
           // Generate unique filename
           const timestamp = Date.now();
           const randomId = Math.random().toString(36).substring(2);
