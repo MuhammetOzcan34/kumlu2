@@ -490,7 +490,7 @@ const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Dosya boyutu ve tipi kontrolü
+    // Dosya boyutu ve tipi için kontroller
     if (file.size > 1024 * 1024) { // 1MB
       toast.error('Dosya boyutu 1MB\'dan büyük olamaz.');
       return;
