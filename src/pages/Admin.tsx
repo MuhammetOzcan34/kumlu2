@@ -740,11 +740,9 @@ export default function Admin() {
     </div>
   );
 }
-// Import ekle
-import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
-
-// TabsList'e ekle
-<TabsTrigger value="watermark" className="text-xs px-2 py-1 h-8 flex-1">Watermark</TabsTrigger>
-
-// TabsContent ekle
-{activeTab === "watermark" && <WatermarkSettingsManager />}
+// Fazla olan WatermarkSettingsManager importunu veya tanımını kaldır
+// import WatermarkSettingsManager from '../components/WatermarkSettingsManager'; // Sadece bir kez olmalı
+// ... existing code ...
+// activeTab değişkenini tanımla veya doğru şekilde kullan
+const [activeTab, setActiveTab] = useState<string>('watermark'); // Eğer yoksa ekle
+// ... existing code ...

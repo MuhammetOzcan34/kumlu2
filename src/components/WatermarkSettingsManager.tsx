@@ -8,6 +8,7 @@ import { Upload, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSettings } from '@/hooks/useSettings';
+import sharp from 'sharp'; // Resim işleme için sharp kütüphanesi
 
 export const WatermarkSettingsManager: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -88,43 +89,78 @@ export const WatermarkSettingsManager: React.FC = () => {
     refetchSettings();
   };
 
+  // Fotoğraf tipi tanımı
+  interface Fotoğraf {
+    id: string;
+    dosya_yolu: string;
+    watermark_applied: boolean;
+  }
+  
   const applyWatermarkToExistingPhotos = async () => {
     if (!watermarkLogoUrl) {
       toast.error('Önce watermark logosu yüklemelisiniz');
       return;
     }
-
+  
     setIsApplyingWatermark(true);
     try {
       const { data: photos, error } = await supabase
-        .from('fotograflar')
+        .from<Fotoğraf>('fotograflar')
         .select('id, dosya_yolu, watermark_applied')
         .eq('watermark_applied', false)
         .not('dosya_yolu', 'is', null);
-
+  
       if (error) throw error;
-
+  
       if (!photos || photos.length === 0) {
         toast.info('Watermark eklenmesi gereken fotoğraf bulunamadı');
         return;
       }
-
+  
       toast.info(`${photos.length} fotoğraf işleniyor...`);
-
-      // Her fotoğraf için watermark uygula
+  
       for (const photo of photos) {
         try {
-          // Burada backend'de watermark uygulama işlemi yapılacak
-          // Şimdilik sadece işaretliyoruz
+          const { data: fileData, error: downloadError } = await supabase.storage
+            .from('fotograflar')
+            .download(photo.dosya_yolu);
+  
+          if (downloadError || !fileData) {
+            console.error(`Fotoğraf indirilemedi: ${photo.dosya_yolu}`, downloadError);
+            continue;
+          }
+  
+          const { data: watermarkData, error: watermarkError } = await supabase.storage
+            .from('fotograflar')
+            .download(watermarkLogoUrl);
+  
+          if (watermarkError || !watermarkData) {
+            console.error('Watermark logosu indirilemedi', watermarkError);
+            return;
+          }
+  
+          const outputBuffer = await sharp(await fileData.arrayBuffer())
+            .composite([{ input: await watermarkData.arrayBuffer(), gravity: 'southeast', opacity: watermarkOpacity }])
+            .toBuffer();
+  
+          const { error: uploadError } = await supabase.storage
+            .from('fotograflar')
+            .update(photo.dosya_yolu, outputBuffer, { contentType: 'image/jpeg' });
+  
+          if (uploadError) {
+            console.error(`Fotoğraf güncellenemedi: ${photo.dosya_yolu}`, uploadError);
+            continue;
+          }
+  
           await supabase
             .from('fotograflar')
             .update({ watermark_applied: true })
             .eq('id', photo.id);
         } catch (error) {
-          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
+          console.error(`Fotoğraf işlenirken hata: ${photo.id}`, error);
         }
       }
-
+  
       toast.success('Fotoğraflar başarıyla işlendi');
     } catch (error: any) {
       toast.error('Fotoğraflar işlenirken hata oluştu: ' + error.message);
@@ -290,6 +326,17 @@ export const WatermarkSettingsManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Test için Watermark Uygula Düğmesi */}
+      <div className="space-y-4">
+        <Button
+          onClick={applyWatermarkToExistingPhotos}
+          disabled={isApplyingWatermark}
+          className="w-full"
+        >
+          {isApplyingWatermark ? 'Watermark Uygulanıyor...' : 'Watermark Uygula'}
+        </Button>
+      </div>
     </div>
   );
 };
