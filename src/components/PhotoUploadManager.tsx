@@ -76,41 +76,55 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     }
 
     setIsUploading(true);
-    console.log('🔄 Upload başlatılıyor...', photos.length, 'fotoğraf');
+    console.log('🔄 Yükleme işlemi başlıyor...', { photoCount: photos.length, addLogo });
 
     try {
       // Logo yükleme işlemini bir kez yap ve tüm fotoğraflar için kullan
       let logoImage: HTMLImageElement | null = null;
       
-      if (addLogo && firmaLogo) {
-        console.log('🔄 Logo yükleme işlemi başlatılıyor...');
-        console.log('📋 firmaLogo değeri:', firmaLogo);
-        
-        try {
+      if (addLogo) {
+        if (firmaLogo) {
+          console.log(`🔄 Firma logosu yükleniyor: ${firmaLogo}`);
           const logoResult = await loadLogo(firmaLogo);
           if (logoResult.success && logoResult.image) {
             logoImage = logoResult.image;
-            console.log('✅ Logo başarıyla yüklendi ve filigran için hazır');
+            console.log('✅ Firma logosu başarıyla yüklendi ve filigran için hazırlandı.');
           } else {
-            console.warn('⚠️ Logo yüklenemedi:', logoResult.error?.message);
-            toast.warning('Logo yüklenemedi, fotoğraflar filigransız yüklenecek');
+            console.warn(`⚠️ Firma logosu yüklenemedi, varsayılan logoya geçiliyor. Hata: ${logoResult.error?.message}`);
+            toast.warning('Firma logosu yüklenemedi, varsayılan logo ile filigran eklenecek.');
+            // Fallback olarak yerel logoyu yüklemeyi dene
+            const fallbackResult = await loadLogo(); // Parametresiz çağrı yerel logoyu kullanır
+            if(fallbackResult.success && fallbackResult.image) {
+              logoImage = fallbackResult.image;
+              console.log('✅ Varsayılan logo başarıyla yüklendi.');
+            } else {
+               console.error('❌ Varsayılan logo bile yüklenemedi. Filigran eklenmeyecek.', fallbackResult.error);
+               toast.error('Logo yüklenemediği için filigran eklenemiyor.');
+            }
           }
-        } catch (error) {
-          console.error('❌ Logo yükleme hatası:', error);
-          toast.warning('Logo yüklenemedi, fotoğraflar filigransız yüklenecek');
+        } else {
+          console.log('ℹ️ Firma logosu ayarlanmamış, varsayılan logo kullanılacak.');
+          const logoResult = await loadLogo(); // Yerel logoyu yükle
+          if (logoResult.success && logoResult.image) {
+            logoImage = logoResult.image;
+            console.log('✅ Varsayılan logo başarıyla yüklendi.');
+          } else {
+            console.error('❌ Varsayılan logo yüklenemedi. Filigran eklenmeyecek.', logoResult.error);
+            toast.error('Logo yüklenemediği için filigran eklenemiyor.');
+          }
         }
       } else {
-        console.log('ℹ️ Logo ekleme kapalı');
+        console.log('ℹ️ Logo ekleme kapalı, filigran uygulanmayacak.');
       }
 
       const uploadPromises = Array.from(photos).map(async (file, index) => {
         try {
-          console.log(`📸 İşleniyor ${index + 1}/${photos.length}:`, file.name);
+          console.log(`[${index + 1}/${photos.length}] 📸 Görüntü işleniyor:`, file.name);
           
-          // Resize and add watermark using the new module
+          // Yeniden boyutlandırma ve filigran ekleme
           const processedBlob = await processImage(
             file,
-            addLogo ? logoImage : null, // Logo eklenecekse ve logo yüklendiyse gönder
+            logoImage, // Logo yüklendiyse gönder, değilse null gider
             1920, // maxWidth
             1080, // maxHeight
             {

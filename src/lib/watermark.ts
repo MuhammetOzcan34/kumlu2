@@ -48,86 +48,34 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
  * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
-export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
+export const loadLogo = (logoUrl?: string): Promise<LogoLoadResult> => {
   return new Promise((resolve) => {
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      let attemptCount = 0;
-      const maxAttempts = 3; // Optimize edilmiş deneme sayısı
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // CORS hatalarını önlemek için kritik
 
-      const tryLoad = (url: string, attemptType: string) => {
-        attemptCount++;
-        console.log(`🔄 Logo yükleme denemesi ${attemptCount}/${maxAttempts} (${attemptType}):`, url);
-        
-        img.onload = () => {
-          console.log(`✅ Logo başarıyla yüklendi (${attemptType}):`, {
-            width: img.width,
-            height: img.height,
-            src: img.src,
-            attempt: attemptCount
-          });
-          resolve({ success: true, image: img });
-        };
+    const primaryUrl = logoUrl && logoUrl.trim() ? logoUrl : '/default-logo.svg';
+    const fallbackUrl = '/default-logo.svg';
 
-        img.onerror = (error) => {
-          console.error(`❌ Logo yüklenemedi (${attemptType}):`, {
-            error,
-            src: img.src,
-            logoUrl,
-            attempt: attemptCount
-          });
-          
-          // Sonraki denemeye geç
-          if (attemptCount < maxAttempts) {
-            setTimeout(() => {
-              if (attemptCount === 1 && logoUrl) {
-                // İkinci deneme: Doğrudan Supabase Storage URL'i
-                const directUrl = logoUrl.includes('storage/v1/object/public') 
-                  ? logoUrl 
-                  : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
-                console.log('🔄 Doğrudan Supabase URL deneniyor:', directUrl);
-                tryLoad(directUrl, 'Doğrudan Supabase');
-              } else {
-                // Son deneme: Yerel logo
-                console.log('🔄 Yerel logo deneniyor');
-                tryLoad('/default-logo.svg', 'Yerel Logo');
-              }
-            }, 500 * attemptCount); // Kısa bekleme süresi
-          } else {
-            // Tüm denemeler başarısız
-            console.error('❌ Tüm logo yükleme denemeleri başarısız');
-            resolve({ success: false, error: new Error('Logo yüklenemedi - tüm denemeler başarısız') });
-          }
-        };
+    img.onload = () => {
+      console.log(`✅ Logo başarıyla yüklendi: ${img.src}`);
+      resolve({ success: true, image: img });
+    };
 
-        img.src = url;
-      };
-
-      if (logoUrl && logoUrl.trim()) {
-        // İlk deneme: Doğrudan Supabase Storage URL'i (Edge Function atlanıyor)
-        const directUrl = logoUrl.includes('storage/v1/object/public') 
-          ? logoUrl 
-          : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
-        
-        console.log('🔗 Logo için doğrudan Supabase URL oluşturuldu:', { 
-          logoUrl, 
-          directUrl,
-          supabaseUrl: SUPABASE_BASE_URL 
-        });
-        tryLoad(directUrl, 'Doğrudan Supabase');
+    img.onerror = () => {
+      console.warn(`⚠️ Birincil logo yüklenemedi: ${primaryUrl}. Fallback deniyor...`);
+      // Birincil URL başarısız olursa, fallback'i dene
+      if (img.src !== fallbackUrl) {
+        img.src = fallbackUrl;
       } else {
-        // Logo URL yok, yerel logo kullan
-        console.log('ℹ️ Logo URL belirtilmemiş, yerel logo kullanılıyor');
-        tryLoad('/default-logo.svg', 'Yerel Logo');
+        // Fallback de başarısız olursa, hata döndür
+        console.error(`❌ Fallback logo da yüklenemedi: ${fallbackUrl}`);
+        resolve({ success: false, error: new Error(`Logo yüklenemedi: ${fallbackUrl}`) });
       }
-    } catch (error) {
-      console.error('❌ Logo yükleme hatası:', error);
-      resolve({ 
-        success: false, 
-        error: error instanceof Error ? error : new Error('Bilinmeyen logo yükleme hatası')
-      });
-    }
+    };
+
+    // Yüklemeyi başlat
+    img.src = primaryUrl;
+    console.log(`🔄 Logo yükleniyor: ${img.src}`);
   });
 };
 
