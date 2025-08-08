@@ -54,7 +54,7 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       let attemptCount = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 4; // Deneme sayısını artırdık
 
       const tryLoad = (url: string, isLastAttempt: boolean = false) => {
         attemptCount++;
@@ -71,29 +71,30 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
         };
 
         img.onerror = (error) => {
-          // Hata detaylarını daha kapsamlı yaz
           console.error('❌ Logo yüklenemedi:', {
             error,
             src: img.src,
             logoUrl,
             attempt: attemptCount
           });
-          // Ağ isteği detaylarını ekle
-          fetch(url)
-            .then(async response => {
-              console.error('🔍 HTTP yanıt durumu:', response.status, response.statusText);
-              console.error('🔍 Content-Type:', response.headers.get('Content-Type'));
-              const body = await response.text();
-              console.error('🔍 Yanıt gövdesi:', body.slice(0, 200)); // İlk 200 karakter
-            })
-            .catch(fetchError => {
-              console.error('🔍 fetch ile hata:', fetchError);
-            });
+          
           if (!isLastAttempt && attemptCount < maxAttempts) {
             // Sonraki denemeyi yap
             setTimeout(() => {
               if (attemptCount === 1 && logoUrl) {
-                // İkinci deneme: Doğrudan Supabase Storage URL'i
+                // İkinci deneme: Edge Function (cache buster ile)
+                const cleanSupabaseUrl = SUPABASE_BASE_URL.endsWith('/') 
+                  ? SUPABASE_BASE_URL.slice(0, -1) 
+                  : SUPABASE_BASE_URL;
+                
+                const functionUrl = `${cleanSupabaseUrl}/functions/v1/image-proxy`;
+                const cacheBuster = `v=${Date.now()}&r=${Math.random()}`;
+                const finalUrl = `${functionUrl}?path=${encodeURIComponent(logoUrl)}&${cacheBuster}`;
+                
+                console.log('🔄 Edge Function (cache buster) deneniyor:', finalUrl);
+                tryLoad(finalUrl);
+              } else if (attemptCount === 2 && logoUrl) {
+                // Üçüncü deneme: Doğrudan Supabase Storage URL'i
                 const directUrl = logoUrl.includes('storage/v1/object/public') 
                   ? logoUrl 
                   : `${SUPABASE_BASE_URL}/storage/v1/object/public/fotograflar/${logoUrl}`;
@@ -104,7 +105,7 @@ export const loadLogo = async (logoUrl?: string): Promise<LogoLoadResult> => {
                 console.log('🔄 Yerel logo deneniyor');
                 tryLoad('/default-logo.svg', true);
               }
-            }, 1000);
+            }, 1000 * attemptCount); // Artan bekleme süresi
           } else {
             // Tüm denemeler başarısız
             console.error('❌ Tüm logo yükleme denemeleri başarısız');
