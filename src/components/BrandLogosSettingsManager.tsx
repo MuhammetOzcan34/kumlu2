@@ -486,62 +486,138 @@ checkAndApplyWatermarkToExistingPhotos();
 }, []);
 */
 
-const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        toast.success('Logo başarıyla yüklendi ve URL kaydedildi.');
-        refetchSettings();
-        // Otomatik filigran eklemeyi kaldır. Kullanıcı manuel olarak tetiklesin.
-        // checkAndApplyWatermarkToExistingPhotos(); 
-      } else {
-        toast.error('Logo yüklendi ancak URL kaydedilemedi.');
+const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Dosya boyutu ve tipi kontrolü
+    if (file.size > 1024 * 1024) { // 1MB
+      toast.error('Dosya boyutu 1MB\'dan büyük olamaz.');
+      return;
+    }
+    if (!['image/png', 'image/jpeg', 'image/svg+xml'].includes(file.type)) {
+      toast.error('Sadece PNG, JPG veya SVG formatında dosya yükleyebilirsiniz.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Eski logoyu sil (varsa)
+      if (firmaLogoUrl) {
+        try {
+          const oldFilePath = new URL(firmaLogoUrl).pathname.split('/ayarlar/').pop();
+          if (oldFilePath) {
+            await supabase.storage.from('ayarlar').remove([oldFilePath]);
+          }
+        } catch (error) {
+          console.warn("Eski logo dosyası silinemedi, ancak işleme devam ediliyor:", error);
+        }
       }
-    } catch (error) {
-        <CardDescription>
-          Firma logosunu yükleyin. Bu logo, seçilen fotoğraflara filigran olarak eklenecektir.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="w-24 h-24 border rounded-md flex items-center justify-center bg-muted/40">
-            {firmaLogoUrl ? (
-              <img src={firmaLogoUrl} alt="Firma Logosu" className="object-contain w-full h-full" />
-            ) : (
-              <ImageIcon className="w-10 h-10 text-muted-foreground" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="logo-upload">Yeni Logo Yükle</Label>
-            <Input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleFileSelect} disabled={isUploading} />
-            <p className="text-xs text-muted-foreground">PNG, JPG veya SVG formatında, en fazla 1MB.</p>
-          </div>
-        </div>
-        {isUploading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            Logo yükleniyor...
-          </div>
+      
+      // Yeni logoyu yükle
+      const fileExtension = file.name.split('.').pop();
+      const filePath = `logo_${Date.now()}.${fileExtension}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('ayarlar')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw new Error(`Yükleme hatası: ${uploadError.message}`);
+      }
+
+      // Yeni logonun public URL'ini al
+      const { data: urlData } = supabase.storage
+        .from('ayarlar')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // URL'i veritabanında güncelle
+      const { error: updateError } = await supabase
+        .from('ayarlar')
+        .update({ deger: publicUrl })
+        .eq('anahtar', 'firma_logo_url');
+
+      // Veritabanı güncelleme hatası varsa, yüklenen dosyayı geri al (temizlik)
+      if (updateError) {
+        await supabase.storage.from('ayarlar').remove([filePath]);
+        toast.error('Logo yüklendi ancak URL veritabanına kaydedilemedi. Lütfen tekrar deneyin.');
+        throw new Error(`Veritabanı güncelleme hatası: ${updateError.message}`);
+      }
+
+      toast.success('Logo başarıyla yüklendi ve URL kaydedildi.');
+      refetchSettings();
+
+    } catch (error: any) {
+      console.error('Logo yükleme işlemi sırasında hata:', error);
+      // Kullanıcıya gösterilen hata mesajını basitleştir
+      if (!error.message.includes('Veritabanı')) {
+         toast.error('Logo yüklenirken bir hata oluştu.');
+      }
+    } finally {
+      setIsUploading(false);
+      // Dosya seçme inputunu temizle
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+  const checkAndApplyWatermarkToExistingPhotos = async () => {
+    // Otomatik filigran eklemeyi kaldır. Kullanıcı manuel olarak tetiklesin.
+    // checkAndApplyWatermarkToExistingPhotos(); 
+  } else {
+    toast.error('Logo yüklendi ancak URL kaydedilemedi.');
+  }
+} catch (error) {
+    <CardDescription>
+      Firma logosunu yükleyin. Bu logo, seçilen fotoğraflara filigran olarak eklenecektir.
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="flex items-center gap-4">
+      <div className="w-24 h-24 border rounded-md flex items-center justify-center bg-muted/40">
+        {firmaLogoUrl ? (
+          <img src={firmaLogoUrl} alt="Firma Logosu" className="object-contain w-full h-full" />
+        ) : (
+          <ImageIcon className="w-10 h-10 text-muted-foreground" />
         )}
-        <Button
-          onClick={checkAndApplyWatermarkToExistingPhotos}
-          disabled={isApplyingWatermark || !firmaLogoUrl}
-        >
-          {isApplyingWatermark ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              İşleniyor...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Mevcut Filigransız Fotoğraflara Logo Ekle
-            </>
-          )}
-        </Button>
-        {isApplyingWatermark && (
-           <p className="text-sm text-muted-foreground mt-2">
-             Bu işlem fotoğraf sayısına göre uzun sürebilir. Lütfen bekleyin.
-           </p>
-        )}
-      </CardContent>
-    </Card>
-  );
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="logo-upload">Yeni Logo Yükle</Label>
+        <Input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleFileSelect} disabled={isUploading} />
+        <p className="text-xs text-muted-foreground">PNG, JPG veya SVG formatında, en fazla 1MB.</p>
+      </div>
+    </div>
+    {isUploading && (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+        Logo yükleniyor...
+      </div>
+    )}
+    <Button
+      onClick={checkAndApplyWatermarkToExistingPhotos}
+      disabled={isApplyingWatermark || !firmaLogoUrl}
+    >
+      {isApplyingWatermark ? (
+        <>
+          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          İşleniyor...
+        </>
+      ) : (
+        <>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Mevcut Filigransız Fotoğraflara Logo Ekle
+        </>
+      )}
+    </Button>
+    {isApplyingWatermark && (
+       <p className="text-sm text-muted-foreground mt-2">
+         Bu işlem fotoğraf sayısına göre uzun sürebilir. Lütfen bekleyin.
+       </p>
+    )}
+  </CardContent>
+</Card>
+);
 };
