@@ -3,7 +3,7 @@
  * Fotoğraflara filigran ekleme işlemlerini yöneten modül
  */
 
-import { SUPABASE_BASE_URL } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Filigran ekleme ayarları
@@ -50,11 +50,13 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
  */
 export const loadLogo = (logoUrl?: string): Promise<LogoLoadResult> => {
   return new Promise((resolve) => {
+    if (!logoUrl || !logoUrl.trim()) {
+      resolve({ success: false, error: new Error('Logo URL boş') });
+      return;
+    }
+    
     const img = new Image();
     img.crossOrigin = 'anonymous'; // CORS hatalarını önlemek için kritik
-
-    const primaryUrl = logoUrl && logoUrl.trim() ? logoUrl : '/default-logo.svg';
-    const fallbackUrl = '/default-logo.svg';
 
     img.onload = () => {
       console.log(`✅ Logo başarıyla yüklendi: ${img.src}`);
@@ -62,19 +64,12 @@ export const loadLogo = (logoUrl?: string): Promise<LogoLoadResult> => {
     };
 
     img.onerror = () => {
-      console.warn(`⚠️ Birincil logo yüklenemedi: ${primaryUrl}. Fallback deniyor...`);
-      // Birincil URL başarısız olursa, fallback'i dene
-      if (img.src !== fallbackUrl) {
-        img.src = fallbackUrl;
-      } else {
-        // Fallback de başarısız olursa, hata döndür
-        console.error(`❌ Fallback logo da yüklenemedi: ${fallbackUrl}`);
-        resolve({ success: false, error: new Error(`Logo yüklenemedi: ${fallbackUrl}`) });
-      }
+      console.error(`❌ Logo yüklenemedi: ${logoUrl}`);
+      resolve({ success: false, error: new Error(`Logo yüklenemedi: ${logoUrl}`) });
     };
 
     // Yüklemeyi başlat
-    img.src = primaryUrl;
+    img.src = logoUrl;
     console.log(`🔄 Logo yükleniyor: ${img.src}`);
   });
 };
@@ -106,23 +101,37 @@ export const applyWatermark = (
   ctx.globalAlpha = opts.opacity || 0.25;
   
   if (opts.position === 'pattern') {
-    // Pattern filigran - Shutterstock tarzı
+    // İyileştirilmiş Pattern filigran - daha iyi kenar kullanımı
     const rows = opts.patternRows || 4;
     const cols = opts.patternCols || 3;
     
-    const stepX = canvasWidth / (cols + 1);
-    const stepY = canvasHeight / (rows + 1);
+    // Kenar boşluklarını minimize et
+    const marginX = logoWidth * 0.3; // Logo genişliğinin %30'u kadar kenar boşluğu
+    const marginY = logoHeight * 0.3; // Logo yüksekliğinin %30'u kadar kenar boşluğu
     
-    for (let row = 1; row <= rows; row++) {
-      for (let col = 1; col <= cols; col++) {
-        const x = stepX * col - logoWidth / 2;
-        const y = stepY * row - logoHeight / 2;
+    const availableWidth = canvasWidth - (2 * marginX);
+    const availableHeight = canvasHeight - (2 * marginY);
+    
+    const stepX = availableWidth / (cols - 1); // cols-1 ile daha sık dağılım
+    const stepY = availableHeight / (rows - 1); // rows-1 ile daha sık dağılım
+    
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        // Daha iyi dağılım için hesaplama
+        const x = marginX + (stepX * col) - logoWidth / 2;
+        const y = marginY + (stepY * row) - logoHeight / 2;
         
-        ctx.save();
-        ctx.translate(x + logoWidth / 2, y + logoHeight / 2);
-        ctx.rotate((opts.angle || -30) * Math.PI / 180);
-        ctx.drawImage(logoImage, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
-        ctx.restore();
+        // Sınırları kontrol et
+        if (x >= 0 && y >= 0 && 
+            x + logoWidth <= canvasWidth && 
+            y + logoHeight <= canvasHeight) {
+          
+          ctx.save();
+          ctx.translate(x + logoWidth / 2, y + logoHeight / 2);
+          ctx.rotate((opts.angle || -30) * Math.PI / 180);
+          ctx.drawImage(logoImage, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
+          ctx.restore();
+        }
       }
     }
   } else {
@@ -292,15 +301,57 @@ export const loadWatermarkLogo = async (): Promise<LogoLoadResult> => {
 
     let logoUrl = config.logoUrl;
     
-    // Eğer logo URL'si yoksa, watermark klasöründen varsayılan logoyu al
-    if (!logoUrl) {
-      const { data } = await supabase.storage
-        .from('fotograflar')
-        .getPublicUrl('watermark/watermark-logo.png');
-      logoUrl = data.publicUrl;
+    // Önce ayarlardan watermark logo URL'sini kontrol et
+    if (logoUrl && logoUrl.trim()) {
+      // Eğer relative path ise, Supabase storage URL'sine çevir
+      if (!logoUrl.startsWith('http')) {
+        const { data } = await supabase.storage
+          .from('fotograflar')
+          .getPublicUrl(logoUrl);
+        logoUrl = data.publicUrl;
+      }
+      
+      const result = await loadLogo(logoUrl);
+      if (result.success) {
+        return result;
+      }
     }
-
-    return loadLogo(logoUrl);
+    
+    // Watermark klasöründen varsayılan logoyu dene
+    const { data } = await supabase.storage
+      .from('fotograflar')
+      .getPublicUrl('watermark/watermark-logo.png');
+    
+    const fallbackResult = await loadLogo(data.publicUrl);
+    if (fallbackResult.success) {
+      return fallbackResult;
+    }
+    
+    // Firma logosu ayarından dene
+    const firmaLogoConfig = await supabase
+      .from('ayarlar')
+      .select('deger')
+      .eq('anahtar', 'firma_logo_url')
+      .single();
+    
+    if (firmaLogoConfig.data?.deger) {
+      let firmaLogoUrl = firmaLogoConfig.data.deger;
+      if (!firmaLogoUrl.startsWith('http')) {
+        const { data: firmaLogoData } = await supabase.storage
+          .from('fotograflar')
+          .getPublicUrl(firmaLogoUrl);
+        firmaLogoUrl = firmaLogoData.publicUrl;
+      }
+      
+      const firmaResult = await loadLogo(firmaLogoUrl);
+      if (firmaResult.success) {
+        return firmaResult;
+      }
+    }
+    
+    // Son çare olarak hata döndür (default-logo.svg kullanma)
+    return { success: false, error: new Error('Hiçbir logo yüklenemedi') };
+    
   } catch (error) {
     console.error('Filigran logosu yüklenirken hata:', error);
     return { success: false, error: error as Error };
@@ -319,30 +370,33 @@ export const processImageWithWatermark = async (
     const config = await getWatermarkConfig();
     
     if (!config?.enabled) {
-      // Filigran devre dışıysa sadece yeniden boyutlandır
+      console.log('Filigran devre dışı, normal işleme devam ediliyor');
       return processImage(file, null, maxWidth, maxHeight);
     }
 
     const logoResult = await loadWatermarkLogo();
-    
     if (!logoResult.success || !logoResult.image) {
-      console.warn('Filigran logosu yüklenemedi, filigransız işleniyor');
+      console.warn('Logo yüklenemedi, filigransız işleme devam ediliyor');
       return processImage(file, null, maxWidth, maxHeight);
     }
 
-    const watermarkOptions = {
-      size: config.size,
-      opacity: config.opacity,
-      position: config.position as any,
-      angle: -30,
-      patternRows: 4,
-      patternCols: 3
-    };
-
-    return processImage(file, logoResult.image, maxWidth, maxHeight, watermarkOptions);
+    return processImage(
+      file,
+      logoResult.image,
+      maxWidth,
+      maxHeight,
+      {
+        size: config.size,
+        opacity: config.opacity,
+        position: config.position as any,
+        angle: -30,
+        patternRows: 4,
+        patternCols: 3
+      }
+    );
   } catch (error) {
     console.error('Filigran işleme hatası:', error);
-    // Hata durumunda filigransız işle
+    // Hata durumunda filigransız işleme devam et
     return processImage(file, null, maxWidth, maxHeight);
   }
 };

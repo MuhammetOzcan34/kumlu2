@@ -536,6 +536,7 @@ export default function Admin() {
               {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
               {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
               {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
+              {activeTab === "watermark" && <WatermarkSettingsManager />}
               {activeTab === "profil" && (
                 <Card>
                   <CardHeader>
@@ -733,6 +734,7 @@ export default function Admin() {
                     {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
                     {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
                     {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
+                    {activeTab === "watermark" && <WatermarkSettingsManager />}
                     {activeTab === "profil" && (
                       <Card>
                         <CardHeader>

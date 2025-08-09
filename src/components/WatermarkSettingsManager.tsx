@@ -8,6 +8,7 @@ import { Upload, RefreshCw, Image as ImageIcon, AlertCircle } from 'lucide-react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSettings } from '@/hooks/useSettings';
+import { processImage, loadWatermarkLogo } from '@/lib/watermark';
 
 export const WatermarkSettingsManager: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -86,57 +87,85 @@ export const WatermarkSettingsManager: React.FC = () => {
     }
 
     setIsApplyingWatermark(true);
+    
     try {
-      // 90-93 satırları arasındaki sorunu çözmek için:
-      const { data: photos, error } = await supabase
+      // Watermark eklenmemiş fotoğrafları al
+      const { data: photos, error: fetchError } = await supabase
         .from('fotograflar')
-        .select('id, dosya_yolu, watermark_applied')
+        .select('id, dosya_yolu')
         .eq('watermark_applied', false)
-        .not('dosya_yolu', 'is', null);
-      
-      if (error) {
-        console.error('Fotoğraf sorgusu hatası:', error);
-        throw error;
-      }
-      
-      // 110-113 satırları arasındaki sorunu çözmek için:
-      for (const photo of photos || []) {
-        try {
-          const { error: updateError } = await supabase
-            .from('fotograflar')
-            .update({ watermark_applied: true })
-            .eq('id', photo.id);
-          
-          if (updateError) {
-            console.error(`Fotoğraf ${photo.id} işlenirken hata:`, updateError);
-          }
-        } catch (error) {
-          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
-        }
-      }
-
+        .limit(50); // Performans için limit
+    
+      if (fetchError) throw fetchError;
+    
       if (!photos || photos.length === 0) {
         toast.info('Watermark eklenmesi gereken fotoğraf bulunamadı');
         return;
       }
-
-      toast.info(`${photos.length} fotoğraf işleniyor...`);
-
-      // Sadece veritabanında işaretleme yap (gerçek watermark ekleme backend'de yapılacak)
-      for (const photo of photos) {
-        try {
-          await supabase
-            .from('fotograflar')
-            .update({ watermark_applied: true })
-            .eq('id', photo.id);
-        } catch (error) {
-          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
-        }
+    
+    // Watermark logosu yükle
+    const logoResult = await loadWatermarkLogo();
+    if (!logoResult.success || !logoResult.image) {
+      toast.error('Watermark logosu yüklenemedi');
+      return;
+    }
+    
+    let processedCount = 0;
+    
+    // Her fotoğrafı işle
+    for (const photo of photos) {
+      try {
+        // Orijinal fotoğrafı indir
+        const { data: fileData } = await supabase.storage
+          .from('fotograflar')
+          .download(photo.dosya_yolu);
+    
+        if (!fileData) continue;
+    
+        // Filigran ekle
+        const processedBlob = await processImage(
+          new File([fileData], 'photo.jpg', { type: 'image/jpeg' }),
+          logoResult.image,
+          1920,
+          1080,
+          {
+            size: watermarkSize,
+            opacity: watermarkOpacity,
+            position: watermarkPosition as any,
+            angle: -30,
+            patternRows: 4,
+            patternCols: 3
+          }
+        );
+    
+        // Güncellenmiş fotoğrafı yükle
+        const { error: uploadError } = await supabase.storage
+          .from('fotograflar')
+          .update(photo.dosya_yolu, processedBlob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+    
+        if (uploadError) throw uploadError;
+    
+        // Veritabanında işaretle
+        await supabase
+          .from('fotograflar')
+          .update({ watermark_applied: true })
+          .eq('id', photo.id);
+    
+        processedCount++;
+        
+      } catch (error) {
+        console.error(`Fotoğraf işleme hatası (${photo.id}):`, error);
       }
-
-      toast.success('Fotoğraflar watermark için işaretlendi');
-    } catch (error: any) {
-      toast.error('Fotoğraflar işlenirken hata oluştu: ' + error.message);
+    }
+    
+    toast.success(`${processedCount} fotoğrafa watermark eklendi`);
+    
+    } catch (error) {
+      console.error('Watermark ekleme hatası:', error);
+      toast.error('Watermark ekleme sırasında hata oluştu');
     } finally {
       setIsApplyingWatermark(false);
     }
@@ -282,11 +311,11 @@ export const WatermarkSettingsManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
+            <div className="flex items-start gap-2 p-3 bg-green-50 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-green-600 mt-0.5" />
+              <div className="text-sm text-green-800">
                 <p className="font-medium">Bilgi:</p>
-                <p>Bu işlem mevcut fotoğrafları watermark için işaretler. Gerçek watermark ekleme işlemi backend'de yapılacaktır.</p>
+                <p>Bu işlem mevcut fotoğraflara gerçek watermark ekler. İşlem tamamlandıktan sonra fotoğraflar filigranla birlikte görüntülenecektir.</p>
               </div>
             </div>
             
