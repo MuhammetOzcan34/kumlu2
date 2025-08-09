@@ -5,12 +5,14 @@ import path from "path";
 export default defineConfig(async ({ mode }) => {
   const plugins = [react()];
 
+  // Sadece development modunda lovable-tagger yükle
   if (mode === 'development') {
     try {
       const { componentTagger } = await import("lovable-tagger");
       plugins.push(componentTagger());
     } catch {
       // Production'da mevcut olmayabilir, hata bastırılır
+      console.warn('lovable-tagger could not be loaded');
     }
   }
 
@@ -23,7 +25,15 @@ export default defineConfig(async ({ mode }) => {
     build: {
       target: "esnext",
       outDir: "dist",
-      sourcemap: false
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            supabase: ['@supabase/supabase-js']
+          }
+        }
+      }
     },
     resolve: {
       alias: {
@@ -32,6 +42,9 @@ export default defineConfig(async ({ mode }) => {
     },
     define: {
       global: "globalThis"
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom', '@supabase/supabase-js']
     }
   };
 });

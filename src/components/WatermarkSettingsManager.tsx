@@ -87,13 +87,33 @@ export const WatermarkSettingsManager: React.FC = () => {
 
     setIsApplyingWatermark(true);
     try {
+      // 90-93 satırları arasındaki sorunu çözmek için:
       const { data: photos, error } = await supabase
         .from('fotograflar')
         .select('id, dosya_yolu, watermark_applied')
         .eq('watermark_applied', false)
         .not('dosya_yolu', 'is', null);
-
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Fotoğraf sorgusu hatası:', error);
+        throw error;
+      }
+      
+      // 110-113 satırları arasındaki sorunu çözmek için:
+      for (const photo of photos || []) {
+        try {
+          const { error: updateError } = await supabase
+            .from('fotograflar')
+            .update({ watermark_applied: true })
+            .eq('id', photo.id);
+          
+          if (updateError) {
+            console.error(`Fotoğraf ${photo.id} işlenirken hata:`, updateError);
+          }
+        } catch (error) {
+          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
+        }
+      }
 
       if (!photos || photos.length === 0) {
         toast.info('Watermark eklenmesi gereken fotoğraf bulunamadı');

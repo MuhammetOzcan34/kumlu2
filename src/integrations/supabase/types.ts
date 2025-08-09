@@ -41,6 +41,7 @@ export type Database = {
         }
         Relationships: []
       }
+      // fotograflar tablosu Row tipinde watermark_applied eklenmeli:
       fotograflar: {
         Row: {
           aciklama: string | null
@@ -59,6 +60,7 @@ export type Database = {
           sira_no: number | null
           thumbnail_yolu: string | null
           updated_at: string
+          watermark_applied: boolean | null  // Bu satır eklenmeli
         }
         Insert: {
           aciklama?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           sira_no?: number | null
           thumbnail_yolu?: string | null
           updated_at?: string
+          watermark_applied?: boolean | null  // Bu satır eklenmeli
         }
         Update: {
           aciklama?: string | null
@@ -95,6 +98,7 @@ export type Database = {
           sira_no?: number | null
           thumbnail_yolu?: string | null
           updated_at?: string
+          watermark_applied?: boolean | null  // Bu satır eklenmeli
         }
         Relationships: [
           {
