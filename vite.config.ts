@@ -18,9 +18,6 @@ export default defineConfig(async ({ mode }) => {
     plugins: plugins,
       build: {
         target: 'esnext',
-        rollupOptions: {
-          external: ['@supabase/supabase-js'],
-        },
       },
     resolve: {
       alias: {
