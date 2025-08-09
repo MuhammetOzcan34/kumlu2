@@ -13,7 +13,6 @@ import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-
 import { KampanyaForm } from "@/components/KampanyaForm";
 import { HesaplamaUrunleriManager } from "@/components/HesaplamaUrunleriManager";
 import { ServisBedelleriManager } from "@/components/ServisBedelleriManager";
@@ -21,7 +20,6 @@ import { PhotoUploadManager } from "@/components/PhotoUploadManager";
 import { PhotoGalleryManager } from "@/components/PhotoGalleryManager";
 import { CompanySettingsManager } from "@/components/CompanySettingsManager";
 import { CategoryManager } from "@/components/CategoryManager";
-
 import { VideoGaleriManager } from "@/components/VideoGaleriManager";
 import { WhatsAppSettingsManager } from "@/components/WhatsAppSettingsManager";
 import { BrandLogosSettingsManager } from "@/components/BrandLogosSettingsManager";
@@ -39,7 +37,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EkOzelliklerManager } from "@/components/EkOzelliklerManager";
-
 import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
 
 export default function Admin() {
@@ -60,7 +57,7 @@ export default function Admin() {
   useEffect(() => {
     console.log('🔄 Admin - Sayfa yükleniyor...');
     
-    // Set up auth state listener
+    // Auth state listener kurulumu
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔐 Admin - Auth durumu değişti:', event);
@@ -74,12 +71,12 @@ export default function Admin() {
           console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
           setTimeout(() => {
             loadUserProfile(session.user.id);
-          }, 500); // Biraz daha uzun bir bekleme süresi
+          }, 500);
         }
       }
     );
 
-    // Check for existing session
+    // Mevcut oturum kontrolü
     console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
@@ -352,14 +349,14 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile view - Full layout for small screens */}
+      {/* Mobil görünüm - Küçük ekranlar için tam layout */}
       <div className="lg:hidden">
-        {/* Mobile Hamburger Menu */}
+        {/* Mobil Hamburger Menü */}
         <HamburgerMenu />
         
         <div className="p-2 sm:p-4 pb-24">
           <div className="max-w-7xl mx-auto">
-            {/* Mobile Header */}
+            {/* Mobil Başlık */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold">Yönetim Paneli</h1>
@@ -377,7 +374,7 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Mobile Tabs */}
+            {/* Mobil Sekmeler */}
             <div className="mb-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 gap-1 overflow-x-auto h-auto p-1">
@@ -387,7 +384,6 @@ export default function Admin() {
                     <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
                   </div>
                   <div className="flex w-full">
-        
                     <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
                     <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
                   </div>
@@ -395,9 +391,9 @@ export default function Admin() {
                     <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
                     <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
                   </div>
-                <div className="flex w-full">
-                  <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
-                </div>
+                  <div className="flex w-full">
+                    <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
+                  </div>
                   <div className="flex w-full">
                     <TabsTrigger value="instagram" className="text-xs px-2 py-1 h-8 flex-1">Instagram</TabsTrigger>
                     <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
@@ -410,7 +406,7 @@ export default function Admin() {
               </Tabs>
             </div>
 
-            {/* Mobile Content */}
+            {/* Mobil İçerik */}
             <div className="space-y-6">
               {activeTab === "kampanyalar" && (
                 <Card>
@@ -494,7 +490,6 @@ export default function Admin() {
               {activeTab === "kategoriler" && (
                 <div className="space-y-6">
                   <CategoryManager />
-                  {/* Kategori yönetimi için debug bilgileri */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Kategori Yönetimi Bilgileri</CardTitle>
@@ -513,6 +508,7 @@ export default function Admin() {
                   </Card>
                 </div>
               )}
+              
               {activeTab === "fotograflar" && (
                 <div className="space-y-6">
                   <PhotoUploadManager onPhotoUploaded={loadAdminData} />
@@ -574,11 +570,11 @@ export default function Admin() {
           </div>
         </div>
         
-        {/* Mobile Navigation */}
+        {/* Mobil Navigasyon */}
         <MobileNavigation />
       </div>
 
-      {/* Desktop view - Sidebar layout for large screens */}
+      {/* Desktop görünüm - Büyük ekranlar için sidebar layout */}
       <div className="hidden lg:block">
         <SidebarProvider>
           <div className="min-h-screen bg-background w-full">
@@ -590,7 +586,7 @@ export default function Admin() {
                 displayName={profile.display_name}
               />
               <main className="flex-1 p-8">
-                {/* Logo Display */}
+                {/* Logo Gösterimi */}
                 <div className="mb-6">
                   <LogoDisplay />
                 </div>
@@ -603,7 +599,7 @@ export default function Admin() {
                     </p>
                   </div>
 
-                  {/* Content based on active tab */}
+                  {/* Aktif sekmeye göre içerik */}
                   <div className="space-y-6">
                     {activeTab === "kampanyalar" && (
                       <Card>
@@ -680,7 +676,7 @@ export default function Admin() {
                                             <AlertDialogHeader>
                                               <AlertDialogTitle>Kampanyayı Sil</AlertDialogTitle>
                                               <AlertDialogDescription>
-                                                Bu kampanyayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                                Bu kampanyayı silmek istediğinizden emin misiniz?
                                               </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
@@ -704,13 +700,18 @@ export default function Admin() {
                       </Card>
                     )}
                     
-                    {activeTab === "kategoriler" && <CategoryManager />}
-                     {activeTab === "fotograflar" && (
-                       <div className="space-y-6">
-                         <PhotoUploadManager onPhotoUploaded={loadAdminData} />
-                         <PhotoGalleryManager />
-                       </div>
-                     )}
+                    {activeTab === "kategoriler" && (
+                      <div className="space-y-6">
+                        <CategoryManager />
+                      </div>
+                    )}
+                    
+                    {activeTab === "fotograflar" && (
+                      <div className="space-y-6">
+                        <PhotoUploadManager onPhotoUploaded={loadAdminData} />
+                        <PhotoGalleryManager />
+                      </div>
+                    )}
 
                     {activeTab === "video-galeri" && <VideoGaleriManager />}
                     {activeTab === "ayarlar" && <CompanySettingsManager />}
@@ -770,808 +771,19 @@ export default function Admin() {
         </SidebarProvider>
       </div>
 
-      {/* KampanyaForm - Available for both mobile and desktop */}
-      <KampanyaForm
-        isOpen={showKampanyaForm}
-        onOpenChange={(open) => {
-          setShowKampanyaForm(open);
-          if (!open) setEditingKampanya(null);
-        }}
-        kampanya={editingKampanya}
-        kategoriler={kategoriler}
-        onSuccess={handleKampanyaSubmit}
-      />
+      {/* Kampanya Formu Modal */}
+      {showKampanyaForm && (
+        <KampanyaForm
+          isOpen={showKampanyaForm}
+          onClose={() => {
+            setShowKampanyaForm(false);
+            setEditingKampanya(null);
+          }}
+          kampanya={editingKampanya}
+          kategoriler={kategoriler}
+          onSuccess={handleKampanyaSubmit}
+        />
+      )}
     </div>
   );
 }
-// Fazla olan WatermarkSettingsManager importunu veya tanımını kaldır
-// import WatermarkSettingsManager from '../components/WatermarkSettingsManager'; // Sadece bir kez olmalı
-// activeTab değişkenini tanımla veya doğru şekilde kullan
-const [activeTab, setActiveTab] = useState<string>('watermark'); // Eğer yoksa ekle
-{
-  getPlatformBadge = (platform: string) => {
-    const variants: { [key: string]: "default" | "secondary" | "destructive" } = {
-      google_ads: "default",
-      instagram: "secondary", 
-      facebook: "destructive"
-    };
-    return variants[platform] || "default";
-  };
-
-  getDurumBadge = (durum: string) => {
-    const variants: { [key: string]: "default" | "secondary" | "destructive" } = {
-      aktif: "default",
-      taslak: "secondary",
-      duraklatildi: "destructive",
-      tamamlandi: "secondary"
-    };
-    return variants[durum] || "secondary";
-  };
-
-  handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Çıkış yapıldı",
-        description: "Başarıyla çıkış yaptınız.",
-      });
-      
-      navigate("/auth");
-    } catch (error: any) {
-      toast({
-        title: "Çıkış hatası",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Erişim Reddedildi</CardTitle>
-            <CardDescription>
-              Bu sayfaya erişim için giriş yapmanız gerekiyor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/auth")} className="w-full">
-              Giriş Yap
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (profile.role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Yetkisiz Erişim</CardTitle>
-            <CardDescription>
-              Bu sayfaya erişim için admin yetkisine sahip olmanız gerekiyor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/")} className="w-full">
-              Ana Sayfaya Dön
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile view - Full layout for small screens */}
-      <div className="lg:hidden">
-        {/* Mobile Hamburger Menu */}
-        <HamburgerMenu />
-        
-        <div className="p-2 sm:p-4 pb-24">
-          <div className="max-w-7xl mx-auto">
-            {/* Mobile Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Yönetim Paneli</h1>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Hoş geldiniz, {profile.display_name || user.email}
-                </p>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button variant="outline" onClick={() => navigate("/")} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                  Ana Sayfa
-                </Button>
-                <Button variant="outline" onClick={handleSignOut} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                  Çıkış Yap
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile Tabs */}
-            <div className="mb-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 gap-1 overflow-x-auto h-auto p-1">
-                  <div className="flex w-full">
-                    <TabsTrigger value="kampanyalar" className="text-xs px-2 py-1 h-8 flex-1">Kampanyalar</TabsTrigger>
-                    <TabsTrigger value="kategoriler" className="text-xs px-2 py-1 h-8 flex-1">Kategoriler</TabsTrigger>
-                    <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-        
-                    <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
-                    <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
-                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
-                  </div>
-                <div className="flex w-full">
-                  <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
-                </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="instagram" className="text-xs px-2 py-1 h-8 flex-1">Instagram</TabsTrigger>
-                    <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="ek-ozellikler" className="text-xs px-2 py-1 h-8 flex-1">Ek Özellikler</TabsTrigger>
-                    <TabsTrigger value="profil" className="text-xs px-2 py-1 h-8 flex-1">Profil</TabsTrigger>
-                  </div>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Mobile Content */}
-            <div className="space-y-6">
-              {activeTab === "kampanyalar" && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Reklam Kampanyaları</CardTitle>
-                      <CardDescription>
-                        Google Ads ve Instagram reklamlarınızı yönetin.
-                      </CardDescription>
-                    </div>
-                    <Button
-                      onClick={() => setShowKampanyaForm(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Yeni
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {kampanyalar.map((kampanya, index) => (
-                        <div key={`kampanya-${kampanya.id}-${index}`} className="border rounded-lg p-4 space-y-2">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-medium">{kampanya.kampanya_adi}</h4>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingKampanya(kampanya);
-                                  setShowKampanyaForm(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Kampanyayı Sil</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Bu kampanyayı silmek istediğinizden emin misiniz?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>İptal</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleKampanyaDelete(kampanya.id)}
-                                    >
-                                      Sil
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2 text-sm">
-                            <Badge variant={getPlatformBadge(kampanya.platform)}>
-                              {kampanya.platform === "google_ads" ? "Google Ads" : 
-                               kampanya.platform === "instagram" ? "Instagram" : "Facebook"}
-                            </Badge>
-                            <Badge variant={getDurumBadge(kampanya.durum)}>
-                              {kampanya.durum}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Bütçe: {kampanya.butce_gunluk ? `₺${kampanya.butce_gunluk}` : "-"} | 
-                            Kategori: {kampanya.kategoriler?.ad || "-"}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {activeTab === "kategoriler" && (
-                <div className="space-y-6">
-                  <CategoryManager />
-                  {/* Kategori yönetimi için debug bilgileri */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Kategori Yönetimi Bilgileri</CardTitle>
-                      <CardDescription>Kategori yönetimi ile ilgili debug bilgileri</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm">
-                        <p>Kategori yönetimi sayfasında herhangi bir sorun yaşarsanız, lütfen aşağıdaki adımları izleyin:</p>
-                        <ol className="list-decimal pl-5 space-y-1 mt-2">
-                          <li>Sayfayı yenileyin</li>
-                          <li>Tarayıcı önbelleğini temizleyin</li>
-                          <li>Farklı bir tarayıcı deneyin</li>
-                        </ol>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              {activeTab === "fotograflar" && (
-                <div className="space-y-6">
-                  <PhotoUploadManager onPhotoUploaded={loadAdminData} />
-                  <PhotoGalleryManager />
-                </div>
-              )}
-
-              {activeTab === "video-galeri" && <VideoGaleriManager />}
-              {activeTab === "ayarlar" && <CompanySettingsManager />}
-              {activeTab === "hesaplama" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Hesaplama Ürünleri</CardTitle>
-                    <CardDescription>
-                      Hesaplama sayfasında kullanılan ürünleri ve fiyatları yönetin
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <HesaplamaUrunleriManager />
-                  </CardContent>
-                </Card>
-              )}
-              {activeTab === "whatsapp" && <WhatsAppSettingsManager />}
-              {activeTab === "instagram" && <InstagramSettingsManager />}
-              {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
-              {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
-              {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
-              {activeTab === "profil" && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Profil Bilgileri</CardTitle>
-                    <CardDescription>
-                      Hesap bilgilerinizi görüntüleyin.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium">E-posta:</p>
-                      <p className="text-muted-foreground">{user.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Görünen Ad:</p>
-                      <p className="text-muted-foreground">{profile.display_name || "Belirtilmemiş"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Rol:</p>
-                      <p className="text-muted-foreground">{profile.role}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Kayıt Tarihi:</p>
-                      <p className="text-muted-foreground">
-                        {new Date(profile.created_at).toLocaleDateString("tr-TR")}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile Navigation */}
-        <MobileNavigation />
-      </div>
-
-      {/* Desktop view - Sidebar layout for large screens */}
-      <div className="hidden lg:block">
-        <SidebarProvider>
-          <div className="min-h-screen bg-background w-full">
-            <div className="flex w-full">
-              <AdminSidebar 
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                userEmail={user.email || ""}
-                displayName={profile.display_name}
-              />
-              <main className="flex-1 p-8">
-                {/* Logo Display */}
-                <div className="mb-6">
-                  <LogoDisplay />
-                </div>
-                
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <div className="mb-6">
-                    <h1 className="text-3xl font-bold mb-2">Yönetim Paneli</h1>
-                    <p className="text-muted-foreground">
-                      Hoş geldiniz, {profile.display_name || user.email}
-                    </p>
-                  </div>
-
-                  {/* Content based on active tab */}
-                  <div className="space-y-6">
-                    {activeTab === "kampanyalar" && (
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                          <div>
-                            <CardTitle>Reklam Kampanyaları</CardTitle>
-                            <CardDescription>
-                              Google Ads ve Instagram reklamlarınızı yönetin.
-                            </CardDescription>
-                          </div>
-                          <Button
-                            onClick={() => setShowKampanyaForm(true)}
-                            className="flex items-center gap-2"
-                          >
-                            <Plus className="h-4 w-4" />
-                            Yeni Kampanya
-                          </Button>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="rounded-md border">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Kampanya Adı</TableHead>
-                                  <TableHead>Platform</TableHead>
-                                  <TableHead>Durum</TableHead>
-                                  <TableHead>Günlük Bütçe</TableHead>
-                                  <TableHead>Kategori</TableHead>
-                                  <TableHead>İşlemler</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {kampanyalar.map((kampanya) => (
-                                  <TableRow key={kampanya.id}>
-                                    <TableCell className="font-medium">
-                                      {kampanya.kampanya_adi}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge variant={getPlatformBadge(kampanya.platform)}>
-                                        {kampanya.platform === "google_ads" ? "Google Ads" : 
-                                         kampanya.platform === "instagram" ? "Instagram" : "Facebook"}
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge variant={getDurumBadge(kampanya.durum)}>
-                                        {kampanya.durum}
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                      {kampanya.butce_gunluk ? `₺${kampanya.butce_gunluk}` : "-"}
-                                    </TableCell>
-                                    <TableCell>
-                                      {kampanya.kategoriler?.ad || "-"}
-                                    </TableCell>
-                                    <TableCell>
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingKampanya(kampanya);
-                                            setShowKampanyaForm(true);
-                                          }}
-                                        >
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                          <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="sm">
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          </AlertDialogTrigger>
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>Kampanyayı Sil</AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                Bu kampanyayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                                              </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel>İptal</AlertDialogCancel>
-                                              <AlertDialogAction
-                                                onClick={() => handleKampanyaDelete(kampanya.id)}
-                                              >
-                                                Sil
-                                              </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                    
-                    {activeTab === "kategoriler" && <CategoryManager />}
-                     {activeTab === "fotograflar" && (
-                       <div className="space-y-6">
-                         <PhotoUploadManager onPhotoUploaded={loadAdminData} />
-                         <PhotoGalleryManager />
-                       </div>
-                     )}
-
-                    {activeTab === "video-galeri" && <VideoGaleriManager />}
-                    {activeTab === "ayarlar" && <CompanySettingsManager />}
-                    {activeTab === "hesaplama" && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Hesaplama Ürünleri</CardTitle>
-                          <CardDescription>
-                            Hesaplama sayfasında kullanılan ürünleri ve fiyatları yönetin
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <HesaplamaUrunleriManager />
-                        </CardContent>
-                      </Card>
-                    )}
-                    {activeTab === "whatsapp" && <WhatsAppSettingsManager />}
-                    {activeTab === "instagram" && <InstagramSettingsManager />}
-                    {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
-                    {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
-                    {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
-                    {activeTab === "profil" && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Profil Bilgileri</CardTitle>
-                          <CardDescription>
-                            Hesap bilgilerinizi görüntüleyin.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div>
-                            <p className="text-sm font-medium">E-posta:</p>
-                            <p className="text-muted-foreground">{user.email}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Görünen Ad:</p>
-                            <p className="text-muted-foreground">{profile.display_name || "Belirtilmemiş"}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Rol:</p>
-                            <p className="text-muted-foreground">{profile.role}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Kayıt Tarihi:</p>
-                            <p className="text-muted-foreground">
-                              {new Date(profile.created_at).toLocaleDateString("tr-TR")}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                </Tabs>
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
-      </div>
-
-      {/* KampanyaForm - Available for both mobile and desktop */}
-      <KampanyaForm
-        isOpen={showKampanyaForm}
-        onOpenChange={(open) => {
-          setShowKampanyaForm(open);
-          if (!open) setEditingKampanya(null);
-        }}
-        kampanya={editingKampanya}
-        kategoriler={kategoriler}
-        onSuccess={handleKampanyaSubmit}
-      />
-    </div>
-  );
-}
-// Fazla olan WatermarkSettingsManager importunu veya tanımını kaldır
-// import WatermarkSettingsManager from '../components/WatermarkSettingsManager'; // Sadece bir kez olmalı
-// activeTab değişkenini tanımla veya doğru şekilde kullan
-const [activeTab, setActiveTab] = useState<string>('watermark'); // Eğer yoksa ekle
-{
-  getPlatformBadge = (platform: string) => {
-    const variants: { [key: string]: "default" | "secondary" | "destructive" } = {
-      google_ads: "default",
-      instagram: "secondary", 
-      facebook: "destructive"
-    };
-    return variants[platform] || "default";
-  };
-
-  getDurumBadge = (durum: string) => {
-    const variants: { [key: string]: "default" | "secondary" | "destructive" } = {
-      aktif: "default",
-      taslak: "secondary",
-      duraklatildi: "destructive",
-      tamamlandi: "secondary"
-    };
-    return variants[durum] || "secondary";
-  };
-
-  handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Çıkış yapıldı",
-        description: "Başarıyla çıkış yaptınız.",
-      });
-      
-      navigate("/auth");
-    } catch (error: any) {
-      toast({
-        title: "Çıkış hatası",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !profile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Erişim Reddedildi</CardTitle>
-            <CardDescription>
-              Bu sayfaya erişim için giriş yapmanız gerekiyor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/auth")} className="w-full">
-              Giriş Yap
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (profile.role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Yetkisiz Erişim</CardTitle>
-            <CardDescription>
-              Bu sayfaya erişim için admin yetkisine sahip olmanız gerekiyor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/")} className="w-full">
-              Ana Sayfaya Dön
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile view - Full layout for small screens */}
-      <div className="lg:hidden">
-        {/* Mobile Hamburger Menu */}
-        <HamburgerMenu />
-        
-        <div className="p-2 sm:p-4 pb-24">
-          <div className="max-w-7xl mx-auto">
-            {/* Mobile Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Yönetim Paneli</h1>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Hoş geldiniz, {profile.display_name || user.email}
-                </p>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button variant="outline" onClick={() => navigate("/")} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                  Ana Sayfa
-                </Button>
-                <Button variant="outline" onClick={handleSignOut} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                  Çıkış Yap
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile Tabs */}
-            <div className="mb-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 gap-1 overflow-x-auto h-auto p-1">
-                  <div className="flex w-full">
-                    <TabsTrigger value="kampanyalar" className="text-xs px-2 py-1 h-8 flex-1">Kampanyalar</TabsTrigger>
-                    <TabsTrigger value="kategoriler" className="text-xs px-2 py-1 h-8 flex-1">Kategoriler</TabsTrigger>
-                    <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-        
-                    <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
-                    <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
-                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
-                  </div>
-                <div className="flex w-full">
-                  <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
-                </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="instagram" className="text-xs px-2 py-1 h-8 flex-1">Instagram</TabsTrigger>
-                    <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="ek-ozellikler" className="text-xs px-2 py-1 h-8 flex-1">Ek Özellikler</TabsTrigger>
-                    <TabsTrigger value="profil" className="text-xs px-2 py-1 h-8 flex-1">Profil</TabsTrigger>
-                  </div>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Mobile Content */}
-            <div className="space-y-6">
-              {activeTab === "kampanyalar" && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Reklam Kampanyaları</CardTitle>
-                      <CardDescription>
-                        Google Ads ve Instagram reklamlarınızı yönetin.
-                      </CardDescription>
-                    </div>
-                    <Button
-                      onClick={() => setShowKampanyaForm(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Yeni
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {kampanyalar.map((kampanya, index) => (
-                        <div key={`kampanya-${kampanya.id}-${index}`} className="border rounded-lg p-4 space-y-2">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-medium">{kampanya.kampanya_adi}</h4>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingKampanya(kampanya);
-                                  setShowKampanyaForm(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Kampanyayı Sil</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Bu kampanyayı silmek istediğinizden emin misiniz?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>İptal</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleKampanyaDelete(kampanya.id)}
-                                    >
-                                      Sil
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2 text-sm">
-                            <Badge variant={getPlatformBadge(kampanya.platform)}>
-                              {kampanya.platform === "google_ads" ? "Google Ads" : 
-                               kampanya.platform === "instagram" ? "Instagram" : "Facebook"}
-                            </Badge>
-                            <Badge variant={getDurumBadge(kampanya.durum)}>
-                              {kampanya.durum}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Bütçe: {kampanya.butce_gunluk ? `₺${kampanya.butce_gunluk}` : "-"} | 
-                            Kategori: {kampanya.kategoriler?.ad || "-"}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {activeTab === "kategoriler" && (
-                <div className="space-y-6">
-                  <CategoryManager />
-                  {/* Kategori yönetimi için debug bilgileri */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Kategori Yönetimi Bilgileri</CardTitle>
-                      <CardDescription>Kategori yönetimi ile ilgili debug bilgileri</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm">
-                        <p>Kategori yönetimi sayfasında herhangi bir sorun yaşarsanız, lütfen aşağıdaki adımları izleyin:</p>
-                        <ol className="list-decimal pl-5 space-y-1 mt-2">
-                          <li>Sayfayı yenileyin</li>
-                          <li>Tarayıcı önbelleğini temizleyin</li>
-                          <li>Farklı bir tarayıcı deneyin</li>
-                        </ol>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              {activeTab === "fotograflar" && (
-                <div className="space-y-6">
-                  <PhotoUploadManager onPhotoUploaded={loadAdminData} />
-                  <PhotoGall
