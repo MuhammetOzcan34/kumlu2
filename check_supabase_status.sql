@@ -117,7 +117,7 @@ SELECT 'hesaplama_urunleri' as tablo, COUNT(*) as kayit_sayisi FROM public.hesap
 UNION ALL
 SELECT 'video_galeri' as tablo, COUNT(*) as kayit_sayisi FROM public.video_galeri;
 
--- 13. Trigger'ları kontrol et
+-- 13. Trigger'ları kontrol  et
 SELECT 
     trigger_name,
     event_manipulation,
