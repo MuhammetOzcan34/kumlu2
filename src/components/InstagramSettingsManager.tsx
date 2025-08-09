@@ -121,22 +121,19 @@ export const InstagramSettingsManager = () => {
   const testInstagramConnection = async () => {
     setTesting(true);
     try {
-      // Instagram API bağlantısını test et
+      // Instagram kullanıcı adını test et
       const { instagramAPI } = await import('@/api/instagram');
-      const result = await instagramAPI.testConnection(
-        settings.instagram_username,
-        settings.instagram_access_token
-      );
+      const result = await instagramAPI.testConnection(settings.instagram_username);
 
       if (result.success) {
         toast({
           title: "Başarılı",
-          description: "Instagram bağlantısı başarıyla test edildi.",
+          description: "Instagram profili bulundu ve erişilebilir.",
         });
       } else {
         toast({
-          title: "Hata",
-          description: result.error || "Instagram bağlantısı test edilemedi.",
+          title: "Uyarı",
+          description: result.error || "Instagram profili bulunamadı. Public olduğundan emin olun.",
           variant: "destructive",
         });
       }
@@ -194,15 +191,9 @@ export const InstagramSettingsManager = () => {
         <Alert>
           <Instagram className="h-4 w-4" />
           <AlertDescription>
-            Instagram API'si için geçerli bir access token gereklidir. 
-            <a 
-              href="https://developers.facebook.com/docs/instagram-basic-display-api/getting-started" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline ml-1"
-            >
-              Instagram Basic Display API dokümantasyonunu inceleyin
-            </a>
+            Instagram entegrasyonu için sadece kullanıcı adınızı girin. 
+            <strong>Önemli:</strong> Instagram profilinizin public (herkese açık) olması gerekir.
+            Private hesaplar için paylaşımlar görüntülenemez.
           </AlertDescription>
         </Alert>
 
@@ -220,8 +211,8 @@ export const InstagramSettingsManager = () => {
           </p>
         </div>
 
-        {/* Instagram Access Token */}
-        <div className="space-y-2">
+        {/* Instagram Access Token - Şimdilik gizli, gelecekte kullanılabilir */}
+        <div className="space-y-2" style={{ display: 'none' }}>
           <Label htmlFor="instagram_access_token">Instagram Access Token</Label>
           <Input
             id="instagram_access_token"
@@ -295,7 +286,7 @@ export const InstagramSettingsManager = () => {
           <Button 
             variant="outline" 
             onClick={testInstagramConnection}
-            disabled={testing || !settings.instagram_username || !settings.instagram_access_token}
+            disabled={testing || !settings.instagram_username}
             className="flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${testing ? 'animate-spin' : ''}`} />
