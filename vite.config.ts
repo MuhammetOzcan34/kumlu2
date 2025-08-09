@@ -2,18 +2,17 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(({ mode }) => {
   const plugins = [react()];
 
-  // Sadece development modunda lovable-tagger yükle
-  if (mode === 'development') {
-    try {
-      const { componentTagger } = await import("lovable-tagger");
-      plugins.push(componentTagger());
-    } catch {
-      // Production'da mevcut olmayabilir, hata bastırılır
-      console.warn('lovable-tagger could not be loaded');
-    }
+  if (mode === "development") {
+    import("lovable-tagger")
+      .then(({ componentTagger }) => {
+        plugins.push(componentTagger());
+      })
+      .catch(() => {
+        console.warn("lovable-tagger yüklenemedi (dev only).");
+      });
   }
 
   return {
@@ -29,22 +28,22 @@ export default defineConfig(async ({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom'],
-            supabase: ['@supabase/supabase-js']
-          }
-        }
-      }
+            vendor: ["react", "react-dom"],
+            supabase: ["@supabase/supabase-js"],
+          },
+        },
+      },
     },
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src")
+        "@": path.resolve(__dirname, "./src"),
       },
     },
     define: {
-      global: "globalThis"
+      global: "globalThis",
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', '@supabase/supabase-js']
-    }
+      include: ["react", "react-dom", "@supabase/supabase-js"],
+    },
   };
 });
