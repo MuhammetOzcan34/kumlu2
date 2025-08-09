@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const plugins = [react()];
 
@@ -10,8 +9,8 @@ export default defineConfig(async ({ mode }) => {
     try {
       const { componentTagger } = await import("lovable-tagger");
       plugins.push(componentTagger());
-    } catch (error) {
-      console.warn('Lovable tagger not available in production');
+    } catch {
+      // Production'da mevcut olmayabilir, hata bastırılır
     }
   }
 
@@ -20,28 +19,19 @@ export default defineConfig(async ({ mode }) => {
       host: "::",
       port: 8080,
     },
-    plugins: plugins,
+    plugins,
     build: {
-      target: 'esnext',
-      outDir: 'dist',
-      sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            supabase: ['@supabase/supabase-js'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu']
-          }
-        }
-      }
+      target: "esnext",
+      outDir: "dist",
+      sourcemap: false
     },
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        "@": path.resolve(__dirname, "./src")
       },
     },
     define: {
-      global: 'globalThis',
-    },
+      global: "globalThis"
+    }
   };
 });
