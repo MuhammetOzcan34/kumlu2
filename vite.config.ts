@@ -16,9 +16,12 @@ export default defineConfig(async ({ mode }) => {
       port: 8080,
     },
     plugins: plugins,
-    build: {
-      target: 'esnext' // Üst düzey await desteği için hedefi güncelle
-    },
+      build: {
+        target: 'esnext',
+        rollupOptions: {
+          external: ['@supabase/supabase-js'],
+        },
+      },
     resolve: {
       alias: {
         "@": "/src",
