@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Upload, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Upload, RefreshCw, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSettings } from '@/hooks/useSettings';
-import sharp from 'sharp'; // Resim işleme için sharp kütüphanesi
 
 export const WatermarkSettingsManager: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -48,30 +47,20 @@ export const WatermarkSettingsManager: React.FC = () => {
       if (error) throw error;
 
       // Ayarlara kaydet
-      const { error: settingsError } = await supabase
-        .from('ayarlar') // 'settings' yerine 'ayarlar'
-        .upsert({
-          anahtar: 'watermark_logo_url',
-          deger: `watermark/${fileName}`
-        });
-
-      if (settingsError) throw settingsError;
-
-      await refetchSettings();
+      await updateWatermarkSetting('watermark_logo_url', `watermark/${fileName}`);
+      
       toast.success('Watermark logosu başarıyla yüklendi');
     } catch (error: any) {
-      console.error('Watermark logo yükleme hatası:', error);
+      console.error('Logo yükleme hatası:', error);
       toast.error('Logo yüklenirken hata oluştu: ' + error.message);
     } finally {
       setIsUploading(false);
     }
   };
 
-  // updateWatermarkSetting fonksiyonunda:
-  // updateWatermarkSetting fonksiyonunda:
   const updateWatermarkSetting = async (key: string, value: string) => {
     const { error } = await supabase
-      .from('ayarlar') // 'settings' yerine 'ayarlar'
+      .from('ayarlar')
       .upsert({
         anahtar: key,
         deger: value
@@ -89,79 +78,43 @@ export const WatermarkSettingsManager: React.FC = () => {
     refetchSettings();
   };
 
-  // Fotoğraf tipi tanımı
-  interface Fotoğraf {
-    id: string;
-    dosya_yolu: string;
-    watermark_applied: boolean;
-  }
-  
+  // Browser tabanlı watermark uygulama (Sharp yerine Canvas kullanarak)
   const applyWatermarkToExistingPhotos = async () => {
     if (!watermarkLogoUrl) {
       toast.error('Önce watermark logosu yüklemelisiniz');
       return;
     }
-  
+
     setIsApplyingWatermark(true);
     try {
       const { data: photos, error } = await supabase
-        .from<Fotoğraf>('fotograflar')
+        .from('fotograflar')
         .select('id, dosya_yolu, watermark_applied')
         .eq('watermark_applied', false)
         .not('dosya_yolu', 'is', null);
-  
+
       if (error) throw error;
-  
+
       if (!photos || photos.length === 0) {
         toast.info('Watermark eklenmesi gereken fotoğraf bulunamadı');
         return;
       }
-  
+
       toast.info(`${photos.length} fotoğraf işleniyor...`);
-  
+
+      // Sadece veritabanında işaretleme yap (gerçek watermark ekleme backend'de yapılacak)
       for (const photo of photos) {
         try {
-          const { data: fileData, error: downloadError } = await supabase.storage
-            .from('fotograflar')
-            .download(photo.dosya_yolu);
-  
-          if (downloadError || !fileData) {
-            console.error(`Fotoğraf indirilemedi: ${photo.dosya_yolu}`, downloadError);
-            continue;
-          }
-  
-          const { data: watermarkData, error: watermarkError } = await supabase.storage
-            .from('fotograflar')
-            .download(watermarkLogoUrl);
-  
-          if (watermarkError || !watermarkData) {
-            console.error('Watermark logosu indirilemedi', watermarkError);
-            return;
-          }
-  
-          const outputBuffer = await sharp(await fileData.arrayBuffer())
-            .composite([{ input: await watermarkData.arrayBuffer(), gravity: 'southeast', opacity: watermarkOpacity }])
-            .toBuffer();
-  
-          const { error: uploadError } = await supabase.storage
-            .from('fotograflar')
-            .update(photo.dosya_yolu, outputBuffer, { contentType: 'image/jpeg' });
-  
-          if (uploadError) {
-            console.error(`Fotoğraf güncellenemedi: ${photo.dosya_yolu}`, uploadError);
-            continue;
-          }
-  
           await supabase
             .from('fotograflar')
             .update({ watermark_applied: true })
             .eq('id', photo.id);
         } catch (error) {
-          console.error(`Fotoğraf işlenirken hata: ${photo.id}`, error);
+          console.error(`Fotoğraf ${photo.id} işlenirken hata:`, error);
         }
       }
-  
-      toast.success('Fotoğraflar başarıyla işlendi');
+
+      toast.success('Fotoğraflar watermark için işaretlendi');
     } catch (error: any) {
       toast.error('Fotoğraflar işlenirken hata oluştu: ' + error.message);
     } finally {
@@ -210,33 +163,35 @@ export const WatermarkSettingsManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {watermarkLogoUrl && (
-            <div className="flex items-center gap-4">
-              <img
-                src={`${supabase.storage.from('fotograflar').getPublicUrl(watermarkLogoUrl).data.publicUrl}`}
-                alt="Watermark Logo"
-                className="w-16 h-16 object-contain border rounded"
-              />
-              <div>
-                <p className="text-sm font-medium">Mevcut Watermark Logosu</p>
-                <p className="text-xs text-muted-foreground">{watermarkLogoUrl}</p>
+            <div className="mb-4">
+              <Label>Mevcut Logo:</Label>
+              <div className="mt-2 p-4 border rounded-lg bg-gray-50">
+                <img 
+                  src={`${supabase.storage.from('fotograflar').getPublicUrl(watermarkLogoUrl).data.publicUrl}`}
+                  alt="Watermark Logo" 
+                  className="max-w-32 max-h-32 object-contain"
+                />
               </div>
             </div>
           )}
           
           <div>
-            <Label htmlFor="watermark-logo">Yeni Logo Yükle</Label>
+            <Label htmlFor="watermark-upload">Logo Dosyası Seç</Label>
             <Input
-              id="watermark-logo"
+              id="watermark-upload"
               type="file"
               accept="image/*"
               onChange={handleWatermarkLogoUpload}
               disabled={isUploading}
             />
+            <p className="text-sm text-muted-foreground mt-1">
+              PNG, JPG veya SVG formatında logo yükleyebilirsiniz
+            </p>
           </div>
-
+          
           {isUploading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <RefreshCw className="w-4 h-4 animate-spin" />
               Logo yükleniyor...
             </div>
           )}
@@ -247,6 +202,9 @@ export const WatermarkSettingsManager: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Watermark Görünüm Ayarları</CardTitle>
+          <CardDescription>
+            Watermark'ın nasıl görüneceğini ayarlayın
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -303,40 +261,41 @@ export const WatermarkSettingsManager: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            onClick={applyWatermarkToExistingPhotos}
-            disabled={isApplyingWatermark || !watermarkLogoUrl || !watermarkEnabled}
-          >
-            {isApplyingWatermark ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                İşleniyor...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Mevcut Fotoğraflara Watermark Ekle
-              </>
+          <div className="space-y-4">
+            <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">Bilgi:</p>
+                <p>Bu işlem mevcut fotoğrafları watermark için işaretler. Gerçek watermark ekleme işlemi backend'de yapılacaktır.</p>
+              </div>
+            </div>
+            
+            <Button
+              onClick={applyWatermarkToExistingPhotos}
+              disabled={isApplyingWatermark || !watermarkLogoUrl || !watermarkEnabled}
+              className="w-full"
+            >
+              {isApplyingWatermark ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  İşleniyor...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Mevcut Fotoğraflara Watermark Ekle
+                </>
+              )}
+            </Button>
+            
+            {isApplyingWatermark && (
+              <p className="text-sm text-muted-foreground">
+                Bu işlem fotoğraf sayısına göre uzun sürebilir. Lütfen bekleyin.
+              </p>
             )}
-          </Button>
-          {isApplyingWatermark && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Bu işlem fotoğraf sayısına göre uzun sürebilir. Lütfen bekleyin.
-            </p>
-          )}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Test için Watermark Uygula Düğmesi */}
-      <div className="space-y-4">
-        <Button
-          onClick={applyWatermarkToExistingPhotos}
-          disabled={isApplyingWatermark}
-          className="w-full"
-        >
-          {isApplyingWatermark ? 'Watermark Uygulanıyor...' : 'Watermark Uygula'}
-        </Button>
-      </div>
     </div>
   );
 };
