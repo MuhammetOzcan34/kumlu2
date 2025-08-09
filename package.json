@@ -1,6 +1,7 @@
 {
   "name": "kumlu2",
   "version": "1.0.0",
+  "type": "module",
   "description": "Kumlu Folyo Projesi",
   "main": "index.js",
   "scripts": {
