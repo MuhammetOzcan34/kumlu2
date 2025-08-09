@@ -1,5 +1,5 @@
 -- ========================================
--- SUPABASE DURUM KONTROL SORGULARI
+-- SUPABASE DURUM KONTROL SORGULARI - DÜZELTİLMİŞ
 -- ========================================
 
 -- 1. Tüm tabloları listele
@@ -20,7 +20,23 @@ FROM pg_tables
 WHERE schemaname = 'public'
 ORDER BY tablename;
 
--- 3. Tüm politikaları listele
+-- 3. Profiles tablosunu kontrol et
+SELECT COUNT(*) as profile_sayisi FROM public.profiles;
+
+-- 4. Ayarlar tablosunu kontrol et
+SELECT COUNT(*) as ayar_sayisi FROM public.ayarlar;
+
+-- 5. Admin kullanıcısını kontrol et
+SELECT 
+    user_id,
+    email,
+    full_name,
+    role,
+    created_at
+FROM public.profiles
+WHERE role = 'admin';
+
+-- 6. Tüm politikaları listele
 SELECT 
     schemaname,
     tablename,
@@ -34,7 +50,7 @@ FROM pg_policies
 WHERE schemaname = 'public'
 ORDER BY tablename, policyname;
 
--- 4. Storage bucket'ları kontrol et
+-- 7. Storage bucket'ları kontrol et
 SELECT 
     name,
     public,
@@ -43,7 +59,7 @@ SELECT
 FROM storage.buckets
 ORDER BY name;
 
--- 5. Storage politikalarını kontrol et
+-- 8. Storage politikalarını kontrol et
 SELECT 
     schemaname,
     tablename,
@@ -57,7 +73,7 @@ FROM pg_policies
 WHERE schemaname = 'storage'
 ORDER BY tablename, policyname;
 
--- 6. Kullanıcıları kontrol et
+-- 9. Kullanıcıları kontrol et
 SELECT 
     id,
     email,
@@ -67,32 +83,33 @@ SELECT
 FROM auth.users
 ORDER BY created_at DESC;
 
--- 7. Profiles tablosunu kontrol et
+-- 10. Profiles tablosunu detaylı kontrol et
 SELECT 
     id,
+    user_id,
     email,
     full_name,
+    display_name,
     role,
     created_at,
     updated_at
 FROM public.profiles
 ORDER BY created_at DESC;
 
--- 8. Ayarlar tablosunu kontrol et
+-- 11. Ayarlar tablosunu kontrol et
 SELECT 
     anahtar,
     deger,
     aciklama,
-    guncelleme_tarihi
+    created_at,
+    updated_at
 FROM public.ayarlar
 ORDER BY anahtar;
 
--- 9. Diğer tabloların kayıt sayılarını kontrol et
+-- 12. Diğer tabloların kayıt sayılarını kontrol et
 SELECT 'kategoriler' as tablo, COUNT(*) as kayit_sayisi FROM public.kategoriler
 UNION ALL
 SELECT 'fotograflar' as tablo, COUNT(*) as kayit_sayisi FROM public.fotograflar
-UNION ALL
-SELECT 'kampanyalar' as tablo, COUNT(*) as kayit_sayisi FROM public.kampanyalar
 UNION ALL
 SELECT 'servis_bedelleri' as tablo, COUNT(*) as kayit_sayisi FROM public.servis_bedelleri
 UNION ALL
@@ -100,7 +117,7 @@ SELECT 'hesaplama_urunleri' as tablo, COUNT(*) as kayit_sayisi FROM public.hesap
 UNION ALL
 SELECT 'video_galeri' as tablo, COUNT(*) as kayit_sayisi FROM public.video_galeri;
 
--- 10. Trigger'ları kontrol et
+-- 13. Trigger'ları kontrol et
 SELECT 
     trigger_name,
     event_manipulation,
@@ -108,4 +125,4 @@ SELECT
     action_statement
 FROM information_schema.triggers
 WHERE trigger_schema = 'public'
-ORDER BY event_object_table, trigger_name; 
+ORDER BY event_object_table, trigger_name;
