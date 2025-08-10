@@ -214,11 +214,11 @@ export const WatermarkSettingsManager: React.FC = () => {
           {watermarkLogoUrl && (
             <div className="mb-4">
               <Label>Mevcut Logo:</Label>
-              <div className="mt-2 p-4 border rounded-lg bg-gray-50">
+              <div className="mt-2 p-4 border rounded-lg bg-muted/50 dark:bg-muted/20">
                 <img 
                   src={`${supabase.storage.from('fotograflar').getPublicUrl(watermarkLogoUrl).data.publicUrl}`}
                   alt="Watermark Logo" 
-                  className="max-w-32 max-h-32 object-contain"
+                  className="max-w-32 max-h-32 object-contain mx-auto"
                 />
               </div>
             </div>
@@ -283,19 +283,19 @@ export const WatermarkSettingsManager: React.FC = () => {
           </div>
 
           <div>
-            <Label htmlFor="position">Pozisyon</Label>
+            <Label htmlFor="position" className="text-foreground">Pozisyon</Label>
             <select
               id="position"
               value={watermarkPosition}
               onChange={(e) => updateWatermarkSetting('watermark_position', e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-background text-foreground border-border focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <option value="pattern">Pattern (Tüm fotoğraf)</option>
-              <option value="center">Merkez</option>
-              <option value="bottom-right">Sağ Alt</option>
-              <option value="bottom-left">Sol Alt</option>
-              <option value="top-right">Sağ Üst</option>
-              <option value="top-left">Sol Üst</option>
+              <option value="pattern" className="bg-background text-foreground">Pattern (Tüm fotoğraf)</option>
+              <option value="center" className="bg-background text-foreground">Merkez</option>
+              <option value="bottom-right" className="bg-background text-foreground">Sağ Alt</option>
+              <option value="bottom-left" className="bg-background text-foreground">Sol Alt</option>
+              <option value="top-right" className="bg-background text-foreground">Sağ Üst</option>
+              <option value="top-left" className="bg-background text-foreground">Sol Üst</option>
             </select>
           </div>
         </CardContent>
@@ -311,9 +311,9 @@ export const WatermarkSettingsManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-start gap-2 p-3 bg-green-50 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-green-600 mt-0.5" />
-              <div className="text-sm text-green-800">
+            <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+              <AlertCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+              <div className="text-sm text-green-800 dark:text-green-200">
                 <p className="font-medium">Bilgi:</p>
                 <p>Bu işlem mevcut fotoğraflara gerçek watermark ekler. İşlem tamamlandıktan sonra fotoğraflar filigranla birlikte görüntülenecektir.</p>
               </div>
