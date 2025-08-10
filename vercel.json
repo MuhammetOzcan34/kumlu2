@@ -13,10 +13,6 @@
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
     }
   ],
   "headers": [
