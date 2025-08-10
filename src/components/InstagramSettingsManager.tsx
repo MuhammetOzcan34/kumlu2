@@ -87,19 +87,19 @@ export const InstagramSettingsManager = () => {
   const testInstagramConnection = async () => {
     setTesting(true);
     try {
-      // Instagram kullanıcı adını test et
+      // Instagram Access Token'ı test et
       const { instagramAPI } = await import('@/api/instagram');
-      const result = await instagramAPI.testConnection(settings.instagram_username);
+      const result = await instagramAPI.testConnection(settings.instagram_access_token);
 
       if (result.success) {
         toast({
           title: "Başarılı",
-          description: "Instagram profili bulundu ve erişilebilir.",
+          description: "Instagram Access Token geçerli ve çalışıyor.",
         });
       } else {
         toast({
           title: "Uyarı",
-          description: result.error || "Instagram profili bulunamadı. Public olduğundan emin olun.",
+          description: result.error || "Access Token geçersiz veya süresi dolmuş.",
           variant: "destructive",
         });
       }
@@ -177,8 +177,8 @@ export const InstagramSettingsManager = () => {
           </p>
         </div>
 
-        {/* Instagram Access Token - Şimdilik gizli, gelecekte kullanılabilir */}
-        <div className="space-y-2" style={{ display: 'none' }}>
+        {/* Instagram Access Token - Basic Display API için gerekli */}
+        <div className="space-y-2">
           <Label htmlFor="instagram_access_token">Instagram Access Token</Label>
           <Input
             id="instagram_access_token"
@@ -188,7 +188,10 @@ export const InstagramSettingsManager = () => {
             onChange={(e) => handleInputChange("instagram_access_token", e.target.value)}
           />
           <p className="text-sm text-muted-foreground">
-            Instagram Basic Display API access token'ınızı girin
+            Instagram Basic Display API access token'ınızı girin. 
+            <a href="#" className="text-primary hover:underline ml-1" onClick={() => window.alert('Token alma adımları için talimatları takip edin.')}>
+              Token nasıl alınır?
+            </a>
           </p>
         </div>
 
@@ -252,7 +255,7 @@ export const InstagramSettingsManager = () => {
           <Button 
             variant="outline" 
             onClick={testInstagramConnection}
-            disabled={testing || !settings.instagram_username}
+            disabled={testing || !settings.instagram_access_token}
             className="flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${testing ? 'animate-spin' : ''}`} />

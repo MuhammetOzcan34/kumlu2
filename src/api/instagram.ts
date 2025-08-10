@@ -1,6 +1,7 @@
 
-// Instagram Feed API
-// Bu dosya public Instagram profillerinden veri çeker
+
+// Instagram Basic Display API
+// Bu dosya resmi Instagram Basic Display API'sini kullanır
 
 interface InstagramPost {
   id: string;
@@ -17,15 +18,41 @@ interface InstagramAPIResponse {
   error?: string;
 }
 
+interface InstagramMediaResponse {
+  data: {
+    id: string;
+    caption?: string;
+    media_type: string;
+    media_url: string;
+    permalink: string;
+    thumbnail_url?: string;
+    timestamp: string;
+  }[];
+  paging?: {
+    cursors: {
+      before: string;
+      after: string;
+    };
+    next?: string;
+  };
+}
+
 // Instagram API fonksiyonları
 export const instagramAPI = {
-  // Instagram paylaşımlarını getir (gerçek profil verisi)
-  async getPosts(username: string, count: number = 6): Promise<InstagramAPIResponse> {
+  // Instagram paylaşımlarını getir (Basic Display API)
+  async getPosts(accessToken: string, count: number = 6): Promise<InstagramAPIResponse> {
     try {
-      console.log(`📸 Instagram posts getiriliyor: @${username}`);
+      console.log(`📸 Instagram Basic Display API ile posts getiriliyor...`);
+
+      if (!accessToken) {
+        return {
+          success: false,
+          error: 'Instagram Access Token gerekli. Lütfen ayarlarda token ekleyin.'
+        };
+      }
 
       // Cache kontrolü
-      const cacheKey = `instagram_${username}_${count}`;
+      const cacheKey = `instagram_basic_${accessToken.substring(0, 10)}_${count}`;
       const cached = localStorage.getItem(cacheKey);
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
 
@@ -40,82 +67,58 @@ export const instagramAPI = {
         }
       }
 
-      // Instagram RSS alternatifi kullan (Picuki.com API)
-      try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.picuki.com/profile/${username}`)}`;
+      // Instagram Basic Display API endpoint
+      const apiUrl = `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp&access_token=${accessToken}&limit=${count}`;
+
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         
-        const response = await fetch(proxyUrl, {
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const htmlContent = data.contents;
-          
-          // HTML'den post verilerini çıkar
-          const posts = this.parseInstagramPosts(htmlContent, username, count);
-          
-          if (posts.length > 0) {
-            console.log(`✅ Instagram API başarılı: ${posts.length} post bulundu`);
-
-            // Cache'e kaydet
-            localStorage.setItem(cacheKey, JSON.stringify(posts));
-            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-
-            return {
-              success: true,
-              posts
-            };
-          }
+        if (response.status === 401) {
+          return {
+            success: false,
+            error: 'Instagram Access Token geçersiz veya süresi dolmuş. Lütfen yeni token alın.'
+          };
         }
-      } catch (apiError) {
-        console.warn('⚠️ Instagram API hatası:', apiError);
+        
+        return {
+          success: false,
+          error: errorData.error?.message || `API Hatası: ${response.status}`
+        };
       }
 
-      // Alternatif yöntem: Instagram Basic Display API benzeri
-      try {
-        const alternativeUrl = `https://instagram.com/${username}/channel/?__a=1&__d=dis`;
-        
-        const response = await fetch(alternativeUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
+      const data: InstagramMediaResponse = await response.json();
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Instagram alternatif API yanıtı:', data);
-          
-          // Veri yapısına göre post'ları çıkar
-          const posts = this.parseAlternativeResponse(data, username, count);
-          
-          if (posts.length > 0) {
-            localStorage.setItem(cacheKey, JSON.stringify(posts));
-            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-            
-            return {
-              success: true,
-              posts
-            };
-          }
-        }
-      } catch (altError) {
-        console.warn('⚠️ Instagram alternatif API hatası:', altError);
+      if (data.data && data.data.length > 0) {
+        const posts: InstagramPost[] = data.data.map((item) => ({
+          id: item.id,
+          media_url: item.media_type === 'VIDEO' && item.thumbnail_url ? item.thumbnail_url : item.media_url,
+          caption: item.caption || 'Instagram paylaşımı',
+          timestamp: item.timestamp,
+          media_type: item.media_type as 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM',
+          permalink: item.permalink
+        }));
+
+        console.log(`✅ Instagram Basic Display API başarılı: ${posts.length} post bulundu`);
+
+        // Cache'e kaydet
+        localStorage.setItem(cacheKey, JSON.stringify(posts));
+        localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+
+        return {
+          success: true,
+          posts
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Instagram hesabınızda paylaşım bulunamadı.'
+        };
       }
-
-      // Her iki yöntem de başarısızsa hata döndür
-      console.error('❌ Instagram verileri alınamadı');
-      return {
-        success: false,
-        error: `@${username} profili için Instagram verileri alınamadı. Profil public olduğundan emin olun.`
-      };
 
     } catch (error) {
-      console.error('❌ Instagram API genel hatası:', error);
+      console.error('❌ Instagram Basic Display API hatası:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Instagram verileri yüklenemedi'
@@ -123,110 +126,38 @@ export const instagramAPI = {
     }
   },
 
-  // HTML içeriğinden post'ları çıkar
-  parseInstagramPosts(htmlContent: string, username: string, count: number): InstagramPost[] {
-    const posts: InstagramPost[] = [];
-    
+  // Access token'ı test et
+  async testConnection(accessToken: string): Promise<InstagramAPIResponse> {
     try {
-      // HTML'den post linklerini bul
-      const postRegex = /\/p\/([A-Za-z0-9_-]+)\//g;
-      const imageRegex = /https:\/\/[^"]*\.jpg|https:\/\/[^"]*\.jpeg/g;
-      
-      const postMatches = [...htmlContent.matchAll(postRegex)];
-      const imageMatches = [...htmlContent.matchAll(imageRegex)];
-      
-      for (let i = 0; i < Math.min(count, postMatches.length, imageMatches.length); i++) {
-        const shortcode = postMatches[i][1];
-        const imageUrl = imageMatches[i][0];
-        
-        posts.push({
-          id: `${username}_${shortcode}`,
-          media_url: imageUrl,
-          caption: `@${username} Instagram paylaşımı`,
-          timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/p/${shortcode}/`
-        });
-      }
-    } catch (parseError) {
-      console.warn('⚠️ HTML parse hatası:', parseError);
-    }
-    
-    return posts;
-  },
-
-  // Alternatif API yanıtını işle
-  parseAlternativeResponse(data: any, username: string, count: number): InstagramPost[] {
-    const posts: InstagramPost[] = [];
-    
-    try {
-      // API yanıt yapısına göre veriyi çıkar
-      const items = data?.items || data?.data?.items || data?.graphql?.user?.edge_owner_to_timeline_media?.edges || [];
-      
-      for (let i = 0; i < Math.min(count, items.length); i++) {
-        const item = items[i];
-        const node = item.node || item;
-        
-        posts.push({
-          id: node.id || `${username}_${i}`,
-          media_url: node.display_url || node.image_versions2?.candidates?.[0]?.url || node.media_url,
-          caption: node.caption?.text || node.caption || `@${username} paylaşımı`,
-          timestamp: new Date((node.taken_at || node.taken_at_timestamp || Date.now() / 1000) * 1000).toISOString(),
-          media_type: node.media_type === 2 ? 'VIDEO' : 'IMAGE',
-          permalink: `https://instagram.com/p/${node.code || node.shortcode}/`
-        });
-      }
-    } catch (parseError) {
-      console.warn('⚠️ Alternatif parse hatası:', parseError);
-    }
-    
-    return posts;
-  },
-
-  // Instagram bağlantısını test et
-  async testConnection(username: string): Promise<InstagramAPIResponse> {
-    try {
-      if (!username || username.length < 1) {
+      if (!accessToken) {
         return {
           success: false,
-          error: 'Geçerli bir Instagram kullanıcı adı girin'
+          error: 'Access Token gerekli'
         };
       }
 
-      // Username format kontrolü
-      const validUsername = /^[a-zA-Z0-9._]+$/.test(username);
-      if (!validUsername) {
-        return {
-          success: false,
-          error: 'Geçersiz kullanıcı adı formatı. Sadece harf, rakam, nokta ve alt çizgi kullanın.'
-        };
-      }
+      console.log('🔍 Instagram Access Token test ediliyor...');
 
-      console.log(`🔍 Instagram profili test ediliyor: @${username}`);
-
-      // Gerçek test için basit bir istek yap
-      const testUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.instagram.com/${username}/`)}`;
-      const response = await fetch(testUrl);
+      // Kullanıcı bilgilerini al
+      const userUrl = `https://graph.instagram.com/me?fields=id,username,media_count&access_token=${accessToken}`;
+      
+      const response = await fetch(userUrl);
       
       if (response.ok) {
-        const data = await response.json();
+        const userData = await response.json();
+        console.log('✅ Instagram bağlantısı başarılı:', userData);
         
-        if (data.contents && !data.contents.includes('Page Not Found')) {
-          return {
-            success: true
-          };
-        } else {
-          return {
-            success: false,
-            error: 'Instagram profili bulunamadı veya private'
-          };
-        }
+        return {
+          success: true
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        
+        return {
+          success: false,
+          error: errorData.error?.message || 'Access Token geçersiz'
+        };
       }
-
-      return {
-        success: false,
-        error: 'Instagram profili kontrol edilemedi'
-      };
     } catch (error) {
       console.error('❌ Instagram test hatası:', error);
       return {
@@ -234,5 +165,37 @@ export const instagramAPI = {
         error: 'Bağlantı test edilemedi'
       };
     }
+  },
+
+  // Long-lived token al (60 gün geçerli)
+  async getLongLivedToken(shortLivedToken: string): Promise<{success: boolean, token?: string, error?: string}> {
+    try {
+      const appId = 'YOUR_APP_ID'; // Bu değeri Meta Developers'dan alacaksınız
+      const appSecret = 'YOUR_APP_SECRET'; // Bu değeri Meta Developers'dan alacaksınız
+      
+      const url = `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${appSecret}&access_token=${shortLivedToken}`;
+      
+      const response = await fetch(url, { method: 'GET' });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          token: data.access_token
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.error?.message || 'Token dönüştürülemedi'
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Token dönüştürme hatası'
+      };
+    }
   }
 };
+

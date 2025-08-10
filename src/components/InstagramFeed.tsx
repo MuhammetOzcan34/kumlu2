@@ -13,6 +13,7 @@ interface InstagramPost {
 
 export const InstagramFeed = () => {
   const instagramUsername = localStorage.getItem("instagram_username") || "";
+  const instagramAccessToken = localStorage.getItem("instagram_access_token") || "";
   const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
   const instagramPostCount = parseInt(localStorage.getItem("instagram_post_count") || "6");
   const instagramCacheDuration = parseInt(localStorage.getItem("instagram_cache_duration") || "3600");
@@ -22,8 +23,8 @@ export const InstagramFeed = () => {
   const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(instagramPostCount);
 
-  // Eğer Instagram aktif değilse veya kullanıcı adı ayarlanmamışsa bileşeni gösterme
-  if (!instagramEnabled || !instagramUsername) {
+  // Eğer Instagram aktif değilse veya access token ayarlanmamışsa bileşeni gösterme
+  if (!instagramEnabled || !instagramAccessToken) {
     return null;
   }
 
@@ -54,7 +55,7 @@ export const InstagramFeed = () => {
 
       // API'den yeni veri al
       const { instagramAPI } = await import('@/api/instagram');
-      const data = await instagramAPI.getPosts(instagramUsername, instagramPostCount);
+      const data = await instagramAPI.getPosts(instagramAccessToken, instagramPostCount);
       
       if (data.success && data.posts) {
         setPosts(data.posts);
@@ -206,4 +207,4 @@ export const InstagramFeed = () => {
       )}
     </div>
   );
-}; 
+};
