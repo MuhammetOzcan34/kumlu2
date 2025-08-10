@@ -1,19 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSetting } from '@/hooks/useSettings';
 
 export const PWAIconManager = () => {
   const companyLogo = useSetting('firma_logo_url');
   const companyName = useSetting('firma_adi');
 
-  useEffect(() => {
-    if (companyLogo) {
-      updateFavicon(companyLogo);
-      updateManifestName(companyName);
-      console.log('✅ PWA favicon updated with company logo');
-    }
-  }, [companyLogo, companyName]);
-
-  const updateFavicon = (logoUrl: string) => {
+  const updateFavicon = useCallback((logoUrl: string) => {
     // Logo URL'sini oluştur
     const getFullLogoUrl = (logoPath: string) => {
       if (logoPath.startsWith('http')) {
@@ -61,9 +53,9 @@ export const PWAIconManager = () => {
         }, 100);
       });
     }, 500);
-  };
+  }, []);
 
-  const updateManifestName = (companyName: string) => {
+  const updateManifestName = useCallback((companyName: string) => {
     if (companyName) {
       // Update page title
       document.title = companyName;
@@ -75,7 +67,20 @@ export const PWAIconManager = () => {
         console.log(`Updated app name to: ${companyName}`);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (companyLogo) {
+      updateFavicon(companyLogo);
+      console.log('✅ PWA favicon updated with company logo');
+    }
+  }, [companyLogo, updateFavicon]);
+
+  useEffect(() => {
+    if (companyName) {
+      updateManifestName(companyName);
+    }
+  }, [companyName, updateManifestName]);
 
   return null; // This component doesn't render anything
-}; 
+};

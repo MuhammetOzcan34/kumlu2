@@ -4,14 +4,9 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "functions": {
-    "app/**/*.{js,ts}": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
-    "VITE_SUPABASE_URL": "@vite_supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@vite_supabase_anon_key"
+    "VITE_SUPABASE_URL": "https://kepfuptrmccexgyzhcti.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlcGZ1cHRybWNjZXhneXpoY3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwOTE0MDcsImV4cCI6MjA2OTY2NzQwN30.9FAlJYC5UVUKh3407eqag5PX90vaUtBreG5d4AcCVm0"
   },
   "rewrites": [
     {
@@ -28,13 +23,71 @@
           "value": "application/manifest+json"
         },
         {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.ico$",
+      "headers": [
+        {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
         }
       ]
     },
     {
-      "source": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|webp))$",
+      "source": "/(.*)\\.png$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.jpg$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.jpeg$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.gif$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.svg$",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.webp$",
       "headers": [
         {
           "key": "Cache-Control",

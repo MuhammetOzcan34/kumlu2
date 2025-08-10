@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import { PWAIconManager } from "@/components/PWAIconManager";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { lazy, Suspense } from 'react';
 import Index from "./pages/Index";
 import Kumlamalar from "./pages/Kumlamalar";
 import AracGiydirme from "./pages/AracGiydirme";
@@ -16,11 +17,12 @@ import ServisBedelleri from "./pages/ServisBedelleri";
 import Hesaplama from "./pages/Hesaplama";
 import Iletisim from "./pages/Iletisim";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
 import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
 import KullanimSartlari from "./pages/KullanimSartlari";
 import NotFound from "./pages/NotFound";
-import { lazy, Suspense } from 'react';
+
+// Lazy load büyük componentler
+const Admin = lazy(() => import('./pages/Admin'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,29 +51,17 @@ const App = () => (
           <Route path="/tabelalar" element={<Tabelalar />} />
           <Route path="/referanslar" element={<Referanslar />} />
           <Route path="/video-galeri" element={<VideoGaleri />} />
-          {/* Servis Bedeli sayfası sadece admin panelinde erişilebilir */}
+          <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
           <Route path="/hesaplama" element={<Hesaplama />} />
           <Route path="/iletisim" element={<Iletisim />} />
           <Route path="/auth" element={<Auth />} />
-          // Route'larda Suspense kullanın
-          <Suspense fallback={<div>Yükleniyor...</div>}>
-            <Routes>
-              {/* Servis Bedeli sayfası sadece admin panelinde erişilebilir */}
-              <Route path="/hesaplama" element={<Hesaplama />} />
-              <Route path="/iletisim" element={<Iletisim />} />
-              <Route path="/auth" element={<Auth />} />
-              // Lazy load büyük componentler
-              const Admin = lazy(() => import('./pages/Admin'));
-              const Hesaplama = lazy(() => import('./pages/Hesaplama'));
-              const VideoGaleri = lazy(() => import('./pages/VideoGaleri'));
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/hesaplama" element={<Hesaplama />} />
-              <Route path="/video-galeri" element={<VideoGaleri />} />
-            </Routes>
-          </Suspense>
+          <Route path="/admin" element={
+            <Suspense fallback={<div>Yükleniyor...</div>}>
+              <Admin />
+            </Suspense>
+          } />
           <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
           <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
         <WhatsAppWidget />
