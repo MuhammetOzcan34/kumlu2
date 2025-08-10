@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import { PWAIconManager } from "@/components/PWAIconManager";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { lazy, Suspense } from 'react';
 import Index from "./pages/Index";
 import Kumlamalar from "./pages/Kumlamalar";
@@ -38,35 +39,37 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <PWAIconManager />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/kumlamalar" element={<Kumlamalar />} />
-          <Route path="/arac-giydirme" element={<AracGiydirme />} />
-          <Route path="/tabelalar" element={<Tabelalar />} />
-          <Route path="/referanslar" element={<Referanslar />} />
-          <Route path="/video-galeri" element={<VideoGaleri />} />
-          <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
-          <Route path="/hesaplama" element={<Hesaplama />} />
-          <Route path="/iletisim" element={<Iletisim />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={
-            <Suspense fallback={<div>Yükleniyor...</div>}>
-              <Admin />
-            </Suspense>
-          } />
-          <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
-          <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <WhatsAppWidget />
-      </BrowserRouter>
-    </TooltipProvider>
+    <SettingsProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <PWAIconManager />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/kumlamalar" element={<Kumlamalar />} />
+            <Route path="/arac-giydirme" element={<AracGiydirme />} />
+            <Route path="/tabelalar" element={<Tabelalar />} />
+            <Route path="/referanslar" element={<Referanslar />} />
+            <Route path="/video-galeri" element={<VideoGaleri />} />
+            <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
+            <Route path="/hesaplama" element={<Hesaplama />} />
+            <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={
+              <Suspense fallback={<div>Yükleniyor...</div>}>
+                <Admin />
+              </Suspense>
+            } />
+            <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
+            <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <WhatsAppWidget />
+        </BrowserRouter>
+      </TooltipProvider>
+    </SettingsProvider>
   </QueryClientProvider>
 );
 
