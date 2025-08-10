@@ -25,11 +25,22 @@ export default defineConfig(({ mode }) => {
       target: "esnext",
       outDir: "dist",
       sourcemap: false,
+      chunkSizeWarningLimit: 1000, // Uyarı limitini artır
       rollupOptions: {
         output: {
           manualChunks: {
+            // Vendor kütüphaneleri ayır
             vendor: ["react", "react-dom"],
             supabase: ["@supabase/supabase-js"],
+            ui: [
+              "@radix-ui/react-dialog",
+              "@radix-ui/react-dropdown-menu",
+              "@radix-ui/react-tabs",
+              "@radix-ui/react-toast"
+            ],
+            router: ["react-router-dom"],
+            query: ["@tanstack/react-query"],
+            icons: ["lucide-react", "@radix-ui/react-icons"]
           },
         },
       },

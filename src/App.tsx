@@ -20,6 +20,7 @@ import Admin from "./pages/Admin";
 import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
 import KullanimSartlari from "./pages/KullanimSartlari";
 import NotFound from "./pages/NotFound";
+import { lazy, Suspense } from 'react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,7 +53,22 @@ const App = () => (
           <Route path="/hesaplama" element={<Hesaplama />} />
           <Route path="/iletisim" element={<Iletisim />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
+          // Route'larda Suspense kullanın
+          <Suspense fallback={<div>Yükleniyor...</div>}>
+            <Routes>
+              {/* Servis Bedeli sayfası sadece admin panelinde erişilebilir */}
+              <Route path="/hesaplama" element={<Hesaplama />} />
+              <Route path="/iletisim" element={<Iletisim />} />
+              <Route path="/auth" element={<Auth />} />
+              // Lazy load büyük componentler
+              const Admin = lazy(() => import('./pages/Admin'));
+              const Hesaplama = lazy(() => import('./pages/Hesaplama'));
+              const VideoGaleri = lazy(() => import('./pages/VideoGaleri'));
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/hesaplama" element={<Hesaplama />} />
+              <Route path="/video-galeri" element={<VideoGaleri />} />
+            </Routes>
+          </Suspense>
           <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
           <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
