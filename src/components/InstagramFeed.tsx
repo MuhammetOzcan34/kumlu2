@@ -69,16 +69,8 @@ export const InstagramFeed = () => {
       console.error("Instagram yükleme hatası:", err);
       setError(err instanceof Error ? err.message : "Bilinmeyen hata");
       
-      // Hata durumunda mock veri göster
-      const mockPosts = Array.from({ length: 6 }, (_, i) => ({
-        id: `mock-${Date.now()}-${i}`,
-        media_url: `https://images.unsplash.com/photo-${1620 + i}x900/?business,work,professional&auto=format&fit=crop&w=400&h=400`,
-        caption: `Profesyonel çalışmalarımızdan bir kare ${i + 1}`,
-        timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-        media_type: 'IMAGE' as const,
-        permalink: `https://instagram.com/p/mock-${i}`
-      }));
-      setPosts(mockPosts);
+      // Hata durumunda boş liste göster
+      setPosts([]);
     } finally {
       setLoading(false);
     }
