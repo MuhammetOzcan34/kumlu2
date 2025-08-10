@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Home, Palette, FileText, Play, Calculator, Users, Phone } from "lucide-react";
+import { Menu, X, Home, Palette, FileText, Play, Calculator, Users, Phone, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -106,12 +106,14 @@ export const HamburgerMenu = () => {
                     </div>
                    </nav>
                   <div className="p-4 border-t border-border space-y-2">
+                    {/* Yönetim Paneli Butonu */}
                     <Link
                       to="/admin"
                       onClick={() => setIsOpen(false)}
                       className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors border border-dashed border-primary/50"
                     >
-                      <span className="text-sm font-medium text-primary">🔧 Yönetim Paneli</span>
+                      <Settings className="h-5 w-5 text-primary" />
+                      <span className="text-sm font-medium text-primary">Yönetim Paneli</span>
                     </Link>
                     <ThemeToggle />
                   </div>

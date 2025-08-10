@@ -94,7 +94,20 @@ export const DesktopSidebar = () => {
         </div>
       </nav>
       
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
+        {/* Yönetim Paneli Butonu */}
+        <Link
+          to="/admin"
+          className={cn(
+            "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors border border-dashed border-primary/50",
+            location.pathname === "/admin"
+              ? "bg-primary/10 text-primary"
+              : "hover:bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          <span className="font-medium">Yönetim Paneli</span>
+        </Link>
         <ThemeToggle />
       </div>
     </aside>
