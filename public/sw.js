@@ -1,7 +1,6 @@
-const CACHE_NAME = 'cam-kumlama-v3';
+const CACHE_NAME = 'cam-kumlama-v4';
 const urlsToCache = [
-  '/',
-  '/manifest.json'
+  '/'
 ];
 
 // Install event
@@ -9,8 +8,9 @@ self.addEventListener('install', () => self.skipWaiting());
 
 // Fetch event - Network first strategy
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip cross-origin requests and manifest.json
+  if (!event.request.url.startsWith(self.location.origin) || 
+      event.request.url.includes('manifest.json')) {
     return;
   }
   

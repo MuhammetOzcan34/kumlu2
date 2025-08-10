@@ -60,7 +60,7 @@ export const PWAIconManager = () => {
     }
   }, []);
 
-  // Logo güncelleme effect'i
+  // Logo güncelleme effect'i - sadece fullLogoUrl değiştiğinde çalışır
   useEffect(() => {
     if (fullLogoUrl) {
       updateFavicon(fullLogoUrl);
@@ -68,7 +68,7 @@ export const PWAIconManager = () => {
     }
   }, [fullLogoUrl, updateFavicon]);
 
-  // İsim güncelleme effect'i
+  // İsim güncelleme effect'i - sadece companyName değiştiğinde çalışır
   useEffect(() => {
     if (companyName) {
       updateManifestName(companyName);
