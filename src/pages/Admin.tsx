@@ -55,128 +55,89 @@ export default function Admin() {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('🔄 Admin - Sayfa yükleniyor...');
-    
-    // Auth state listener kurulumu
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔐 Admin - Auth durumu değişti:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-          navigate("/auth");
-        } else {
-          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 500);
-        }
-      }
-    );
+    // Kullanıcının kimliğini ve profilini doğrulamak için tek bir merkezi fonksiyon.
+    const checkUserAndLoadProfile = async () => {
+      setLoading(true);
+      try {
+        // 1. Mevcut oturumu al
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    // Mevcut oturum kontrolü
-    console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
+        if (sessionError || !session?.user) {
+          console.log('⚠️ Admin - Oturum bulunamadı, auth sayfasına yönlendiriliyor.');
+          navigate('/auth');
+          return;
+        }
+        
+        const user = session.user;
+        setUser(user);
+
+        // 2. Kullanıcı profilini yükle
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profileError) {
+          // Profil bulunamazsa oluştur
+          if (profileError.code === 'PGRST116') {
+            console.log('🔧 Admin - Profil bulunamadı, yeni profil oluşturuluyor...');
+            const { data: newProfile, error: createError } = await supabase
+              .from("profiles")
+              .insert({ id: user.id, user_id: user.id, display_name: user.email, role: user.email === 'ckumlama@gmail.com' ? 'admin' : 'user' })
+              .select().single();
+
+            if (createError) throw createError; // Oluşturma hatası varsa fırlat
+
+            console.log('✅ Admin - Yeni profil başarıyla oluşturuldu.');
+            setProfile(newProfile);
+            if (newProfile?.role === "admin") {
+              await loadAdminData();
+            }
+          } else {
+            throw profileError; // Diğer profil hatalarını fırlat
+          }
+        } else {
+          console.log('✅ Admin - Profil başarıyla yüklendi.');
+          setProfile(profileData);
+          if (profileData?.role === "admin") {
+            await loadAdminData();
+          } else {
+            console.warn('⚠️ Admin - Kullanıcı admin yetkisine sahip değil, ana sayfaya yönlendiriliyor.');
+            navigate('/'); // Admin değilse ana sayfaya yönlendir
+          }
+        }
+      } catch (error: any) {
+        console.error("❌ Admin - Kimlik doğrulama veya profil yükleme hatası:", error);
+        toast({
+          title: "Giriş Hatası",
+          description: "Kullanıcı bilgileri yüklenemedi. Lütfen tekrar giriş yapın.",
+          variant: "destructive",
+        });
         navigate("/auth");
-      } else {
-        console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-        loadUserProfile(session.user.id);
+      } finally {
+        setLoading(false);
+        console.log('✅ Admin - Yükleme işlemi tamamlandı.');
       }
-    }).catch(error => {
-      console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
+    };
+
+    checkUserAndLoadProfile();
+
+    // Oturum durumundaki değişiklikleri dinle (örn: çıkış yapma)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        console.log('🚪 Admin - Kullanıcı çıkış yaptı, auth sayfasına yönlendiriliyor.');
+        setProfile(null);
+        setUser(null);
+        navigate('/auth');
+      }
     });
 
+    // Component unmount olduğunda listener'ı temizle
     return () => {
-      console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
       subscription.unsubscribe();
     };
   }, [navigate]);
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) {
-        console.error("❌ Admin - Profil yükleme hatası:", error);
-        
-        // Eğer profil bulunamazsa, otomatik olarak oluşturmaya çalış
-        if (error.code === 'PGRST116') {
-          console.log('🔧 Admin - Profil bulunamadı, oluşturuluyor...');
-          const { data: newProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert({
-              id: userId,
-              user_id: userId,
-              display_name: user?.email || 'Kullanıcı',
-              role: user?.email === 'ckumlama@gmail.com' ? 'admin' : 'user'
-            })
-            .select()
-            .single();
-            
-          if (createError) {
-            console.error('❌ Admin - Profil oluşturma hatası:', createError);
-            toast({
-              title: "Profil Hatası",
-              description: "Kullanıcı profili oluşturulamadı. Lütfen yöneticinizle iletişime geçin.",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return;
-          }
-          
-          console.log('✅ Admin - Yeni profil oluşturuldu:', newProfile);
-          setProfile(newProfile);
-          
-          if (newProfile?.role === "admin") {
-            await loadAdminData();
-          }
-        } else {
-          toast({
-            title: "Profil Yükleme Hatası",
-            description: "Kullanıcı profili yüklenemedi. Sayfayı yenilemeyi deneyin.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
-        return;
-      }
-
-      console.log('✅ Admin - Kullanıcı profili yüklendi:', data);
-      setProfile(data);
-      
-      if (data?.role === "admin") {
-        console.log('🔑 Admin - Kullanıcı admin rolüne sahip, yönetim verileri yükleniyor');
-        await loadAdminData();
-      } else {
-        console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', data?.role);
-      }
-    } catch (error) {
-      console.error("❌ Admin - Profil yükleme hatası:", error);
-      toast({
-        title: "Beklenmeyen Hata",
-        description: "Bir hata oluştu. Lütfen sayfayı yenileyin.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-      console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
-    }
-  };
 
   const loadAdminData = async () => {
     try {

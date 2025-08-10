@@ -1,65 +1,111 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface KampanyaFormProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void; // İsteğe bağlı prop eklendi
+  onClose?: () => void; // Mevcut onClose prop'u korundu
   kampanya?: any;
   kategoriler: any[];
   onSuccess: () => void;
 }
 
-export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSuccess }: KampanyaFormProps) => {
+export function KampanyaForm({ 
+  isOpen, 
+  onOpenChange, 
+  onClose, 
+  kampanya, 
+  kategoriler, 
+  onSuccess 
+}: KampanyaFormProps) {
   const [formData, setFormData] = useState({
-    kampanya_adi: kampanya?.kampanya_adi || "",
-    platform: kampanya?.platform || "",
-    durum: kampanya?.durum || "taslak",
-    hedef_kitle: kampanya?.hedef_kitle || "",
-    butce_gunluk: kampanya?.butce_gunluk || "",
-    butce_toplam: kampanya?.butce_toplam || "",
-    baslangic_tarihi: kampanya?.baslangic_tarihi || "",
-    bitis_tarihi: kampanya?.bitis_tarihi || "",
-    reklam_metni: kampanya?.reklam_metni || "",
-    hedef_url: kampanya?.hedef_url || "",
-    kategori_id: kampanya?.kategori_id || "",
+    kampanya_adi: "",
+    platform: "",
+    durum: "taslak",
+    kategori_id: "",
+    butce_gunluk: "",
+    baslangic_tarihi: "",
+    bitis_tarihi: "",
+    reklam_metni: "",
+    hedef_url: ""
   });
-
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (kampanya) {
+      setFormData({
+        kampanya_adi: kampanya.kampanya_adi || "",
+        platform: kampanya.platform || "",
+        durum: kampanya.durum || "taslak",
+        kategori_id: kampanya.kategori_id || "",
+        butce_gunluk: kampanya.butce_gunluk?.toString() || "",
+        baslangic_tarihi: kampanya.baslangic_tarihi || "",
+        bitis_tarihi: kampanya.bitis_tarihi || "",
+        reklam_metni: kampanya.reklam_metni || "",
+        hedef_url: kampanya.hedef_url || ""
+      });
+    } else {
+      setFormData({
+        kampanya_adi: "",
+        platform: "",
+        durum: "taslak",
+        kategori_id: "",
+        butce_gunluk: "",
+        baslangic_tarihi: "",
+        bitis_tarihi: "",
+        reklam_metni: "",
+        hedef_url: ""
+      });
+    }
+  }, [kampanya]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const submitData = {
+        ...formData,
+        butce_gunluk: formData.butce_gunluk ? parseFloat(formData.butce_gunluk) : null
+      };
+
       if (kampanya) {
-        // Update existing
+        // Güncelleme
         const { error } = await supabase
           .from("reklam_kampanyalari")
-          .update(formData)
+          .update(submitData)
           .eq("id", kampanya.id);
 
         if (error) throw error;
-        toast({ title: "Kampanya güncellendi" });
+
+        toast({
+          title: "Başarılı",
+          description: "Kampanya başarıyla güncellendi.",
+        });
       } else {
-        // Create new
+        // Yeni ekleme
         const { error } = await supabase
           .from("reklam_kampanyalari")
-          .insert([formData]);
+          .insert([submitData]);
 
         if (error) throw error;
-        toast({ title: "Kampanya oluşturuldu" });
+
+        toast({
+          title: "Başarılı",
+          description: "Kampanya başarıyla oluşturuldu.",
+        });
       }
 
       onSuccess();
-      onOpenChange(false);
+      handleClose();
     } catch (error: any) {
       toast({
         title: "Hata",
@@ -71,22 +117,28 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
     }
   };
 
+  const handleClose = () => {
+    // onOpenChange varsa onu kullan, yoksa onClose'u kullan
+    if (onOpenChange) {
+      onOpenChange(false);
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={onOpenChange || (() => {})}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {kampanya ? "Kampanya Düzenle" : "Yeni Kampanya"}
           </DialogTitle>
-          <DialogDescription>
-            Reklam kampanyası bilgilerini girin.
-          </DialogDescription>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="kampanya_adi">Kampanya Adı *</Label>
+              <Label htmlFor="kampanya_adi">Kampanya Adı</Label>
               <Input
                 id="kampanya_adi"
                 value={formData.kampanya_adi}
@@ -94,9 +146,9 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 required
               />
             </div>
-
+            
             <div className="space-y-2">
-              <Label htmlFor="platform">Platform *</Label>
+              <Label htmlFor="platform">Platform</Label>
               <Select
                 value={formData.platform}
                 onValueChange={(value) => setFormData({ ...formData, platform: value })}
@@ -111,9 +163,7 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+            
             <div className="space-y-2">
               <Label htmlFor="durum">Durum</Label>
               <Select
@@ -121,7 +171,7 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 onValueChange={(value) => setFormData({ ...formData, durum: value })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Durum seçin" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="taslak">Taslak</SelectItem>
@@ -131,9 +181,9 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-2">
-              <Label htmlFor="kategori">Kategori</Label>
+              <Label htmlFor="kategori_id">Kategori</Label>
               <Select
                 value={formData.kategori_id}
                 onValueChange={(value) => setFormData({ ...formData, kategori_id: value })}
@@ -142,27 +192,15 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                   <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  {kategoriler?.map((kategori) => (
-                    <SelectItem key={kategori.id} value={kategori.id || 'unknown'}>
+                  {kategoriler.map((kategori) => (
+                    <SelectItem key={kategori.id} value={kategori.id}>
                       {kategori.ad}
                     </SelectItem>
-                  )) || []}
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="hedef_kitle">Hedef Kitle</Label>
-            <Input
-              id="hedef_kitle"
-              value={formData.hedef_kitle}
-              onChange={(e) => setFormData({ ...formData, hedef_kitle: e.target.value })}
-              placeholder="Örn: 25-45 yaş, İstanbul"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+            
             <div className="space-y-2">
               <Label htmlFor="butce_gunluk">Günlük Bütçe (₺)</Label>
               <Input
@@ -173,20 +211,7 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 onChange={(e) => setFormData({ ...formData, butce_gunluk: e.target.value })}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="butce_toplam">Toplam Bütçe (₺)</Label>
-              <Input
-                id="butce_toplam"
-                type="number"
-                step="0.01"
-                value={formData.butce_toplam}
-                onChange={(e) => setFormData({ ...formData, butce_toplam: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+            
             <div className="space-y-2">
               <Label htmlFor="baslangic_tarihi">Başlangıç Tarihi</Label>
               <Input
@@ -196,7 +221,7 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="bitis_tarihi">Bitiş Tarihi</Label>
               <Input
@@ -206,40 +231,40 @@ export const KampanyaForm = ({ isOpen, onOpenChange, kampanya, kategoriler, onSu
                 onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="hedef_url">Hedef URL</Label>
+              <Input
+                id="hedef_url"
+                type="url"
+                value={formData.hedef_url}
+                onChange={(e) => setFormData({ ...formData, hedef_url: e.target.value })}
+                placeholder="https://example.com"
+              />
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="hedef_url">Hedef URL</Label>
-            <Input
-              id="hedef_url"
-              type="url"
-              value={formData.hedef_url}
-              onChange={(e) => setFormData({ ...formData, hedef_url: e.target.value })}
-              placeholder="https://example.com"
-            />
-          </div>
-
+          
           <div className="space-y-2">
             <Label htmlFor="reklam_metni">Reklam Metni</Label>
             <Textarea
               id="reklam_metni"
               value={formData.reklam_metni}
               onChange={(e) => setFormData({ ...formData, reklam_metni: e.target.value })}
-              rows={3}
+              rows={4}
               placeholder="Reklam metnini buraya yazın..."
             />
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={handleClose}>
               İptal
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Kaydediliyor..." : (kampanya ? "Güncelle" : "Oluştur")}
+              {loading ? "Kaydediliyor..." : kampanya ? "Güncelle" : "Oluştur"}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
+}
