@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useSetting } from "@/hooks/useSettings";
+import { useSettings } from "@/hooks/useSettings";
 import { RefreshCw, Instagram } from "lucide-react";
 
 interface InstagramPost {
@@ -13,24 +13,45 @@ interface InstagramPost {
 }
 
 export const InstagramFeed = () => {
-  const instagramUsername = useSetting("instagram_username");
-  const instagramEnabled = useSetting("instagram_enabled") === "true";
-  const instagramPostCount = parseInt(useSetting("instagram_post_count")) || 6;
-  const instagramCacheDuration = parseInt(useSetting("instagram_cache_duration")) || 3600;
-  
+  // Tüm hook'ları koşulsuz çağır
+  const { data: settings, isLoading } = useSettings();
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [displayCount, setDisplayCount] = useState(instagramPostCount);
+  const [displayCount, setDisplayCount] = useState(6);
+
+  // Ayarları güvenli şekilde al
+  const instagramUsername = settings?.instagram_username;
+  const instagramEnabled = settings?.instagram_enabled === "true";
+  const instagramPostCount = parseInt(settings?.instagram_post_count || "6") || 6;
+  const instagramCacheDuration = parseInt(settings?.instagram_cache_duration || "3600") || 3600;
+
+  // displayCount'u güncelle
+  useEffect(() => {
+    setDisplayCount(instagramPostCount);
+  }, [instagramPostCount]);
+
+  useEffect(() => {
+    // Sadece ayarlar yüklendiyse ve Instagram aktifse çalıştır
+    if (!isLoading && instagramEnabled && instagramUsername) {
+      loadInstagramPosts();
+    }
+  }, [instagramUsername, instagramPostCount, isLoading, instagramEnabled]);
+
+  // Eğer ayarlar henüz yüklenmediyse loading göster
+  if (isLoading) {
+    return (
+      <div className="text-center py-4">
+        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">Instagram ayarları yükleniyor...</p>
+      </div>
+    );
+  }
 
   // Eğer Instagram aktif değilse veya kullanıcı adı ayarlanmamışsa bileşeni gösterme
   if (!instagramEnabled || !instagramUsername) {
     return null;
   }
-
-  useEffect(() => {
-    loadInstagramPosts();
-  }, [instagramUsername, instagramPostCount]);
 
   const loadInstagramPosts = async () => {
     setLoading(true);

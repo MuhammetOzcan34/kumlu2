@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "./ThemeToggle";
-import { useSetting } from "@/hooks/useSettings";
+import { useSettings } from "@/hooks/useSettings";
 import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
@@ -12,7 +12,6 @@ const menuItems = [
   { icon: Palette, label: "Cam Kumlama", href: "/kumlamalar" },
   { icon: FileText, label: "Tabelalar", href: "/tabelalar" },
   { icon: Play, label: "Video Galeri", href: "/video-galeri" },
-  
   { icon: Calculator, label: "Hesaplama", href: "/hesaplama" },
   { icon: Users, label: "Referanslar", href: "/referanslar" },
   { icon: Phone, label: "İletişim", href: "/iletisim" },
@@ -20,16 +19,35 @@ const menuItems = [
 
 export const HamburgerMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const firmaAdi = useSetting('firma_adi') || 'Kumlama Web';
-  const firmaLogo = useSetting('firma_logo_url');
-
-  console.log('🔍 HamburgerMenu - firmaLogo:', firmaLogo);
+  const { data: settings, isLoading } = useSettings();
 
   // Supabase storage URL'sini dinamik olarak al
   const getStorageUrl = () => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://kepfuptrmccexgyzhcti.supabase.co";
     return `${supabaseUrl}/storage/v1/object/public/fotograflar/`;
   };
+
+  // Ayarlar yüklenene kadar basit header göster
+  if (isLoading || !settings) {
+    return (
+      <div className="fixed top-0 left-0 right-0 h-16 bg-card/80 backdrop-blur-sm z-40 lg:hidden border-b border-border">
+        <div className="flex items-center justify-between h-full px-4">
+          <Button variant="ghost" size="icon" className="bg-card/80 backdrop-blur-sm">
+            <Menu className="h-6 w-6" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
+            <div className="h-5 w-24 bg-muted rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const firmaAdi = settings.firma_adi || 'Kumlama Web';
+  const firmaLogo = settings.firma_logo_url;
+
+  console.log('🔍 HamburgerMenu - firmaLogo:', firmaLogo);
 
   return (
     <>
