@@ -5,16 +5,6 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   const plugins = [react()];
 
-  if (mode === "development") {
-    import("lovable-tagger")
-      .then(({ componentTagger }) => {
-        plugins.push(componentTagger());
-      })
-      .catch(() => {
-        console.warn("lovable-tagger yüklenemedi (dev only).");
-      });
-  }
-
   return {
     server: {
       host: "::",

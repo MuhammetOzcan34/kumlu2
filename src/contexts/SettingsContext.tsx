@@ -6,12 +6,13 @@ interface SettingsContextType {
   settings: Record<string, string> | undefined;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { data: settings, isLoading, error } = useQuery<Record<string, string>>({
+  const { data: settings, isLoading, error, refetch } = useQuery<Record<string, string>>({
     queryKey: ['settings'],
     queryFn: async () => {
       console.log('🔍 Fetching settings from database...');
@@ -40,7 +41,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   return (
-    <SettingsContext.Provider value={{ settings, isLoading, error }}>
+    <SettingsContext.Provider value={{ settings, isLoading, error, refetch }}>
       {children}
     </SettingsContext.Provider>
   );
@@ -62,6 +63,6 @@ export const useSetting = (key: string): string | undefined => {
 
 // Tüm ayarları almak için hook
 export const useSettings = () => {
-  const { settings, isLoading, error } = useSettingsContext();
-  return { data: settings, isLoading, error };
+  const { settings, isLoading, error, refetch } = useSettingsContext();
+  return { data: settings, isLoading, error, refetch };
 };
