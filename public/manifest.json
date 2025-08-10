@@ -1,4 +1,5 @@
 {
+  "id": "/manifest.json",
   "name": "Kumlu Folyo - Profesyonel Hizmetler",
   "short_name": "KumluFolyo",
   "description": "Profesyonel cam kumlama, tabela ve dijital baskı hizmetleri",
@@ -7,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -17,12 +18,14 @@
     {
       "src": "/pwa-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/pwa-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["business", "utilities"],
