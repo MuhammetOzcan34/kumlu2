@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useSetting } from "@/hooks/useSettings";
 import { RefreshCw, Instagram } from "lucide-react";
 
 interface InstagramPost {
@@ -13,10 +12,10 @@ interface InstagramPost {
 }
 
 export const InstagramFeed = () => {
-  const instagramUsername = useSetting("instagram_username");
-  const instagramEnabled = useSetting("instagram_enabled") === "true";
-  const instagramPostCount = parseInt(useSetting("instagram_post_count")) || 6;
-  const instagramCacheDuration = parseInt(useSetting("instagram_cache_duration")) || 3600;
+  const instagramUsername = localStorage.getItem("instagram_username") || "";
+  const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
+  const instagramPostCount = parseInt(localStorage.getItem("instagram_post_count") || "6");
+  const instagramCacheDuration = parseInt(localStorage.getItem("instagram_cache_duration") || "3600");
   
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [loading, setLoading] = useState(false);

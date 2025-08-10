@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,41 +36,23 @@ export const InstagramSettingsManager = () => {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("ayarlar")
-        .select("*")
-        .in("anahtar", [
-          "instagram_username",
-          "instagram_access_token",
-          "instagram_enabled",
-          "instagram_post_count",
-          "instagram_cache_duration"
-        ]);
+      // localStorage'dan ayarları yükle
+      const savedSettings = {
+        instagram_username: localStorage.getItem("instagram_username") || "",
+        instagram_access_token: localStorage.getItem("instagram_access_token") || "",
+        instagram_enabled: localStorage.getItem("instagram_enabled") === "true",
+        instagram_post_count: parseInt(localStorage.getItem("instagram_post_count") || "6"),
+        instagram_cache_duration: parseInt(localStorage.getItem("instagram_cache_duration") || "3600")
+      };
 
-      if (error) {
-        console.error("Ayarlar yüklenirken hata:", error);
-        toast({
-          title: "Hata",
-          description: "Ayarlar yüklenirken bir hata oluştu.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const newSettings = { ...settings };
-      data?.forEach((setting) => {
-        if (setting.anahtar === "instagram_enabled") {
-          newSettings[setting.anahtar] = setting.deger === "true";
-        } else if (setting.anahtar === "instagram_post_count" || setting.anahtar === "instagram_cache_duration") {
-          newSettings[setting.anahtar] = parseInt(setting.deger) || 0;
-        } else {
-          newSettings[setting.anahtar] = setting.deger;
-        }
-      });
-
-      setSettings(newSettings);
+      setSettings(savedSettings);
     } catch (error) {
       console.error("Ayarlar yüklenirken hata:", error);
+      toast({
+        title: "Hata",
+        description: "Ayarlar yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,27 +61,12 @@ export const InstagramSettingsManager = () => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const settingsToSave = [
-        { anahtar: "instagram_username", deger: settings.instagram_username },
-        { anahtar: "instagram_access_token", deger: settings.instagram_access_token },
-        { anahtar: "instagram_enabled", deger: settings.instagram_enabled.toString() },
-        { anahtar: "instagram_post_count", deger: settings.instagram_post_count.toString() },
-        { anahtar: "instagram_cache_duration", deger: settings.instagram_cache_duration.toString() }
-      ];
-
-      const { error } = await supabase
-        .from("ayarlar")
-        .upsert(settingsToSave, { onConflict: "anahtar" });
-
-      if (error) {
-        console.error("Ayarlar kaydedilirken hata:", error);
-        toast({
-          title: "Hata",
-          description: "Ayarlar kaydedilirken bir hata oluştu.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // localStorage'a ayarları kaydet
+      localStorage.setItem("instagram_username", settings.instagram_username);
+      localStorage.setItem("instagram_access_token", settings.instagram_access_token);
+      localStorage.setItem("instagram_enabled", settings.instagram_enabled.toString());
+      localStorage.setItem("instagram_post_count", settings.instagram_post_count.toString());
+      localStorage.setItem("instagram_cache_duration", settings.instagram_cache_duration.toString());
 
       toast({
         title: "Başarılı",
