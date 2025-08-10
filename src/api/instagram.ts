@@ -1,3 +1,4 @@
+
 // Instagram Feed API
 // Bu dosya public Instagram profillerinden veri çeker
 
@@ -39,31 +40,24 @@ export const instagramAPI = {
         }
       }
 
-      // Instagram'ın public API'sini kullan
+      // Instagram RSS alternatifi kullan (Picuki.com API)
       try {
-        const response = await fetch(`https://www.instagram.com/${username}/?__a=1`, {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.picuki.com/profile/${username}`)}`;
+        
+        const response = await fetch(proxyUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'tr,en;q=0.5',
-            'Cache-Control': 'no-cache'
+            'Accept': 'application/json',
           }
         });
 
         if (response.ok) {
           const data = await response.json();
-          const media = data?.graphql?.user?.edge_owner_to_timeline_media?.edges || [];
-
-          if (media.length > 0) {
-            const posts: InstagramPost[] = media.slice(0, count).map((edge: any, index: number) => ({
-              id: edge.node.id || `instagram_${Date.now()}_${index}`,
-              media_url: edge.node.display_url || edge.node.thumbnail_src,
-              caption: edge.node.edge_media_to_caption?.edges[0]?.node?.text || `@${username} paylaşımı`,
-              timestamp: new Date(edge.node.taken_at_timestamp * 1000).toISOString(),
-              media_type: edge.node.is_video ? 'VIDEO' : 'IMAGE',
-              permalink: `https://instagram.com/p/${edge.node.shortcode}`
-            }));
-
+          const htmlContent = data.contents;
+          
+          // HTML'den post verilerini çıkar
+          const posts = this.parseInstagramPosts(htmlContent, username, count);
+          
+          if (posts.length > 0) {
             console.log(`✅ Instagram API başarılı: ${posts.length} post bulundu`);
 
             // Cache'e kaydet
@@ -80,65 +74,46 @@ export const instagramAPI = {
         console.warn('⚠️ Instagram API hatası:', apiError);
       }
 
-      // API başarısızsa, güzel örnek içerik göster
-      console.log('🎨 Örnek Instagram içeriği gösteriliyor');
+      // Alternatif yöntem: Instagram Basic Display API benzeri
+      try {
+        const alternativeUrl = `https://instagram.com/${username}/channel/?__a=1&__d=dis`;
+        
+        const response = await fetch(alternativeUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
 
-      const samplePosts: InstagramPost[] = [
-        {
-          id: `sample_${Date.now()}_1`,
-          media_url: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=400&h=400',
-          caption: '🔧 Profesyonel araç giydirme hizmetimiz ile araçlarınızı kişiselleştirin! #camgiydir #aracgiydirme #profesyonel',
-          timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
-        },
-        {
-          id: `sample_${Date.now()}_2`,
-          media_url: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=400&h=400',
-          caption: '✨ Cam kumlama işlemleri ile cam yüzeylerinize sanatsal dokunuş! #camkumlama #sanat #tasarım',
-          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
-        },
-        {
-          id: `sample_${Date.now()}_3`,
-          media_url: 'https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=400&h=400',
-          caption: '📋 Özel tasarım tabelalarımız ile işletmenizi öne çıkarın! #tabela #tasarım #işletme',
-          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
-        },
-        {
-          id: `sample_${Date.now()}_4`,
-          media_url: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=400&h=400',
-          caption: '🖨️ Dijital baskı hizmetlerimiz ile hayallerinizi gerçeğe dönüştürün! #dijitalbaskı #baskı #tasarım',
-          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
-        },
-        {
-          id: `sample_${Date.now()}_5`,
-          media_url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&h=400',
-          caption: '🏢 Kurumsal projelerinizde profesyonel çözümlerimizle yanınızdayız! #kurumsal #profesyonel',
-          timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
-        },
-        {
-          id: `sample_${Date.now()}_6`,
-          media_url: 'https://images.unsplash.com/photo-1586717799252-bd134ad00e26?auto=format&fit=crop&w=400&h=400',
-          caption: '🎯 Kaliteli hizmet anlayışımız ile müşteri memnuniyetini önceleyiyoruz! #kalite #memnuniyet',
-          timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-          media_type: 'IMAGE' as const,
-          permalink: `https://instagram.com/${username}`
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Instagram alternatif API yanıtı:', data);
+          
+          // Veri yapısına göre post'ları çıkar
+          const posts = this.parseAlternativeResponse(data, username, count);
+          
+          if (posts.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(posts));
+            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+            
+            return {
+              success: true,
+              posts
+            };
+          }
         }
-      ];
+      } catch (altError) {
+        console.warn('⚠️ Instagram alternatif API hatası:', altError);
+      }
 
+      // Her iki yöntem de başarısızsa hata döndür
+      console.error('❌ Instagram verileri alınamadı');
       return {
-        success: true,
-        posts: samplePosts.slice(0, count),
-        error: `@${username} profili için örnek içerik gösteriliyor. Gerçek Instagram verileriniz yakında burada görünecek.`
+        success: false,
+        error: `@${username} profili için Instagram verileri alınamadı. Profil public olduğundan emin olun.`
       };
+
     } catch (error) {
       console.error('❌ Instagram API genel hatası:', error);
       return {
@@ -146,6 +121,66 @@ export const instagramAPI = {
         error: error instanceof Error ? error.message : 'Instagram verileri yüklenemedi'
       };
     }
+  },
+
+  // HTML içeriğinden post'ları çıkar
+  parseInstagramPosts(htmlContent: string, username: string, count: number): InstagramPost[] {
+    const posts: InstagramPost[] = [];
+    
+    try {
+      // HTML'den post linklerini bul
+      const postRegex = /\/p\/([A-Za-z0-9_-]+)\//g;
+      const imageRegex = /https:\/\/[^"]*\.jpg|https:\/\/[^"]*\.jpeg/g;
+      
+      const postMatches = [...htmlContent.matchAll(postRegex)];
+      const imageMatches = [...htmlContent.matchAll(imageRegex)];
+      
+      for (let i = 0; i < Math.min(count, postMatches.length, imageMatches.length); i++) {
+        const shortcode = postMatches[i][1];
+        const imageUrl = imageMatches[i][0];
+        
+        posts.push({
+          id: `${username}_${shortcode}`,
+          media_url: imageUrl,
+          caption: `@${username} Instagram paylaşımı`,
+          timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+          media_type: 'IMAGE' as const,
+          permalink: `https://instagram.com/p/${shortcode}/`
+        });
+      }
+    } catch (parseError) {
+      console.warn('⚠️ HTML parse hatası:', parseError);
+    }
+    
+    return posts;
+  },
+
+  // Alternatif API yanıtını işle
+  parseAlternativeResponse(data: any, username: string, count: number): InstagramPost[] {
+    const posts: InstagramPost[] = [];
+    
+    try {
+      // API yanıt yapısına göre veriyi çıkar
+      const items = data?.items || data?.data?.items || data?.graphql?.user?.edge_owner_to_timeline_media?.edges || [];
+      
+      for (let i = 0; i < Math.min(count, items.length); i++) {
+        const item = items[i];
+        const node = item.node || item;
+        
+        posts.push({
+          id: node.id || `${username}_${i}`,
+          media_url: node.display_url || node.image_versions2?.candidates?.[0]?.url || node.media_url,
+          caption: node.caption?.text || node.caption || `@${username} paylaşımı`,
+          timestamp: new Date((node.taken_at || node.taken_at_timestamp || Date.now() / 1000) * 1000).toISOString(),
+          media_type: node.media_type === 2 ? 'VIDEO' : 'IMAGE',
+          permalink: `https://instagram.com/p/${node.code || node.shortcode}/`
+        });
+      }
+    } catch (parseError) {
+      console.warn('⚠️ Alternatif parse hatası:', parseError);
+    }
+    
+    return posts;
   },
 
   // Instagram bağlantısını test et
@@ -169,9 +204,28 @@ export const instagramAPI = {
 
       console.log(`🔍 Instagram profili test ediliyor: @${username}`);
 
-      // Basit format kontrolü yeterli
+      // Gerçek test için basit bir istek yap
+      const testUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.instagram.com/${username}/`)}`;
+      const response = await fetch(testUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.contents && !data.contents.includes('Page Not Found')) {
+          return {
+            success: true
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Instagram profili bulunamadı veya private'
+          };
+        }
+      }
+
       return {
-        success: true
+        success: false,
+        error: 'Instagram profili kontrol edilemedi'
       };
     } catch (error) {
       console.error('❌ Instagram test hatası:', error);
