@@ -21,6 +21,10 @@ export const WatermarkSettingsManager: React.FC = () => {
   const watermarkOpacity = parseFloat(settings?.['watermark_opacity'] || '0.25');
   const watermarkSize = parseFloat(settings?.['watermark_size'] || '0.15');
   const watermarkPosition = settings?.['watermark_position'] || 'pattern';
+  // Pattern ayarları
+  const patternRows = parseInt(settings?.['watermark_pattern_rows'] || '4');
+  const patternCols = parseInt(settings?.['watermark_pattern_cols'] || '3');
+  const watermarkAngle = parseFloat(settings?.['watermark_angle'] || '-30');
 
   const handleWatermarkLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,7 +126,7 @@ export const WatermarkSettingsManager: React.FC = () => {
     
         if (!fileData) continue;
     
-        // Filigran ekle
+        // Filigran ekle - güncellenmiş ayarlarla
         const processedBlob = await processImage(
           new File([fileData], 'photo.jpg', { type: 'image/jpeg' }),
           logoResult.image,
@@ -132,9 +136,9 @@ export const WatermarkSettingsManager: React.FC = () => {
             size: watermarkSize,
             opacity: watermarkOpacity,
             position: watermarkPosition as any,
-            angle: -30,
-            patternRows: 4,
-            patternCols: 3
+            angle: watermarkAngle,
+            patternRows: patternRows,
+            patternCols: patternCols
           }
         );
     
@@ -290,7 +294,7 @@ export const WatermarkSettingsManager: React.FC = () => {
               onChange={(e) => updateWatermarkSetting('watermark_position', e.target.value)}
               className="w-full p-2 border rounded bg-background text-foreground border-border focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <option value="pattern" className="bg-background text-foreground">Pattern (Tüm fotoğraf)</option>
+              <option value="pattern" className="bg-background text-foreground">Pattern (Shutterstock Tarzı)</option>
               <option value="center" className="bg-background text-foreground">Merkez</option>
               <option value="bottom-right" className="bg-background text-foreground">Sağ Alt</option>
               <option value="bottom-left" className="bg-background text-foreground">Sol Alt</option>
@@ -298,6 +302,59 @@ export const WatermarkSettingsManager: React.FC = () => {
               <option value="top-left" className="bg-background text-foreground">Sol Üst</option>
             </select>
           </div>
+
+          {/* Pattern Ayarları - Sadece pattern seçildiğinde göster */}
+          {watermarkPosition === 'pattern' && (
+            <div className="space-y-4 p-4 bg-muted/50 dark:bg-muted/20 rounded-lg border">
+              <h4 className="font-medium text-sm">Pattern Ayarları</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pattern-rows">Satır Sayısı ({patternRows})</Label>
+                  <Input
+                    id="pattern-rows"
+                    type="range"
+                    min="2"
+                    max="6"
+                    step="1"
+                    value={patternRows}
+                    onChange={(e) => updateWatermarkSetting('watermark_pattern_rows', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="pattern-cols">Sütun Sayısı ({patternCols})</Label>
+                  <Input
+                    id="pattern-cols"
+                    type="range"
+                    min="2"
+                    max="5"
+                    step="1"
+                    value={patternCols}
+                    onChange={(e) => updateWatermarkSetting('watermark_pattern_cols', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="angle">Açı ({watermarkAngle}°)</Label>
+                <Input
+                  id="angle"
+                  type="range"
+                  min="-45"
+                  max="45"
+                  step="5"
+                  value={watermarkAngle}
+                  onChange={(e) => updateWatermarkSetting('watermark_angle', e.target.value)}
+                />
+              </div>
+              
+              <div className="text-xs text-muted-foreground">
+                <p>• Shutterstock tarzı pattern için önerilen: 4 satır, 3 sütun, -30° açı</p>
+                <p>• Logo fotoğrafın tamamına eşit aralıklarla dağıtılacak</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
