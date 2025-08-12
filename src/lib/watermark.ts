@@ -1,6 +1,6 @@
 /**
  * watermark.ts
- * Fotoğraflara filigran ekleme işlemlerini yöneten modül
+ * Fotoğraflara filigran ekleme ve gelişmiş optimizasyon işlemlerini yöneten modül
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,17 @@ interface LogoLoadResult {
 }
 
 /**
+ * Gelişmiş görüntü optimizasyon ayarları
+ */
+interface OptimizationSettings {
+  maxWidth: number;
+  maxHeight: number;
+  quality: number;
+  format: 'jpeg' | 'webp';
+  compressionLevel: 'low' | 'medium' | 'high';
+}
+
+/**
  * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
@@ -41,6 +52,59 @@ const DEFAULT_OPTIONS: WatermarkOptions = {
   position: 'pattern', // Fotoğraf genelinde dağılım
   patternRows: 3,  // 3 satır (yukarıdan aşağı)
   patternCols: 4   // 4 sütun (soldan sağa)
+};
+
+/**
+ * Fotoğraf boyutuna göre optimizasyon ayarlarını belirler - Akıllı Boyutlandırma
+ * @param originalWidth Orijinal genişlik
+ * @param originalHeight Orijinal yükseklik
+ * @returns Optimizasyon ayarları
+ */
+const getOptimizationSettings = (originalWidth: number, originalHeight: number): OptimizationSettings => {
+  const totalPixels = originalWidth * originalHeight;
+  const aspectRatio = originalWidth / originalHeight;
+  
+  // Çok büyük fotoğraflar (8MP+) - Agresif sıkıştırma
+  if (totalPixels > 8000000) {
+    return {
+      maxWidth: aspectRatio > 1.5 ? 1600 : 1400, // Panoramik fotoğraflar için daha geniş
+      maxHeight: aspectRatio < 0.7 ? 1600 : 1200, // Dikey fotoğraflar için daha yüksek
+      quality: 0.75,
+      format: 'jpeg',
+      compressionLevel: 'high'
+    };
+  }
+  
+  // Büyük fotoğraflar (4-8MP) - Orta sıkıştırma
+  if (totalPixels > 4000000) {
+    return {
+      maxWidth: aspectRatio > 1.5 ? 1400 : 1200,
+      maxHeight: aspectRatio < 0.7 ? 1400 : 1000,
+      quality: 0.80,
+      format: 'jpeg',
+      compressionLevel: 'medium'
+    };
+  }
+  
+  // Orta boyut fotoğraflar (2-4MP) - Dengeli optimizasyon
+  if (totalPixels > 2000000) {
+    return {
+      maxWidth: aspectRatio > 1.5 ? 1200 : 1000,
+      maxHeight: aspectRatio < 0.7 ? 1200 : 900,
+      quality: 0.82,
+      format: 'jpeg',
+      compressionLevel: 'medium'
+    };
+  }
+  
+  // Küçük fotoğraflar (2MP altı) - Minimal sıkıştırma
+  return {
+    maxWidth: aspectRatio > 1.5 ? 1000 : 800,
+    maxHeight: aspectRatio < 0.7 ? 1000 : 600,
+    quality: 0.85,
+    format: 'jpeg',
+    compressionLevel: 'low'
+  };
 };
 
 /**
@@ -204,23 +268,25 @@ export const applyWatermark = (
 };
 
 /**
- * Bir görüntüyü yeniden boyutlandırır ve isteğe bağlı olarak filigran ekler
+ * Gelişmiş görüntü işleme fonksiyonu - Akıllı optimizasyon ile
  * @param file Görüntü dosyası
  * @param logoImage Logo görüntüsü (opsiyonel)
- * @param maxWidth Maksimum genişlik
- * @param maxHeight Maksimum yükseklik
+ * @param maxWidth Maksimum genişlik (opsiyonel - otomatik hesaplanır)
+ * @param maxHeight Maksimum yükseklik (opsiyonel - otomatik hesaplanır)
  * @param watermarkOptions Filigran ayarları
  * @returns İşlenmiş görüntü blob'u
  */
 export const processImage = async (
   file: File,
   logoImage?: HTMLImageElement | null,
-  maxWidth: number = 1920,
-  maxHeight: number = 1080,
+  maxWidth?: number,
+  maxHeight?: number,
   watermarkOptions: WatermarkOptions = {}
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
+    const startTime = performance.now();
     const img = new Image();
+    
     img.onload = () => {
       try {
         // Canvas oluştur
@@ -231,11 +297,24 @@ export const processImage = async (
           throw new Error('Canvas context alınamadı');
         }
         
+        // Akıllı optimizasyon ayarlarını belirle
+        const optimization = getOptimizationSettings(img.width, img.height);
+        const finalMaxWidth = maxWidth || optimization.maxWidth;
+        const finalMaxHeight = maxHeight || optimization.maxHeight;
+        
+        console.log('🎯 Akıllı optimizasyon ayarları:', {
+          original: `${img.width}x${img.height}`,
+          target: `${finalMaxWidth}x${finalMaxHeight}`,
+          quality: optimization.quality,
+          compressionLevel: optimization.compressionLevel,
+          totalPixels: (img.width * img.height / 1000000).toFixed(1) + 'MP'
+        });
+        
         // Boyutları hesapla (aspect ratio korunarak)
         let { width, height } = img;
         
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
+        if (width > finalMaxWidth || height > finalMaxHeight) {
+          const ratio = Math.min(finalMaxWidth / width, finalMaxHeight / height);
           width *= ratio;
           height *= ratio;
         }
@@ -243,8 +322,21 @@ export const processImage = async (
         canvas.width = width;
         canvas.height = height;
         
+        // Performans İyileştirmesi: High-quality image smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Gelişmiş canvas ayarları
+        if (optimization.compressionLevel === 'high') {
+          // Yüksek sıkıştırma için daha agresif smoothing
+          ctx.filter = 'blur(0.5px)';
+        }
+        
         // Görüntüyü çiz
         ctx.drawImage(img, 0, 0, width, height);
+        
+        // Filter'ı temizle
+        ctx.filter = 'none';
         
         // Filigran ekle (logo varsa)
         if (logoImage) {
@@ -255,26 +347,39 @@ export const processImage = async (
           console.log('ℹ️ Logo olmadığı için filigran eklenmiyor');
         }
         
-        // Blob'a dönüştür
+        // Blob'a dönüştür - Dinamik kalite ile
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              console.log('✅ Görüntü işleme tamamlandı:', {
-                originalSize: file.size,
-                processedSize: blob.size,
-                dimensions: `${width}x${height}`,
-                hasWatermark: !!logoImage
+              const endTime = performance.now();
+              const processingTime = (endTime - startTime).toFixed(1);
+              const compressionRatio = ((file.size - blob.size) / file.size * 100).toFixed(1);
+              const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+              const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+              
+              // Detaylı Loglama: Sıkıştırma oranı ve boyut bilgileri
+              console.log('✅ Gelişmiş görüntü işleme tamamlandı:', {
+                originalSize: `${originalSizeMB} MB`,
+                processedSize: `${sizeMB} MB`,
+                compressionRatio: `${compressionRatio}%`,
+                dimensions: `${img.width}x${img.height} → ${width}x${height}`,
+                quality: optimization.quality,
+                compressionLevel: optimization.compressionLevel,
+                processingTime: `${processingTime}ms`,
+                hasWatermark: !!logoImage,
+                galeriOptimized: true // Galeri Uyumluluğu işareti
               });
+              
               resolve(blob);
             } else {
               reject(new Error('Blob oluşturulamadı'));
             }
           },
           'image/jpeg',
-          0.9 // Kalite
+          optimization.quality // Dinamik Kalite
         );
       } catch (error) {
-        console.error('❌ Görüntü işleme hatası:', error);
+        console.error('❌ Gelişmiş görüntü işleme hatası:', error);
         reject(error);
       }
     };
@@ -398,24 +503,24 @@ export const loadWatermarkLogo = async (): Promise<LogoLoadResult> => {
 };
 
 /**
- * Filigran ile görüntü işleme fonksiyonu
+ * Gelişmiş filigran ile görüntü işleme fonksiyonu
  */
 export const processImageWithWatermark = async (
   file: File,
-  maxWidth: number = 1920,
-  maxHeight: number = 1080
+  maxWidth?: number,
+  maxHeight?: number
 ): Promise<Blob> => {
   try {
     const config = await getWatermarkConfig();
     
     if (!config?.enabled) {
-      console.log('Filigran devre dışı, normal işleme devam ediliyor');
+      console.log('Filigran devre dışı, gelişmiş optimizasyon ile işleme devam ediliyor');
       return processImage(file, null, maxWidth, maxHeight);
     }
 
     const logoResult = await loadWatermarkLogo();
     if (!logoResult.success || !logoResult.image) {
-      console.warn('Logo yüklenemedi, filigransız işleme devam ediliyor');
+      console.warn('Logo yüklenemedi, gelişmiş optimizasyon ile filigransız işleme devam ediliyor');
       return processImage(file, null, maxWidth, maxHeight);
     }
 
@@ -434,8 +539,8 @@ export const processImageWithWatermark = async (
       }
     );
   } catch (error) {
-    console.error('Filigran işleme hatası:', error);
-    // Hata durumunda filigransız işleme devam et
+    console.error('Gelişmiş filigran işleme hatası:', error);
+    // Hata durumunda gelişmiş optimizasyon ile filigransız işleme devam et
     return processImage(file, null, maxWidth, maxHeight);
   }
 };
