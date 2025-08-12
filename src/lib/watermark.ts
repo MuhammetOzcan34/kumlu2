@@ -35,12 +35,12 @@ interface LogoLoadResult {
  * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
-  size: 0.12,      // Görüntünün %12'si kadar (daha küçük ve profesyonel)
-  opacity: 0.2,    // %20 opaklık (daha şeffaf)
+  size: 0.08,      // Görüntünün %8'i kadar (daha küçük ve profesyonel)
+  opacity: 0.15,   // %15 opaklık (daha şeffaf)
   angle: -30,      // -30 derece açı
   position: 'pattern', // Fotoğraf genelinde dağılım
-  patternRows: 4,  // 4 satır
-  patternCols: 3   // 3 sütun
+  patternRows: 3,  // 3 satır (yukarıdan aşağı)
+  patternCols: 4   // 4 sütun (soldan sağa)
 };
 
 /**
@@ -92,38 +92,64 @@ export const applyWatermark = (
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
   
-  // Logo boyutunu hesapla - Shutterstock tarzı orantılama
-  const logoSize = Math.min(canvasWidth, canvasHeight) * (opts.size || 0.12);
-  const logoAspectRatio = logoImage.width / logoImage.height;
-  const logoWidth = logoSize;
-  const logoHeight = logoSize / logoAspectRatio;
+  // Logo boyutunu fotoğraf boyutuna göre dinamik hesapla
+  const baseSize = Math.min(canvasWidth, canvasHeight);
+  const logoSize = baseSize * (opts.size || 0.08);
   
-  // Opaklık ve açı ayarları
-  ctx.globalAlpha = opts.opacity || 0.2;
+  // Logo aspect ratio'sunu koru
+  const logoAspectRatio = logoImage.width / logoImage.height;
+  let logoWidth, logoHeight;
+  
+  if (logoAspectRatio > 1) {
+    // Yatay logo
+    logoWidth = logoSize;
+    logoHeight = logoSize / logoAspectRatio;
+  } else {
+    // Dikey logo
+    logoHeight = logoSize;
+    logoWidth = logoSize * logoAspectRatio;
+  }
+  
+  // Opaklık ayarı
+  ctx.globalAlpha = opts.opacity || 0.15;
   
   if (opts.position === 'pattern') {
-    // Shutterstock tarzı Pattern filigran - Tam orantılı dağılım
-    const rows = opts.patternRows || 4;
-    const cols = opts.patternCols || 3;
+    // Shutterstock tarzı Pattern filigran - Doğru sütun/satır dağılımı
+    const rows = opts.patternRows || 3; // 3 satır (yukarıdan aşağı)
+    const cols = opts.patternCols || 4; // 4 sütun (soldan sağa)
     
-    // Kenar boşluklarını hesapla - Fotoğrafın %10'u kadar
-    const marginX = canvasWidth * 0.1;
-    const marginY = canvasHeight * 0.1;
+    // Dinamik kenar boşluğu hesaplama - fotoğraf boyutuna göre
+    const marginRatioX = canvasWidth > canvasHeight ? 0.08 : 0.12; // Yatay fotoğraflarda daha az boşluk
+    const marginRatioY = canvasHeight > canvasWidth ? 0.08 : 0.12; // Dikey fotoğraflarda daha az boşluk
+    
+    const marginX = canvasWidth * marginRatioX;
+    const marginY = canvasHeight * marginRatioY;
     
     // Kullanılabilir alan
     const availableWidth = canvasWidth - (2 * marginX);
     const availableHeight = canvasHeight - (2 * marginY);
     
-    // Logo arası mesafeleri hesapla
-    const stepX = availableWidth / (cols + 1); // Eşit dağılım için +1
-    const stepY = availableHeight / (rows + 1); // Eşit dağılım için +1
+    // Logo arası mesafeleri hesapla - eşit dağılım
+    const stepX = availableWidth / (cols - 1); // Sütunlar arası mesafe
+    const stepY = availableHeight / (rows - 1); // Satırlar arası mesafe
     
-    // Pattern döşeme - Shutterstock tarzı
+    // Pattern döşeme - 4 sütun x 3 satır
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        // Merkezi hesapla - Tam orantılı dağılım
-        const x = marginX + (stepX * (col + 1)) - logoWidth / 2;
-        const y = marginY + (stepY * (row + 1)) - logoHeight / 2;
+        // Logo pozisyonunu hesapla
+        let x, y;
+        
+        if (cols === 1) {
+          x = marginX + (availableWidth / 2) - logoWidth / 2;
+        } else {
+          x = marginX + (stepX * col) - logoWidth / 2;
+        }
+        
+        if (rows === 1) {
+          y = marginY + (availableHeight / 2) - logoHeight / 2;
+        } else {
+          y = marginY + (stepY * row) - logoHeight / 2;
+        }
         
         // Sınırları kontrol et
         if (x >= 0 && y >= 0 && 
@@ -292,11 +318,11 @@ export const getWatermarkConfig = async () => {
   return {
     enabled: config.watermark_enabled === 'true',
     logoUrl: config.watermark_logo_url || '',
-    opacity: parseFloat(config.watermark_opacity || '0.2'),
-    size: parseFloat(config.watermark_size || '0.12'),
+    opacity: parseFloat(config.watermark_opacity || '0.15'),
+    size: parseFloat(config.watermark_size || '0.08'),
     position: config.watermark_position || 'pattern',
-    patternRows: parseInt(config.watermark_pattern_rows || '4'),
-    patternCols: parseInt(config.watermark_pattern_cols || '3'),
+    patternRows: parseInt(config.watermark_pattern_rows || '3'),
+    patternCols: parseInt(config.watermark_pattern_cols || '4'),
     angle: parseFloat(config.watermark_angle || '-30')
   };
 };
