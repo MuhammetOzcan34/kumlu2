@@ -17,7 +17,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
   useEffect(() => {
     const targetNode = imageRefs.current[currentIndex];
     if (targetNode) {
-      targetNode.scrollIntoView({ behavior: 'auto', block: 'center' });
+      targetNode.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
     // Sadece index değiştiğinde çalışsın
   }, [currentIndex]); 
@@ -65,7 +65,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
           <div
             key={image.id}
             ref={el => imageRefs.current[index] = el}
-            className="w-full h-full flex flex-col items-center justify-center snap-center p-4"
+            className="w-full h-[80vh] flex flex-col items-center justify-center snap-start p-2"
           >
             <div className="relative w-full h-full flex justify-center items-center">
               <img
