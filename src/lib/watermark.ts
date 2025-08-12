@@ -35,8 +35,8 @@ interface LogoLoadResult {
  * Varsayılan filigran ayarları - Shutterstock tarzı pattern
  */
 const DEFAULT_OPTIONS: WatermarkOptions = {
-  size: 0.15,      // Görüntünün %15'i kadar
-  opacity: 0.25,   // %25 opaklık
+  size: 0.12,      // Görüntünün %12'si kadar (daha küçük ve profesyonel)
+  opacity: 0.2,    // %20 opaklık (daha şeffaf)
   angle: -30,      // -30 derece açı
   position: 'pattern', // Fotoğraf genelinde dağılım
   patternRows: 4,  // 4 satır
@@ -92,34 +92,38 @@ export const applyWatermark = (
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
   
-  // Logo boyutunu hesapla
-  const logoSize = Math.min(canvasWidth, canvasHeight) * (opts.size || 0.15);
+  // Logo boyutunu hesapla - Shutterstock tarzı orantılama
+  const logoSize = Math.min(canvasWidth, canvasHeight) * (opts.size || 0.12);
+  const logoAspectRatio = logoImage.width / logoImage.height;
   const logoWidth = logoSize;
-  const logoHeight = (logoImage.height / logoImage.width) * logoSize;
+  const logoHeight = logoSize / logoAspectRatio;
   
   // Opaklık ve açı ayarları
-  ctx.globalAlpha = opts.opacity || 0.25;
+  ctx.globalAlpha = opts.opacity || 0.2;
   
   if (opts.position === 'pattern') {
-    // İyileştirilmiş Pattern filigran - daha iyi kenar kullanımı
+    // Shutterstock tarzı Pattern filigran - Tam orantılı dağılım
     const rows = opts.patternRows || 4;
     const cols = opts.patternCols || 3;
     
-    // Kenar boşluklarını minimize et
-    const marginX = logoWidth * 0.3; // Logo genişliğinin %30'u kadar kenar boşluğu
-    const marginY = logoHeight * 0.3; // Logo yüksekliğinin %30'u kadar kenar boşluğu
+    // Kenar boşluklarını hesapla - Fotoğrafın %10'u kadar
+    const marginX = canvasWidth * 0.1;
+    const marginY = canvasHeight * 0.1;
     
+    // Kullanılabilir alan
     const availableWidth = canvasWidth - (2 * marginX);
     const availableHeight = canvasHeight - (2 * marginY);
     
-    const stepX = availableWidth / (cols - 1); // cols-1 ile daha sık dağılım
-    const stepY = availableHeight / (rows - 1); // rows-1 ile daha sık dağılım
+    // Logo arası mesafeleri hesapla
+    const stepX = availableWidth / (cols + 1); // Eşit dağılım için +1
+    const stepY = availableHeight / (rows + 1); // Eşit dağılım için +1
     
+    // Pattern döşeme - Shutterstock tarzı
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        // Daha iyi dağılım için hesaplama
-        const x = marginX + (stepX * col) - logoWidth / 2;
-        const y = marginY + (stepY * row) - logoHeight / 2;
+        // Merkezi hesapla - Tam orantılı dağılım
+        const x = marginX + (stepX * (col + 1)) - logoWidth / 2;
+        const y = marginY + (stepY * (row + 1)) - logoHeight / 2;
         
         // Sınırları kontrol et
         if (x >= 0 && y >= 0 && 
@@ -260,14 +264,20 @@ export const processImage = async (
 /**
  * Supabase ayarlarından filigran konfigürasyonunu alır
  */
-/**
- * Supabase ayarlarından filigran konfigürasyonunu alır
- */
 export const getWatermarkConfig = async () => {
   const { data, error } = await supabase
     .from('ayarlar') // 'settings' yerine 'ayarlar'
     .select('anahtar, deger')
-    .in('anahtar', ['watermark_enabled', 'watermark_logo_url', 'watermark_opacity', 'watermark_size', 'watermark_position']);
+    .in('anahtar', [
+      'watermark_enabled', 
+      'watermark_logo_url', 
+      'watermark_opacity', 
+      'watermark_size', 
+      'watermark_position',
+      'watermark_pattern_rows',
+      'watermark_pattern_cols',
+      'watermark_angle'
+    ]);
 
   if (error) {
     console.error('Filigran ayarları alınamadı:', error);
@@ -282,9 +292,12 @@ export const getWatermarkConfig = async () => {
   return {
     enabled: config.watermark_enabled === 'true',
     logoUrl: config.watermark_logo_url || '',
-    opacity: parseFloat(config.watermark_opacity || '0.25'),
-    size: parseFloat(config.watermark_size || '0.15'),
-    position: config.watermark_position || 'pattern'
+    opacity: parseFloat(config.watermark_opacity || '0.2'),
+    size: parseFloat(config.watermark_size || '0.12'),
+    position: config.watermark_position || 'pattern',
+    patternRows: parseInt(config.watermark_pattern_rows || '4'),
+    patternCols: parseInt(config.watermark_pattern_cols || '3'),
+    angle: parseFloat(config.watermark_angle || '-30')
   };
 };
 
@@ -389,9 +402,9 @@ export const processImageWithWatermark = async (
         size: config.size,
         opacity: config.opacity,
         position: config.position as any,
-        angle: -30,
-        patternRows: 4,
-        patternCols: 3
+        angle: config.angle,
+        patternRows: config.patternRows,
+        patternCols: config.patternCols
       }
     );
   } catch (error) {
