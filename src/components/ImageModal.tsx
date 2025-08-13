@@ -13,7 +13,6 @@ interface ImageModalProps {
 export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: ImageModalProps) => {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Açıldığında doğru fotoğrafa kaydır
   useEffect(() => {
     const targetNode = imageRefs.current[currentIndex];
     if (targetNode) {
@@ -25,13 +24,13 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
     return null;
   }
 
-  // Fotoğraf yüksekliği - minimum boşluk
-  const photoHeight = "calc(100vh - 20px)";
+  // Sabit fotoğraf yüksekliği ve boşluk
+  const photoHeight = "calc(100vh - 20px)"; // tüm cihazlarda aynı yükseklik
   const photoGap = 5; // px
 
   return (
     <div className="fixed inset-0 bg-black z-[9999] lg:ml-64 lg:bottom-0 lg:top-0 lg:right-0 pb-20 lg:pb-0">
-      {/* Kapatma Butonu */}
+      {/* Kapatma */}
       <Button
         variant="ghost"
         size="icon"
@@ -41,7 +40,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
         <X className="h-6 w-6" />
       </Button>
 
-      {/* Sol ok */}
+      {/* Önceki */}
       <Button
         variant="ghost"
         size="icon"
@@ -52,7 +51,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
         <ChevronLeft className="h-6 w-6" />
       </Button>
 
-      {/* Sağ ok */}
+      {/* Sonraki */}
       <Button
         variant="ghost"
         size="icon"
@@ -83,11 +82,18 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
             </div>
 
             {/* Fotoğraf */}
-            <div className="relative w-full h-full flex justify-center items-center">
+            <div
+              className="relative w-full h-full flex justify-center items-center"
+              style={{ height: photoHeight }}
+            >
               <img
                 src={image.image}
                 alt={image.title}
-                className="w-auto h-auto max-w-full max-h-full object-contain"
+                className="max-w-full max-h-full object-contain"
+                style={{
+                  height: "100%", // Sabit container yüksekliğini doldur
+                  width: "auto",
+                }}
               />
             </div>
           </div>
