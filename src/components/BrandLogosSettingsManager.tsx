@@ -247,16 +247,19 @@ export function BrandLogosSettingsManager() {
     const hasImage = settings[imageKey];
 
     return (
-      <Card key={index}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Image className="w-5 h-5" />
+      <Card key={index} className="w-full">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Image className="w-5 h-5 sm:w-6 sm:h-6" />
             Marka {index}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 sm:space-y-6">
+          {/* Marka Adı - Mobilde daha büyük input */}
           <div className="space-y-2">
-            <Label htmlFor={`logo_${index}_name`}>Marka Adı</Label>
+            <Label htmlFor={`logo_${index}_name`} className="text-sm sm:text-base font-medium">
+              Marka Adı
+            </Label>
             <Input
               id={`logo_${index}_name`}
               value={typeof settings[nameKey] === 'string' ? settings[nameKey] : ''}
@@ -264,21 +267,23 @@ export function BrandLogosSettingsManager() {
                 setSettings(prev => ({ ...prev, [nameKey]: e.target.value }))
               }
               placeholder={`Marka ${index} adı`}
+              className="h-12 sm:h-10 text-base sm:text-sm"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Logo Resmi</Label>
+          {/* Logo Resmi - Mobilde daha büyük yükleme alanı */}
+          <div className="space-y-3">
+            <Label className="text-sm sm:text-base font-medium">Logo Resmi</Label>
             <div className="space-y-3">
-              {/* Dosya Yükleme Alanı */}
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
-                <div className="flex flex-col items-center justify-center space-y-2">
+              {/* Dosya Yükleme Alanı - Mobilde daha büyük */}
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 sm:p-4 min-h-[160px] sm:min-h-[120px]">
+                <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-2">
                   {hasImage ? (
                     <div className="relative">
                       <img
                         src={typeof settings[imageKey] === 'string' ? settings[imageKey] : ''}
                         alt={`Marka ${index} önizleme`}
-                        className="w-24 h-24 object-contain rounded"
+                        className="w-32 h-32 sm:w-24 sm:h-24 object-contain rounded"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -288,38 +293,38 @@ export function BrandLogosSettingsManager() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        className="absolute -top-2 -right-2 w-6 h-6 p-0"
+                        className="absolute -top-2 -right-2 w-8 h-8 sm:w-6 sm:h-6 p-0 touch-manipulation"
                         onClick={() => removeLogo(index)}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-4 h-4 sm:w-3 sm:h-3" />
                       </Button>
                     </div>
                   ) : (
-                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <Upload className="w-12 h-12 sm:w-8 sm:h-8 text-muted-foreground" />
                   )}
                   
-                  <div className="text-center">
+                  <div className="text-center w-full">
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={() => fileInputRefs.current[index]?.click()}
                       disabled={uploadingLogo === index}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 h-12 sm:h-10 px-6 sm:px-4 text-base sm:text-sm w-full sm:w-auto touch-manipulation"
                     >
                       {uploadingLogo === index ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 sm:w-4 sm:h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                           Yükleniyor...
                         </>
                       ) : hasImage ? (
                         <>
-                          <Upload className="w-4 h-4" />
+                          <Upload className="w-5 h-5 sm:w-4 sm:h-4" />
                           Değiştir
                         </>
                       ) : (
                         <>
-                          <Upload className="w-4 h-4" />
+                          <Upload className="w-5 h-5 sm:w-4 sm:h-4" />
                           Logo Yükle
                         </>
                       )}
@@ -334,7 +339,7 @@ export function BrandLogosSettingsManager() {
                   </div>
                   
                   {!hasImage && (
-                    <p className="text-xs text-muted-foreground text-center">
+                    <p className="text-sm sm:text-xs text-muted-foreground text-center px-2">
                       PNG, JPG, GIF (max 5MB)
                     </p>
                   )}
@@ -343,8 +348,11 @@ export function BrandLogosSettingsManager() {
             </div>
           </div>
 
+          {/* Açıklama - Mobilde daha büyük textarea */}
           <div className="space-y-2">
-            <Label htmlFor={`logo_${index}_description`}>Açıklama</Label>
+            <Label htmlFor={`logo_${index}_description`} className="text-sm sm:text-base font-medium">
+              Açıklama
+            </Label>
             <Textarea
               id={`logo_${index}_description`}
               value={typeof settings[descriptionKey] === 'string' ? settings[descriptionKey] : ''}
@@ -352,7 +360,7 @@ export function BrandLogosSettingsManager() {
                 setSettings(prev => ({ ...prev, [descriptionKey]: e.target.value }))
               }
               placeholder={`Marka ${index} açıklaması`}
-              className="min-h-[60px]"
+              className="min-h-[80px] sm:min-h-[60px] text-base sm:text-sm resize-none"
             />
           </div>
         </CardContent>
@@ -364,20 +372,20 @@ export function BrandLogosSettingsManager() {
     <div className="space-y-6">
       {/* Pop-up Ayarları */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+            <Settings className="w-6 h-6 sm:w-5 sm:h-5" />
             Pop-up Ayarları
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base sm:text-sm mt-2">
             Cam Kumlama sayfasında görünecek marka logoları pop-up'ını yapılandırın
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 sm:space-y-8 px-4 sm:px-6">
           {/* Pop-up Aktif/Pasif */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base font-medium">Pop-up Aktif</Label>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 p-4 sm:p-0 bg-muted/30 sm:bg-transparent rounded-lg sm:rounded-none">
+            <div className="space-y-1">
+              <Label className="text-base sm:text-base font-medium">Pop-up Aktif</Label>
               <p className="text-sm text-muted-foreground">
                 Cam Kumlama sayfasında pop-up'ı göster/gizle
               </p>
@@ -387,11 +395,12 @@ export function BrandLogosSettingsManager() {
               onCheckedChange={(checked) =>
                 setSettings(prev => ({ ...prev, brand_popup_enabled: checked }))
               }
+              className="scale-125 sm:scale-100"
             />
           </div>
 
           {/* Pop-up Başlığı */}
-          <div className="space-y-2">
+          <div className="space-y-3 sm:space-y-2">
             <Label htmlFor="popup_title" className="text-base font-medium">
               Pop-up Başlığı
             </Label>
@@ -402,11 +411,12 @@ export function BrandLogosSettingsManager() {
                 setSettings(prev => ({ ...prev, brand_popup_title: e.target.value }))
               }
               placeholder="Kullandığımız Markalar"
+              className="h-12 sm:h-10 text-base sm:text-sm"
             />
           </div>
 
           {/* Pop-up Açıklaması */}
-          <div className="space-y-2">
+          <div className="space-y-3 sm:space-y-2">
             <Label htmlFor="popup_description" className="text-base font-medium">
               Pop-up Açıklaması
             </Label>
@@ -417,17 +427,17 @@ export function BrandLogosSettingsManager() {
                 setSettings(prev => ({ ...prev, brand_popup_description: e.target.value }))
               }
               placeholder="Kaliteli hizmet için tercih ettiğimiz markalar"
-              className="min-h-[60px]"
+              className="min-h-[100px] sm:min-h-[60px] text-base sm:text-sm resize-none"
             />
           </div>
 
           {/* Pop-up Süresi */}
-          <div className="space-y-2">
+          <div className="space-y-3 sm:space-y-2">
             <Label htmlFor="popup_duration" className="text-base font-medium">
               Pop-up Süresi (milisaniye)
             </Label>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-3 sm:gap-2">
+              <Clock className="w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
               <Input
                 id="popup_duration"
                 type="number"
@@ -438,9 +448,10 @@ export function BrandLogosSettingsManager() {
                 placeholder="3000"
                 min="1000"
                 max="10000"
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground px-2 sm:px-0">
               Pop-up'ın kaç milisaniye sonra otomatik kapanacağı (1000ms = 1 saniye)
             </p>
           </div>
@@ -449,31 +460,42 @@ export function BrandLogosSettingsManager() {
 
       {/* Marka Logoları */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Image className="w-5 h-5" />
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+            <Image className="w-6 h-6 sm:w-5 sm:h-5" />
             Marka Logoları
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base sm:text-sm mt-2">
             6 adet marka logosu ve açıklamalarını yapılandırın. Logoları yükleyerek ekleyebilirsiniz.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CardContent className="px-4 sm:px-6">
+          {/* Mobilde tek sütun, desktop'ta iki sütun */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map(renderLogoSection)}
           </div>
         </CardContent>
       </Card>
 
       {/* Kaydet Butonu */}
-      <div className="flex justify-end">
+      <div className="flex justify-center sm:justify-end px-4 sm:px-0">
         <Button
           onClick={saveSettings}
           disabled={loading}
-          className="flex items-center gap-2"
+          className="w-full sm:w-auto min-w-[120px] h-12 sm:h-10 text-base sm:text-sm font-medium"
+          size="lg"
         >
-          <Save className="w-4 h-4" />
-          {loading ? "Kaydediliyor..." : "Ayarları Kaydet"}
+          {loading ? (
+            <>
+              <div className="mr-2 h-5 w-5 sm:h-4 sm:w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Kaydediliyor...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-5 w-5 sm:h-4 sm:w-4" />
+              Kaydet
+            </>
+          )}
         </Button>
       </div>
     </div>
