@@ -23,6 +23,8 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   const { data: settings } = useSettings();
 
   const whatsappNumber = settings?.whatsapp_number || "905555555555";
+  // WhatsApp URL için numaradaki boşlukları temizle
+  const cleanWhatsappNumber = whatsappNumber.replace(/\s/g, '');
   const whatsappMessage = settings?.whatsapp_default_message || "Merhaba, bilgi almak istiyorum.";
   const whatsappEnabled = settings?.whatsapp_enabled !== "false";
 
@@ -106,7 +108,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   const handleSendMessage = () => {
     const fullMessage = `Merhaba, ben ${name}. ${message}`;
     const encodedMessage = encodeURIComponent(fullMessage);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${cleanWhatsappNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
     setIsOpen(false);
     setMessage("");
@@ -116,7 +118,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
 
   const handleQuickContact = () => {
     const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${cleanWhatsappNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
 
@@ -251,4 +253,4 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
       )}
     </div>
   );
-} 
+}

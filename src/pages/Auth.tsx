@@ -23,12 +23,18 @@ export default function Auth() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Kullanıcı giriş yaptığında admin paneline yönlendir
+        if (session?.user) {
+          navigate("/admin");
+        }
       }
     );
 
@@ -36,10 +42,15 @@ export default function Auth() {
       setSession(session);
       setUser(session?.user ?? null);
       setCheckingSession(false);
+      
+      // Eğer zaten giriş yapılmışsa admin paneline yönlendir
+      if (session?.user) {
+        navigate("/admin");
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +100,10 @@ export default function Auth() {
         title: "Giriş başarılı",
         description: "Yönetim paneline yönlendiriliyorsunuz.",
       });
+      
+      // Giriş başarılı olduktan sonra admin paneline yönlendir
+      navigate("/admin");
+      
     } catch (error: any) {
       toast({
         title: "Giriş hatası",

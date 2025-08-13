@@ -381,17 +381,17 @@ export default function Admin() {
                   <div className="flex w-full">
                     <TabsTrigger value="kampanyalar" className="text-xs px-2 py-1 h-8 flex-1">Kampanyalar</TabsTrigger>
                     <TabsTrigger value="kategoriler" className="text-xs px-2 py-1 h-8 flex-1">Kategoriler</TabsTrigger>
+                  </div>
+                  <div className="flex w-full">
                     <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
                     <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
+                  </div>
+                  <div className="flex w-full">
                     <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
-                  </div>
-                  <div className="flex w-full">
                     <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
-                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
                   </div>
                   <div className="flex w-full">
+                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
                     <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
                   </div>
                   <div className="flex w-full">
@@ -400,6 +400,9 @@ export default function Admin() {
                   </div>
                   <div className="flex w-full">
                     <TabsTrigger value="ek-ozellikler" className="text-xs px-2 py-1 h-8 flex-1">Ek Özellikler</TabsTrigger>
+                    <TabsTrigger value="watermark" className="text-xs px-2 py-1 h-8 flex-1">Watermark</TabsTrigger>
+                  </div>
+                  <div className="flex w-full">
                     <TabsTrigger value="profil" className="text-xs px-2 py-1 h-8 flex-1">Profil</TabsTrigger>
                   </div>
                 </TabsList>
