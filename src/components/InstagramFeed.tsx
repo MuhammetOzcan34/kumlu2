@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Instagram } from "lucide-react";
 
@@ -11,7 +11,86 @@ interface InstagramPost {
   permalink: string;
 }
 
-export const InstagramFeed = () => {
+// Optimize edilmiş Instagram post bileşeni
+const InstagramPostCard = memo(({ post, onClick }: {
+  post: InstagramPost;
+  onClick: () => void;
+}) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const formatDate = useCallback((timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  }, []);
+
+  const truncateCaption = useCallback((caption: string, maxLength: number = 100) => {
+    if (caption.length <= maxLength) return caption;
+    return caption.substring(0, maxLength) + '...';
+  }, []);
+
+  return (
+    <div className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+         onClick={onClick}>
+      <div className="relative aspect-square">
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        {imageError && (
+          <div className="absolute inset-0 bg-muted flex items-center justify-center">
+            <p className="text-muted-foreground text-xs">Görsel yüklenemedi</p>
+          </div>
+        )}
+        <img
+          src={post.media_url}
+          alt={post.caption || 'Instagram görseli'}
+          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
+          loading="lazy"
+          decoding="async"
+        />
+        {post.media_type === 'VIDEO' && (
+          <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+            </svg>
+          </div>
+        )}
+        {post.media_type === 'CAROUSEL_ALBUM' && (
+          <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21,15 16,10 5,21"/>
+            </svg>
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        <p className="text-sm text-muted-foreground mb-2">
+          {formatDate(post.timestamp)}
+        </p>
+        {post.caption && (
+          <p className="text-sm line-clamp-3">
+            {truncateCaption(post.caption)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});
+
+InstagramPostCard.displayName = "InstagramPostCard";
+
+export const InstagramFeed = memo(() => {
   const instagramUsername = localStorage.getItem("instagram_username") || "";
   const instagramAccessToken = localStorage.getItem("instagram_access_token") || "";
   const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
@@ -28,11 +107,7 @@ export const InstagramFeed = () => {
     return null;
   }
 
-  useEffect(() => {
-    loadInstagramPosts();
-  }, [instagramUsername, instagramPostCount]);
-
-  const loadInstagramPosts = async () => {
+  const loadInstagramPosts = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -69,142 +144,87 @@ export const InstagramFeed = () => {
     } catch (err) {
       console.error("Instagram yükleme hatası:", err);
       setError(err instanceof Error ? err.message : "Bilinmeyen hata");
-      
-      // Hata durumunda boş liste göster
       setPosts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [instagramUsername, instagramAccessToken, instagramPostCount, instagramCacheDuration]);
 
-  const loadMorePosts = () => {
+  const loadMorePosts = useCallback(() => {
     setDisplayCount(prevCount => prevCount + 6);
-  };
+  }, []);
 
-  const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+  const handlePostClick = useCallback((post: InstagramPost) => {
+    window.open(post.permalink, '_blank', 'noopener,noreferrer');
+  }, []);
 
-  const truncateCaption = (caption: string, maxLength: number = 100) => {
-    if (caption.length <= maxLength) return caption;
-    return caption.substring(0, maxLength) + '...';
-  };
+  useEffect(() => {
+    loadInstagramPosts();
+  }, [loadInstagramPosts]);
+
+  const displayedPosts = posts.slice(0, displayCount);
 
   return (
     <div className="space-y-4">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2 flex items-center justify-center gap-2">
-          <Instagram className="h-6 w-6" />
-          Instagram Paylaşımları
+          <Instagram className="h-6 w-6 text-pink-500" />
+          Instagram
         </h2>
-        <p className="text-muted-foreground">En son paylaşımlarımızı görün</p>
+        <p className="text-muted-foreground mb-4">
+          @{instagramUsername} hesabımızdan son paylaşımlar
+        </p>
       </div>
-      
-      {/* Hata mesajı */}
+
+      {loading && posts.length === 0 && (
+        <div className="flex justify-center py-8">
+          <div className="flex items-center space-x-2">
+            <RefreshCw className="h-5 w-5 animate-spin" />
+            <span>Instagram gönderileri yükleniyor...</span>
+          </div>
+        </div>
+      )}
+
       {error && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-center">
-          <p className="text-destructive text-sm">{error}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadInstagramPosts}
-            className="mt-2"
-          >
+        <div className="text-center py-8">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={loadInstagramPosts} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
             Tekrar Dene
           </Button>
         </div>
       )}
-      
-      {/* Instagram tarzı dikey liste */}
-      <div className="space-y-6 max-w-md mx-auto">
-        {posts.slice(0, displayCount).map((post) => (
-          <div key={post.id} className="bg-card rounded-xl overflow-hidden shadow-lg">
-            {/* Header */}
-            <div className="flex items-center p-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-full mr-3 flex items-center justify-center">
-                <Instagram className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm">@{instagramUsername}</h4>
-                <p className="text-xs text-muted-foreground">{formatDate(post.timestamp)}</p>
-              </div>
-            </div>
-            
-            {/* Image/Video */}
-            <div className="aspect-square bg-muted relative">
-              {post.media_type === 'VIDEO' && (
-                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                  VIDEO
-                </div>
-              )}
-              {post.media_type === 'CAROUSEL_ALBUM' && (
-                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                  ALBÜM
-                </div>
-              )}
-              <img 
-                src={post.media_url} 
-                alt={post.caption}
-                className="w-full h-full object-cover"
-                loading="lazy"
+
+      {displayedPosts.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {displayedPosts.map((post) => (
+              <InstagramPostCard
+                key={post.id}
+                post={post}
+                onClick={() => handlePostClick(post)}
               />
-            </div>
-            
-            {/* Caption */}
-            <div className="p-4">
-              <p className="text-sm">{truncateCaption(post.caption)}</p>
-              <a 
-                href={post.permalink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary text-xs hover:underline mt-2 inline-block"
-              >
-                Instagram'da görüntüle →
-              </a>
-            </div>
+            ))}
           </div>
-        ))}
+
+          {displayCount < posts.length && (
+            <div className="text-center">
+              <Button onClick={loadMorePosts} variant="outline">
+                Daha Fazla Göster ({posts.length - displayCount} kaldı)
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      <div className="text-center">
+        <Button onClick={loadInstagramPosts} variant="ghost" size="sm">
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Yenile
+        </Button>
       </div>
-      
-      {/* Loading indicator */}
-      {loading && (
-        <div className="text-center py-4">
-          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Instagram paylaşımları yükleniyor...</p>
-        </div>
-      )}
-      
-      {/* Load More Button */}
-      {displayCount < posts.length && !loading && (
-        <div className="text-center">
-          <Button 
-            onClick={loadMorePosts}
-            variant="outline"
-            className="btn-mobile"
-          >
-            Daha Fazla Yükle
-          </Button>
-        </div>
-      )}
-      
-      {/* Refresh Button */}
-      {!loading && posts.length > 0 && (
-        <div className="text-center">
-          <Button 
-            onClick={loadInstagramPosts}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Yenile
-          </Button>
-        </div>
-      )}
     </div>
   );
-};
+});
+
+InstagramFeed.displayName = "InstagramFeed";

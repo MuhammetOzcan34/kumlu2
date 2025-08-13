@@ -1,23 +1,19 @@
 import { Palette, FileText, Settings, Image, Wrench, Eye, Car } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { ServiceCard } from "@/components/ServiceCard";
-import { Card, CardContent } from "@/components/ui/card";
 import { ImageSlider } from "@/components/ImageSlider";
 import { HeroButtons } from "@/components/HeroButtons";
 import { ImageModal } from "@/components/ImageModal";
 import { InstagramFeed } from "@/components/InstagramFeed";
 import { TeklifFormu } from "@/components/TeklifFormu";
-import { useSetting } from "@/hooks/useSettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-
-
-// Servis kartları
+// Servis kartları - memoize edilmiş
 const services = [
   {
     title: "Cam Kumlama",
@@ -43,7 +39,6 @@ const services = [
     href: "/kumlamalar",
     gradient: "bg-gradient-to-r from-coral-pink to-warm-orange"
   },
-
   {
     title: "Hesaplama",
     icon: Wrench,
@@ -65,19 +60,62 @@ const services = [
   }
 ];
 
+// Optimize edilmiş servis kartları bileşeni
+const ServicesGrid = memo(() => {
+  return (
+    <section className="mb-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-center sm:text-left">
+          Hizmetlerimiz
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {services.map((service) => {
+          if (service.isQuoteForm) {
+            return (
+              <TeklifFormu 
+                key={service.title}
+                triggerButtonText={service.title}
+                triggerButtonVariant="ghost"
+                className="w-full"
+                asServiceCard={true}
+                serviceIcon={service.icon}
+                serviceGradient={service.gradient}
+              />
+            );
+          }
+          
+          return (
+            <ServiceCard
+              key={service.title}
+              title={service.title}
+              icon={service.icon}
+              href={service.href}
+              gradient={service.gradient}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+
+ServicesGrid.displayName = "ServicesGrid";
+
 const Index = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
 
-  // Slider için fotoğrafları çek
+  // Slider için fotoğrafları çek - optimize edilmiş query
   const { data: sliderPhotos } = useQuery({
     queryKey: ["slider-photos"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fotograflar")
-        .select("*")
+        .select("id, dosya_yolu, baslik, aciklama, sira_no")
         .eq("aktif", true)
         .or("gorsel_tipi.eq.slider,kullanim_alani.cs.{ana-sayfa-slider}")
-        .order("sira_no", { ascending: true });
+        .order("sira_no", { ascending: true })
+        .limit(10); // Maksimum 10 slider görseli
       
       if (error) {
         console.error('❌ Slider photos fetch error:', error);
@@ -93,10 +131,12 @@ const Index = () => {
         description: photo.aciklama || ""
       })) || [];
     },
+    staleTime: 1000 * 60 * 5, // 5 dakika cache
+    gcTime: 1000 * 60 * 10, // 10 dakika garbage collection
   });
 
-  // Eğer slider fotoğrafı yoksa varsayılan verileri kullan
-  const slides = sliderPhotos || [];
+  // Slider verilerini memoize et
+  const slides = useMemo(() => sliderPhotos || [], [sliderPhotos]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,40 +158,7 @@ const Index = () => {
           </section>
           
           {/* Services Grid */}
-          <section className="mb-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-center sm:text-left">
-                Hizmetlerimiz
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {services.map((service) => {
-                if (service.isQuoteForm) {
-                  return (
-                    <TeklifFormu 
-                      key={service.title}
-                      triggerButtonText={service.title}
-                      triggerButtonVariant="ghost"
-                      className="w-full"
-                      asServiceCard={true}
-                      serviceIcon={service.icon}
-                      serviceGradient={service.gradient}
-                    />
-                  );
-                }
-                
-                return (
-                  <ServiceCard
-                    key={service.title}
-                    title={service.title}
-                    icon={service.icon}
-                    href={service.href}
-                    gradient={service.gradient}
-                  />
-                );
-              })}
-            </div>
-          </section>
+          <ServicesGrid />
           
           {/* Instagram Section */}
           <section className="mb-8">

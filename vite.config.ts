@@ -15,14 +15,34 @@ export default defineConfig(({ mode }) => {
       target: "esnext",
       outDir: "dist",
       sourcemap: false,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: mode === 'production',
+        },
+      },
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom"],
-            supabase: ["@supabase/supabase-js"],
+            // Vendor kütüphaneleri ayrı chunk'lara böl
+            'react-vendor': ['react', 'react-dom'],
+            'router-vendor': ['react-router-dom'],
+            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+            'query-vendor': ['@tanstack/react-query'],
+            'supabase-vendor': ['@supabase/supabase-js'],
+            'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+            'chart-vendor': ['recharts'],
+            'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
           },
+          // Dosya adlarını optimize et
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
         },
       },
+      // Chunk boyut uyarılarını artır
+      chunkSizeWarningLimit: 1000,
     },
     resolve: {
       alias: {
@@ -33,7 +53,25 @@ export default defineConfig(({ mode }) => {
       global: "globalThis",
     },
     optimizeDeps: {
-      include: ["react", "react-dom", "@supabase/supabase-js"],
+      include: [
+        'react', 
+        'react-dom', 
+        '@supabase/supabase-js',
+        '@tanstack/react-query',
+        'react-router-dom',
+        'lucide-react'
+      ],
+      // Büyük kütüphaneleri önceden bundle'la
+      force: true,
+    },
+    // CSS optimizasyonu
+    css: {
+      devSourcemap: mode === 'development',
+    },
+    // Performans için ek ayarlar
+    esbuild: {
+      // Production'da console.log'ları kaldır
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
     },
   };
 });
