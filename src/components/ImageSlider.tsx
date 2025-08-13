@@ -17,7 +17,6 @@ interface ImageSliderProps {
   onImageClick?: (index: number) => void;
 }
 
-// Optimize edilmiş görsel bileşeni
 const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
   src: string;
   alt: string;
@@ -79,28 +78,26 @@ export const ImageSlider = memo(({ slides, autoPlay = true, interval = 5000, onI
     }
   }, [onImageClick, currentSlide]);
 
+  // Otomatik geçiş
   useEffect(() => {
     if (!autoPlay || slides.length <= 1) return;
-
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, interval);
-
     return () => clearInterval(timer);
   }, [autoPlay, interval, slides.length]);
 
   // Klavye navigasyonu
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft') {
+      if (event.key === "ArrowLeft") {
         goToPrevious();
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === "ArrowRight") {
         goToNext();
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goToPrevious, goToNext]);
 
   if (slides.length === 0) {
@@ -167,8 +164,8 @@ export const ImageSlider = memo(({ slides, autoPlay = true, interval = 5000, onI
               onClick={() => goToSlide(index)}
               className={cn(
                 "w-2 h-2 rounded-full transition-all",
-                index === currentSlide 
-                  ? "bg-white scale-125" 
+                index === currentSlide
+                  ? "bg-white scale-125"
                   : "bg-white/50 hover:bg-white/75"
               )}
               aria-label={`${index + 1}. görsele git`}

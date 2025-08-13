@@ -13,18 +13,21 @@ interface ImageModalProps {
 export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: ImageModalProps) => {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Her zaman doğru fotoğrafın referansına anında scroll yap
+  // Seçilen fotoğrafa otomatik kaydırma
   useEffect(() => {
     const targetNode = imageRefs.current[currentIndex];
     if (targetNode) {
-      targetNode.scrollIntoView({ behavior: 'auto', block: 'start' });
+      targetNode.scrollIntoView({ behavior: "auto", block: "start" });
     }
-    // Sadece index değiştiğinde çalışsın
-  }, [currentIndex]); 
+  }, [currentIndex]);
 
   if (currentIndex < 0 || currentIndex >= images.length) {
     return null;
   }
+
+  // Her fotoğrafın kaplayacağı yükseklik: ekran yüksekliği - boşluk
+  // Boşluk: 60px (altta bir sonraki fotoğrafın üst kısmı gözükecek)
+  const photoHeight = "calc(100vh - 60px)";
 
   return (
     <div className="fixed inset-0 bg-black z-[9999] lg:ml-64 lg:bottom-0 lg:top-0 lg:right-0 pb-20 lg:pb-0">
@@ -47,7 +50,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>
-      
+
       <Button
         variant="ghost"
         size="icon"
@@ -58,14 +61,26 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
         <ChevronRight className="h-6 w-6" />
       </Button>
 
-      <div 
+      {/* Sayfa numarası */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+        <p className="text-sm text-white bg-black/70 px-3 py-1 rounded-full">
+          {currentIndex + 1} / {images.length}
+        </p>
+      </div>
+
+      <div
         className="h-full overflow-y-auto snap-y snap-mandatory"
+        style={{ scrollSnapType: "y mandatory" }}
       >
         {images.map((image, index) => (
           <div
             key={image.id}
-            ref={el => imageRefs.current[index] = el}
-            className="w-full h-[85vh] md:h-[90vh] flex flex-col items-center justify-center snap-start p-1"
+            ref={(el) => (imageRefs.current[index] = el)}
+            className="w-full flex items-center justify-center snap-start"
+            style={{
+              height: photoHeight,
+              marginBottom: "20px", // Fotoğraflar arası minimal boşluk
+            }}
           >
             <div className="relative w-full h-full flex justify-center items-center">
               <img
@@ -73,11 +88,6 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
                 alt={image.title}
                 className="w-auto h-auto max-w-full max-h-full object-contain"
               />
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                <p className="text-xs text-white/70 bg-black/60 px-3 py-1 rounded-full">
-                  {index + 1} / {images.length}
-                </p>
-              </div>
             </div>
           </div>
         ))}
