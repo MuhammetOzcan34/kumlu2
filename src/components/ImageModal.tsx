@@ -65,7 +65,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
           <div
             key={image.id}
             ref={el => imageRefs.current[index] = el}
-            className="w-full h-[75vh] md:h-[80vh] flex flex-col items-center justify-center snap-start p-1 md:p-2"
+            className="w-full h-[85vh] md:h-[90vh] flex flex-col items-center justify-center snap-start p-1"
           >
             <div className="relative w-full h-full flex justify-center items-center">
               <img
@@ -73,8 +73,8 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
                 alt={image.title}
                 className="w-auto h-auto max-w-full max-h-full object-contain"
               />
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-                <p className="text-xs text-white/60 bg-black/50 px-2 py-1 rounded">
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
+                <p className="text-xs text-white/70 bg-black/60 px-3 py-1 rounded-full">
                   {index + 1} / {images.length}
                 </p>
               </div>
