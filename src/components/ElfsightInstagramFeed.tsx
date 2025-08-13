@@ -55,22 +55,27 @@ export const ElfsightInstagramFeed = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col items-center w-full">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2 flex items-center justify-center gap-2">
-          <Instagram className="h-6 w-6 text-pink-500" />
+        <h2 className="text-xl sm:text-2xl font-bold mb-2 flex items-center justify-center gap-2">
+          <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />
           Instagram
         </h2>
-        <p className="text-muted-foreground mb-4">
+        <p className="text-sm sm:text-base text-muted-foreground mb-4">
           Son paylaşımlarımız
         </p>
       </div>
       
-      {/* Elfsight Widget */}
-      <div className="w-full">
+      {/* Elfsight Widget - Mobil Uyumlu */}
+      <div className="w-full max-w-4xl flex justify-center px-2 sm:px-4">
         <div 
-          className={`elfsight-app-${settings.elfsight_widget_id}`}
+          className={`elfsight-app-${settings.elfsight_widget_id} w-full`}
           data-elfsight-app-lazy
+          style={{
+            minHeight: '300px',
+            width: '100%',
+            maxWidth: '100%'
+          }}
         ></div>
       </div>
     </div>

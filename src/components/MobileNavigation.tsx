@@ -1,4 +1,4 @@
-import { Home, Palette, FileText, Menu, Calculator } from "lucide-react";
+import { Home, Palette, FileText, Menu, Calculator, Car } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -6,9 +6,9 @@ import { useState } from "react";
 
 const navigationItems = [
   { icon: Palette, label: "Kumlama", href: "/kumlamalar" },
-  { icon: FileText, label: "Tabela", href: "/tabelalar" },
+  { icon: Car, label: "Araç Giydirme", href: "/arac-giydirme" },
   { icon: Home, label: "Anasayfa", href: "/", isMainButton: true },
-  { icon: Calculator, label: "Hesapla", href: "/hesaplama" },
+  { icon: FileText, label: "Tabela", href: "/tabelalar" },
   { icon: Menu, label: "Menü", href: "#", isMenu: true },
 ];
 

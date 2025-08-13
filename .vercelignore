@@ -1,21 +1,120 @@
+# Dependencies
 node_modules
-.env.local
-.env.*.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-*.tsbuildinfo
-.vscode
-.idea
+bun.lockb
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
 *.log
-supabase/.temp
-*.sql
-.nyc_output
-coverage
+logs
+
+# OS files
+.DS_Store
+Thumbs.db
+*.lnk
+
+# IDE files
 .vscode
 .idea
 *.swp
 *.swo
 *~
+.history
+
+# Build artifacts
+*.tsbuildinfo
+dist
+build
+.nyc_output
+coverage
+.next
+out
+
+# Database and SQL files
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+supabase/.temp
+supabase/migrations
+supabase/seed.sql
+supabase/functions
+supabase/config.toml
+
+# Temporary files
+temp_*
+*.tmp
+*.temp
+.cache
+.parcel-cache
+
+# Documentation and setup files
+*.md
+!README.md
+FOTOĞRAF_YÜKLEME_TEST.md
+INSTAGRAM_SETUP.md
+supabase_dashboard_instructions.md
+docs/
+
+# Scripts
+*.sh
+*.bat
+*.cmd
+push_automatically.sh
+
+# Git
 .git
+.gitignore
+.gitattributes
+
+# Testing
+__tests__
+*.test.*
+*.spec.*
+cypress
+.nyc_output
+
+# Source maps
+*.map
+
+# Other
+.qodo
+.trae
+.eslintcache
+.stylelintcache
+*.orig
+.turbo
+.vercel
+.netlify
+
+# Large assets that should be served from CDN
+public/images/large/
+public/videos/
+public/assets/large/
+
+# Development only files
+.storybook
+storybook-static
+.chromatic
+
+# Package manager files
+.pnp
+.pnp.js
+.yarn/
+
+# TypeScript
+*.tsbuildinfo
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# Husky
+.husky/_

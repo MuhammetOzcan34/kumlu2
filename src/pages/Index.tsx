@@ -160,9 +160,11 @@ const Index = () => {
           {/* Services Grid */}
           <ServicesGrid />
           
-          {/* Instagram Section */}
-          <section className="mb-8">
-            <InstagramFeed />
+          {/* Instagram Section - Mobil Uyumlu */}
+          <section className="mb-8 w-full">
+            <div className="w-full overflow-hidden">
+              <InstagramFeed />
+            </div>
           </section>
         </div>
       </main>

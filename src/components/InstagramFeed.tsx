@@ -93,25 +93,46 @@ InstagramPostCard.displayName = "InstagramPostCard";
 
 export const InstagramFeed = memo(() => {
   const [widgetType, setWidgetType] = useState<'elfsight' | 'api'>('elfsight');
-  const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
+  const [instagramEnabled, setInstagramEnabled] = useState(false);
   
   useEffect(() => {
+    // Ayarları localStorage'dan yükle
+    const enabled = localStorage.getItem("instagram_enabled") === "true";
     const type = localStorage.getItem("instagram_widget_type") as 'elfsight' | 'api';
+    
+    setInstagramEnabled(enabled);
     setWidgetType(type || 'elfsight');
+    
+    // Debug için konsola yazdır
+    console.log('Instagram Ayarları:', {
+      enabled,
+      type,
+      widget_id: localStorage.getItem("elfsight_widget_id"),
+      widget_code: localStorage.getItem("elfsight_widget_code")
+    });
   }, []);
 
   // Instagram aktif değilse bileşeni gösterme
   if (!instagramEnabled) {
+    console.log('Instagram devre dışı - bileşen gösterilmiyor');
     return null;
   }
 
   // Widget tipine göre uygun bileşeni göster
   if (widgetType === 'elfsight') {
-    return <ElfsightInstagramFeed />;
+    return (
+      <div className="w-full">
+        <ElfsightInstagramFeed />
+      </div>
+    );
   }
 
   // Mevcut API tabanlı Instagram feed (eski kod)
-  return <APIInstagramFeed />;
+  return (
+    <div className="w-full">
+      <APIInstagramFeed />
+    </div>
+  );
 });
 
 // Mevcut API tabanlı Instagram feed bileşeni

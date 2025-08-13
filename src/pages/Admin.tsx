@@ -377,33 +377,33 @@ export default function Admin() {
             {/* Mobil Sekmeler */}
             <div className="mb-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 gap-1 overflow-x-auto h-auto p-1">
-                  <div className="flex w-full">
-                    <TabsTrigger value="kampanyalar" className="text-xs px-2 py-1 h-8 flex-1">Kampanyalar</TabsTrigger>
-                    <TabsTrigger value="kategoriler" className="text-xs px-2 py-1 h-8 flex-1">Kategoriler</TabsTrigger>
+                <TabsList className="grid grid-cols-1 gap-2 h-auto p-3 bg-muted/50">
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="kampanyalar" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Kampanyalar</TabsTrigger>
+                    <TabsTrigger value="kategoriler" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Kategoriler</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="fotograflar" className="text-xs px-2 py-1 h-8 flex-1">Fotoğraflar</TabsTrigger>
-                    <TabsTrigger value="video-galeri" className="text-xs px-2 py-1 h-8 flex-1">Videolar</TabsTrigger>
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="fotograflar" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Fotoğraflar</TabsTrigger>
+                    <TabsTrigger value="video-galeri" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Videolar</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="ayarlar" className="text-xs px-2 py-1 h-8 flex-1">Ayarlar</TabsTrigger>
-                    <TabsTrigger value="hesaplama" className="text-xs px-2 py-1 h-8 flex-1">Hesaplama</TabsTrigger>
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="ayarlar" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Ayarlar</TabsTrigger>
+                    <TabsTrigger value="hesaplama" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Hesaplama</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="whatsapp" className="text-xs px-2 py-1 h-8 flex-1">WhatsApp</TabsTrigger>
-                    <TabsTrigger value="servis-bedelleri" className="text-xs px-2 py-1 h-8 flex-1">Servis Bedelleri</TabsTrigger>
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="whatsapp" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">WhatsApp</TabsTrigger>
+                    <TabsTrigger value="servis-bedelleri" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Servis Bedelleri</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="instagram" className="text-xs px-2 py-1 h-8 flex-1">Instagram</TabsTrigger>
-                    <TabsTrigger value="marka-logolari" className="text-xs px-2 py-1 h-8 flex-1">Marka Logoları</TabsTrigger>
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="instagram" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Instagram</TabsTrigger>
+                    <TabsTrigger value="marka-logolari" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Marka Logoları</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="ek-ozellikler" className="text-xs px-2 py-1 h-8 flex-1">Ek Özellikler</TabsTrigger>
-                    <TabsTrigger value="watermark" className="text-xs px-2 py-1 h-8 flex-1">Watermark</TabsTrigger>
+                  <div className="grid grid-cols-2 gap-2">
+                    <TabsTrigger value="ek-ozellikler" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Ek Özellikler</TabsTrigger>
+                    <TabsTrigger value="watermark" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Watermark</TabsTrigger>
                   </div>
-                  <div className="flex w-full">
-                    <TabsTrigger value="profil" className="text-xs px-2 py-1 h-8 flex-1">Profil</TabsTrigger>
+                  <div className="grid grid-cols-1 gap-2">
+                    <TabsTrigger value="profil" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Profil Bilgileri</TabsTrigger>
                   </div>
                 </TabsList>
               </Tabs>

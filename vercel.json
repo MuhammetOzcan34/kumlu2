@@ -1,40 +1,17 @@
 {
-  "public": true,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "env": {
-    "VITE_SUPABASE_URL": "https://kepfuptrmccexgyzhcti.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlcGZ1cHRybWNjZXhneXpoY3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwOTE0MDcsImV4cCI6MjA2OTY2NzQwN30.9FAlJYC5UVUKh3407eqag5PX90vaUtBreG5d4AcCVm0"
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
   },
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/sw.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
-        { "key": "Service-Worker-Allowed", "value": "/" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(ico|png|jpg|jpeg|gif|svg|webp)$",
-      "headers": [
-        { "key": "Cache-control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(js|css|woff|woff2|ttf|eot)$",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }

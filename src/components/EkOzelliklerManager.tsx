@@ -89,9 +89,14 @@ export const EkOzelliklerManager: React.FC = () => {
           <Input name="ad" value={form.ad || ''} onChange={handleChange} placeholder="Ek Özellik Adı" required />
           <Textarea name="aciklama" value={form.aciklama || ''} onChange={handleChange} placeholder="Açıklama" />
           <Input name="tutar" type="number" value={form.tutar || 0} onChange={handleChange} placeholder="Tutar (₺)" />
-          <select name="birim" value={form.birim || 'adet'} onChange={handleChange} className="border rounded px-2 py-1">
-            <option value="adet">Adet</option>
-            <option value="metre">Metre</option>
+          <select 
+            name="birim" 
+            value={form.birim || 'adet'} 
+            onChange={handleChange} 
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="adet" className="bg-background text-foreground">Adet</option>
+            <option value="metre" className="bg-background text-foreground">Metre</option>
           </select>
           <div className="flex items-center gap-2">
             <Switch checked={form.aktif ?? true} onCheckedChange={handleSwitch} />
