@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Instagram } from "lucide-react";
+import { ElfsightInstagramFeed } from "./ElfsightInstagramFeed";
 
 interface InstagramPost {
   id: string;
@@ -91,9 +92,32 @@ const InstagramPostCard = memo(({ post, onClick }: {
 InstagramPostCard.displayName = "InstagramPostCard";
 
 export const InstagramFeed = memo(() => {
+  const [widgetType, setWidgetType] = useState<'elfsight' | 'api'>('elfsight');
+  const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
+  
+  useEffect(() => {
+    const type = localStorage.getItem("instagram_widget_type") as 'elfsight' | 'api';
+    setWidgetType(type || 'elfsight');
+  }, []);
+
+  // Instagram aktif değilse bileşeni gösterme
+  if (!instagramEnabled) {
+    return null;
+  }
+
+  // Widget tipine göre uygun bileşeni göster
+  if (widgetType === 'elfsight') {
+    return <ElfsightInstagramFeed />;
+  }
+
+  // Mevcut API tabanlı Instagram feed (eski kod)
+  return <APIInstagramFeed />;
+});
+
+// Mevcut API tabanlı Instagram feed bileşeni
+const APIInstagramFeed = memo(() => {
   const instagramUsername = localStorage.getItem("instagram_username") || "";
   const instagramAccessToken = localStorage.getItem("instagram_access_token") || "";
-  const instagramEnabled = localStorage.getItem("instagram_enabled") === "true";
   const instagramPostCount = parseInt(localStorage.getItem("instagram_post_count") || "6");
   const instagramCacheDuration = parseInt(localStorage.getItem("instagram_cache_duration") || "3600");
   
@@ -102,8 +126,8 @@ export const InstagramFeed = memo(() => {
   const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(instagramPostCount);
 
-  // Eğer Instagram aktif değilse veya access token ayarlanmamışsa bileşeni gösterme
-  if (!instagramEnabled || !instagramAccessToken) {
+  // Eğer access token ayarlanmamışsa bileşeni gösterme
+  if (!instagramAccessToken) {
     return null;
   }
 
@@ -227,4 +251,5 @@ export const InstagramFeed = memo(() => {
   );
 });
 
+APIInstagramFeed.displayName = "APIInstagramFeed";
 InstagramFeed.displayName = "InstagramFeed";
