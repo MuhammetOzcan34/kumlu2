@@ -15,13 +15,8 @@ export default defineConfig(({ mode }) => {
       target: "esnext",
       outDir: "dist",
       sourcemap: false,
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: mode === 'production',
-          drop_debugger: mode === 'production',
-        },
-      },
+      // Terser yerine esbuild kullan (daha hızlı)
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks: {
@@ -72,6 +67,10 @@ export default defineConfig(({ mode }) => {
     esbuild: {
       // Production'da console.log'ları kaldır
       drop: mode === 'production' ? ['console', 'debugger'] : [],
+      // Minification ayarları
+      minifyIdentifiers: mode === 'production',
+      minifySyntax: mode === 'production',
+      minifyWhitespace: mode === 'production',
     },
   };
 });
