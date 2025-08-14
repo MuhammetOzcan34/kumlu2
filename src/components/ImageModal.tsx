@@ -25,7 +25,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-[9999] lg:ml-64 lg:bottom-0 lg:top-0 lg:right-0 pb-20 lg:pb-0">
+    <div className="fixed inset-0 bg-black z-40 lg:ml-64 lg:bottom-0 lg:top-0 lg:right-0 pb-24 lg:pb-0">
       {/* Kapatma */}
       <Button
         variant="ghost"
