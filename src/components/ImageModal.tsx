@@ -24,10 +24,6 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
     return null;
   }
 
-  // Sabit fotoğraf yüksekliği ve boşluk
-  const photoHeight = "calc(100vh - 20px)"; // tüm cihazlarda aynı yükseklik
-  const photoGap = 5; // px
-
   return (
     <div className="fixed inset-0 bg-black z-[9999] lg:ml-64 lg:bottom-0 lg:top-0 lg:right-0 pb-20 lg:pb-0">
       {/* Kapatma */}
@@ -72,8 +68,8 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
             ref={(el) => (imageRefs.current[index] = el)}
             className="w-full flex items-center justify-center snap-start relative"
             style={{
-              height: photoHeight,
-              marginBottom: `${photoGap}px`,
+              height: "100vh",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
             }}
           >
             {/* Fotoğraf numarası */}
@@ -82,18 +78,11 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
             </div>
 
             {/* Fotoğraf */}
-            <div
-              className="relative w-full h-full flex justify-center items-center"
-              style={{ height: photoHeight }}
-            >
+            <div className="relative w-full flex justify-center items-center h-full">
               <img
                 src={image.image}
                 alt={image.title}
-                className="max-w-full max-h-full object-contain"
-                style={{
-                  height: "100%", // Sabit container yüksekliğini doldur
-                  width: "auto",
-                }}
+                className="object-contain w-auto h-full max-h-full"
               />
             </div>
           </div>
