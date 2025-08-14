@@ -66,11 +66,7 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
           <div
             key={image.id}
             ref={(el) => (imageRefs.current[index] = el)}
-            className="w-full flex items-center justify-center snap-start relative"
-            style={{
-              height: "100vh",
-              borderBottom: "1px solid rgba(255,255,255,0.1)",
-            }}
+            className="w-full flex flex-col items-center justify-start snap-start relative"
           >
             {/* Fotoğraf numarası */}
             <div className="absolute top-2 left-2 bg-black/70 text-white text-xs sm:text-sm px-2 py-1 rounded-full z-20">
@@ -78,13 +74,15 @@ export const ImageModal = ({ images, currentIndex, onClose, onNext, onPrev }: Im
             </div>
 
             {/* Fotoğraf */}
-            <div className="relative w-full flex justify-center items-center h-full">
-              <img
-                src={image.image}
-                alt={image.title}
-                className="object-contain w-auto h-full max-h-full"
-              />
-            </div>
+            <img
+              src={image.image}
+              alt={image.title}
+              className="max-w-full max-h-screen object-contain"
+              style={{
+                marginBottom: "8px",
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+              }}
+            />
           </div>
         ))}
       </div>
