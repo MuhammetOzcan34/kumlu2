@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X } from "lucide-react";
@@ -15,6 +15,7 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
   const { data: settings } = useSettings();
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
   // Pop-up ayarları
   const popupTitle = settings?.brand_popup_title || "Kullandığımız Markalar";
@@ -61,6 +62,11 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
       description: settings.brand_logo_6_description || "Yenilikçi tasarım"
     }] : [])
   ];
+
+  // Görsel yükleme callback'i
+  const handleImageLoad = useCallback((logoId: number) => {
+    setLoadedImages(prev => new Set([...prev, logoId]));
+  }, []);
 
   // Eğer pop-up devre dışı bırakılmışsa veya hiç logo yüklenmemişse hiçbir şey gösterme
   if (!popupEnabled || logos.length === 0) {
@@ -131,11 +137,20 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
                 key={logo.id}
                 className="flex flex-col items-center p-4 rounded-lg border border-border hover:border-primary/50 transition-colors group bg-background/50"
               >
-                <div className="w-16 h-16 mb-3 flex items-center justify-center bg-white rounded-lg p-2 shadow-sm">
+                <div className="w-12 h-12 mb-2 flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm">
+                  {!loadedImages.has(logo.id) && (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded" />
+                  )}
                   <img
                     src={logo.image}
                     alt={logo.name}
-                    className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-200"
+                    className={cn(
+                      "max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-200",
+                      loadedImages.has(logo.id) ? "opacity-100" : "opacity-0"
+                    )}
+                    style={{ maxWidth: '40px', maxHeight: '40px' }}
+                    loading="lazy"
+                    onLoad={() => handleImageLoad(logo.id)}
                     onError={(e) => {
                       // Hata durumunda logoyu gizle
                       const target = e.target as HTMLImageElement;
@@ -143,8 +158,8 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
                     }}
                   />
                 </div>
-                <h3 className="font-medium text-sm text-center mb-1">{logo.name}</h3>
-                <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                <h3 className="font-medium text-xs text-center mb-1 line-clamp-1">{logo.name}</h3>
+                <p className="text-xs text-muted-foreground text-center leading-tight line-clamp-2">
                   {logo.description}
                 </p>
               </div>
@@ -160,4 +175,4 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
       </Card>
     </div>
   );
-} 
+}

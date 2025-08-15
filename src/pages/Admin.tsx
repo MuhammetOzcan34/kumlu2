@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { EkOzelliklerManager } from "@/components/EkOzelliklerManager";
+
 import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
 
 export default function Admin() {
@@ -399,7 +399,7 @@ export default function Admin() {
                     <TabsTrigger value="marka-logolari" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Marka Logoları</TabsTrigger>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <TabsTrigger value="ek-ozellikler" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Ek Özellikler</TabsTrigger>
+
                     <TabsTrigger value="watermark" className="text-sm px-4 py-3 h-12 font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95">Watermark</TabsTrigger>
                   </div>
                   <div className="grid grid-cols-1 gap-2">
@@ -538,7 +538,7 @@ export default function Admin() {
               {activeTab === "instagram" && <InstagramSettingsManager />}
               {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
               {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
-              {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
+
               {activeTab === "watermark" && <WatermarkSettingsManager />}
               {activeTab === "profil" && (
                 <Card>
@@ -736,7 +736,7 @@ export default function Admin() {
                     {activeTab === "instagram" && <InstagramSettingsManager />}
                     {activeTab === "marka-logolari" && <BrandLogosSettingsManager />}
                     {activeTab === "servis-bedelleri" && <ServisBedelleriManager />}
-                    {activeTab === "ek-ozellikler" && <EkOzelliklerManager />}
+
                     {activeTab === "watermark" && <WatermarkSettingsManager />}
                     {activeTab === "profil" && (
                       <Card>

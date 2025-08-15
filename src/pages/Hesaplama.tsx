@@ -22,7 +22,6 @@ interface AlanBilgisi {
   malzeme: string;
   en: string;
   boy: string;
-  ekOzellikler: { ad: string; miktar: number }[];
 }
 
 interface HesaplamaSonuc {
@@ -58,15 +57,7 @@ const Hesaplama = () => {
   const [sonuc, setSonuc] = useState<HesaplamaSonuc | null>(null);
   const [showResult, setShowResult] = useState(false);
   
-  // Ek özellikler state'i
-  const [ekOzellikler, setEkOzellikler] = useState<{id:string;ad:string;aciklama:string;carpani:number;aktif:boolean;}[]>([]);
-  
-  // Ek özellikleri yükle
-  useEffect(() => {
-    supabase.from('ek_ozellikler').select('*').eq('aktif', true).order('ad').then(({data}) => {
-      setEkOzellikler(data || []);
-    });
-  }, []);
+
 
   // İstanbul ilçeleri ve servis bedelleri (Google Sheets'ten)
   const istanbulServisBedelleri = {
@@ -139,30 +130,8 @@ const Hesaplama = () => {
     ));
   };
 
-  // Ek özellik toggle fonksiyonu (belirli bir alan için)
-  const ekOzellikToggle = (alanId: string, ozellik: string, checked: boolean) => {
-    setAlanlar(alanlar.map(alan => {
-      if (alan.id === alanId) {
-        const mevcutOzellikler = alan.ekOzellikler || [];
-        const yeniOzellikler = checked
-          ? [...mevcutOzellikler, { ad: ozellik, miktar: 1 }]
-          : mevcutOzellikler.filter(o => o.ad !== ozellik);
-        return { ...alan, ekOzellikler: yeniOzellikler };
-      }
-      return alan;
-    }));
-  };
-  const ekOzellikMiktarGuncelle = (alanId: string, ozellik: string, miktar: number) => {
-    setAlanlar(alanlar.map(alan => {
-      if (alan.id === alanId) {
-        const yeniOzellikler = (alan.ekOzellikler || []).map(o =>
-          o.ad === ozellik ? { ...o, miktar } : o
-        );
-        return { ...alan, ekOzellikler: yeniOzellikler };
-      }
-      return alan;
-    }));
-  };
+
+
 
   const hesaplaFiyat = () => {
     if (!alanlar.every(alan => alan.malzeme && alan.en && alan.boy)) {
@@ -205,50 +174,10 @@ const Hesaplama = () => {
 
       if (!fiyat) return;
 
-      let malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
+      const malzemeFiyati = metrekare * fiyat.malzeme_fiyat;
       const montajFiyati = montajIsteniyor ? metrekare * fiyat.montaj_fiyat : 0;
 
-      // Ek özellikler için fiyat artışı hesapla
-      let ekOzellikArtisi = 0;
-      <div className="space-y-3">
-        <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ekOzellikler.map((ozellik) => (
-            <div
-              key={ozellik.id}
-              className={cn(
-                "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
-                (alan.ekOzellikler || []).includes(ozellik.ad)
-                  ? "bg-primary/10 border-primary"
-                  : "hover:bg-muted/50"
-              )}
-            >
-              <div className="flex-shrink-0 text-2xl">✨</div>
-              <div className="flex-grow">
-                <Label
-                  htmlFor={`ek-ozellik-${alan.id}-${ozellik.ad}`}
-                  className="text-base font-medium cursor-pointer"
-                >
-                  {ozellik.ad}
-                </Label>
-                <p className="text-sm text-muted-foreground">{ozellik.aciklama}</p>
-                <p className="text-xs text-muted-foreground">Çarpan: %{ozellik.carpani}</p>
-              </div>
-              <Checkbox
-                id={`ek-ozellik-${alan.id}-${ozellik.ad}`}
-                checked={(alan.ekOzellikler || []).includes(ozellik.ad)}
-                onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.ad, checked)}
-                className="mt-1"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Ek özellik fiyat artışları (dinamik) */}
-      const ekOzellikFiyatlari: Record<string, number> = {};
-      ekOzellikler.forEach(o => { ekOzellikFiyatlari[o.ad] = o.carpani / 100; });
-      
-      malzemeFiyati += ekOzellikArtisi;
+
 
       toplamMalzemeFiyati += malzemeFiyati;
       toplamMontajFiyati += montajFiyati;
@@ -378,9 +307,9 @@ const Hesaplama = () => {
                       </div>
 
                       <div className="space-y-4">
-                        {/* 1. Malzeme Seçimi */}
+                        {/* Malzeme Seçimi */}
                         <div className="space-y-2">
-                          <Label>1. Malzeme Seçiniz</Label>
+                          <Label>Malzeme Seçiniz</Label>
                           <Select 
                             value={alan.malzeme} 
                             onValueChange={(value) => alanGuncelle(alan.id, 'malzeme', value)}
@@ -398,10 +327,10 @@ const Hesaplama = () => {
                           </Select>
                         </div>
                         
-                        {/* 2. En/Boy Girişi */}
+                        {/* En/Boy Girişi */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>2. En Giriniz (cm)</Label>
+                            <Label>En Giriniz (cm)</Label>
                             <Input
                               type="number"
                               value={alan.en}
@@ -429,60 +358,15 @@ const Hesaplama = () => {
                           </div>
                         )}
 
-                        {/* 3. Ek Özellik Seçimi */}
-                        <div className="space-y-3">
-                          <Label className="text-xl font-semibold">3. Ek Özellik Seçiniz</Label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {ekOzellikler.map((ozellik) => {
-                              const seciliAlan = alan.ekOzellikler.find(o => o.ad === ozellik.ad);
-                              return (
-                                <div
-                                  key={ozellik.id}
-                                  className={cn(
-                                    "flex items-start space-x-4 p-4 rounded-lg border transition-colors",
-                                    seciliAlan ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
-                                  )}
-                                >
-                                  <div className="flex-shrink-0 text-2xl">✨</div>
-                                  <div className="flex-grow">
-                                    <Label
-                                      htmlFor={`ek-ozellik-${alan.id}-${ozellik.ad}`}
-                                      className="text-base font-medium cursor-pointer"
-                                    >
-                                      {ozellik.ad}
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">{ozellik.aciklama}</p>
-                                    <p className="text-xs text-muted-foreground">Tutar: ₺{ozellik.tutar} / {ozellik.birim}</p>
-                                    {seciliAlan && (
-                                      <Input
-                                        type="number"
-                                        min={1}
-                                        value={seciliAlan.miktar}
-                                        onChange={e => ekOzellikMiktarGuncelle(alan.id, ozellik.ad, Number(e.target.value))}
-                                        className="mt-2 w-24"
-                                        placeholder={`Miktar (${ozellik.birim})`}
-                                      />
-                                    )}
-                                  </div>
-                                  <Checkbox
-                                    id={`ek-ozellik-${alan.id}-${ozellik.ad}`}
-                                    checked={!!seciliAlan}
-                                    onCheckedChange={(checked: boolean) => ekOzellikToggle(alan.id, ozellik.ad, checked)}
-                                    className="mt-1"
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* 4. Uygulama & Montaj */}
+                {/* Uygulama & Montaj */}
                 <div className="space-y-3">
-                  <Label className="text-base font-medium">4. Uygulama & Montaj</Label>
+                  <Label className="text-base font-medium">Uygulama & Montaj</Label>
                   <div className="relative">
                     <input
                       type="checkbox"
@@ -493,13 +377,24 @@ const Hesaplama = () => {
                     />
                     <label
                       htmlFor="montaj"
-                      className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
                         montajIsteniyor
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                          : 'border-border hover:border-primary/70 hover:bg-primary/5'
                       }`}
                     >
                       <div className="flex items-center gap-4">
+                        <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                          montajIsteniyor 
+                            ? 'border-primary bg-primary' 
+                            : 'border-gray-300'
+                        }`}>
+                          {montajIsteniyor && (
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
                         <span className="text-2xl">🔧</span>
                         <div>
                           <div className="font-semibold text-lg">Montaj Hizmeti</div>
@@ -532,9 +427,9 @@ const Hesaplama = () => {
                   )}
                 </div>
                 
-                {/* 5. Şehir Seçimi */}
+                {/* Şehir Seçimi */}
                 <div className="space-y-2">
-                  <Label htmlFor="sehir">5. Şehir Seçiniz</Label>
+                  <Label htmlFor="sehir">Şehir Seçiniz</Label>
                   <Select value={sehir} onValueChange={setSehir} disabled={montajIsteniyor}>
                     <SelectTrigger>
                       <SelectValue placeholder="Şehir seçin" />
@@ -550,10 +445,10 @@ const Hesaplama = () => {
                   </Select>
                 </div>
                 
-                {/* 6. İlçe Seçimi (sadece İstanbul için) */}
+                {/* İlçe Seçimi (sadece İstanbul için) */}
                 {sehir === "İstanbul" && (
                   <div className="space-y-2">
-                    <Label htmlFor="ilce">6. İlçe Seçiniz</Label>
+                    <Label htmlFor="ilce">İlçe Seçiniz</Label>
                     <Select value={ilce} onValueChange={setIlce}>
                       <SelectTrigger>
                         <SelectValue placeholder="İlçe seçin" />
@@ -582,6 +477,7 @@ const Hesaplama = () => {
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground mb-1">Hesaplama Sonucu</p>
                       <p className="text-3xl font-bold text-primary">₺{sonuc.toplamFiyat.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground mt-1 font-medium text-orange-600">KDV Hariç</p>
                       <p className="text-sm text-muted-foreground mt-2">
                         Toplam Alan: {sonuc.toplamMetrekare.toFixed(2)} m²
                       </p>
@@ -598,14 +494,7 @@ const Hesaplama = () => {
                             Malzeme: ₺{alan.malzemeFiyati.toFixed(2)}
                             {montajIsteniyor && ` - Montaj: ₺${alan.montajFiyati.toFixed(2)}`}
                           </p>
-                          {alan.ekOzellikler && alan.ekOzellikler.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-xs text-muted-foreground">
-                                Ek Özellikler: {alan.ekOzellikler.join(', ')}
-                                {alan.ekOzellikArtisi > 0 && ` (+₺${alan.ekOzellikArtisi.toFixed(2)})`}
-                              </p>
-                            </div>
-                          )}
+
                         </div>
                       ))}
                     </div>
@@ -629,8 +518,9 @@ const Hesaplama = () => {
                       )}
                     </div>
                     
-                    <div className="text-xs text-muted-foreground text-center">
-                      * Bu fiyat tahmini olup, kesin fiyat için iletişime geçin
+                    <div className="text-xs text-muted-foreground text-center space-y-1">
+                      <p>* Bu fiyat tahmini olup, kesin fiyat için iletişime geçin</p>
+                      <p className="font-medium text-orange-600">* Tüm fiyatlar KDV hariçtir</p>
                     </div>
                   </div>
                 )}
@@ -649,6 +539,7 @@ const Hesaplama = () => {
                 <p>• Minimum montaj alanı 10m² olarak hesaplanır</p>
                 <p>• İlçeye göre servis bedeli eklenir</p>
                 <p>• Özel tasarım ve karmaşık işler için detaylı fiyat teklifi verilir</p>
+                <p className="font-medium text-orange-600">• Tüm fiyatlar KDV hariçtir</p>
                 <p>• Kesin fiyat için lütfen bizimle iletişime geçin</p>
               </CardContent>
             </Card>

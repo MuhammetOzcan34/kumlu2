@@ -97,12 +97,7 @@ const adminMenuItems = [
     icon: Palette, 
     description: "Marka logoları pop-up" 
   },
-  { 
-    title: "Ek Özellikler", 
-    value: "ek-ozellikler", 
-    icon: Plus, 
-    description: "Hesaplama ek özellikleri" 
-  },
+
   { 
     title: "Watermark", 
     value: "watermark", 
