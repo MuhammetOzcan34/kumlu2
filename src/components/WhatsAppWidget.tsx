@@ -22,9 +22,31 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   const [phone, setPhone] = useState("");
   const { data: settings } = useSettings();
 
-  const whatsappNumber = settings?.whatsapp_number || "905555555555";
-  // WhatsApp URL için numaradaki boşlukları temizle
-  const cleanWhatsappNumber = whatsappNumber.replace(/\s/g, '');
+  const whatsappNumber = settings?.whatsapp_number || "5555555555";
+  
+  // Türkiye uyumlu telefon numarası formatı için temizleme ve düzenleme
+  const cleanWhatsappNumber = (() => {
+    // Boşlukları ve özel karakterleri temizle
+    let cleaned = whatsappNumber.replace(/[^0-9]/g, '');
+    
+    // Eğer numara 90 ile başlıyorsa (ülke kodu varsa) olduğu gibi bırak
+    if (cleaned.startsWith('90') && cleaned.length === 12) {
+      return cleaned;
+    }
+    
+    // Eğer numara 5 ile başlıyorsa (Türk cep telefonu) başına 90 ekle
+    if (cleaned.startsWith('5') && cleaned.length === 10) {
+      return '90' + cleaned;
+    }
+    
+    // Eğer numara 0 ile başlıyorsa 0'ı kaldır ve 90 ekle
+    if (cleaned.startsWith('05') && cleaned.length === 11) {
+      return '90' + cleaned.substring(1);
+    }
+    
+    // Varsayılan olarak 90 ekle
+    return '90' + cleaned;
+  })();
   const whatsappMessage = settings?.whatsapp_default_message || "Merhaba, bilgi almak istiyorum.";
   const whatsappEnabled = settings?.whatsapp_enabled !== "false";
 

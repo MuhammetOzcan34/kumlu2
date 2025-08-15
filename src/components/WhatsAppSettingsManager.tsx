@@ -104,18 +104,40 @@ export function WhatsAppSettingsManager() {
   };
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digit characters
+    // Tüm rakam olmayan karakterleri temizle
     const cleaned = value.replace(/\D/g, "");
     
-    // Format as Turkish phone number
-    if (cleaned.length <= 3) {
-      return cleaned;
-    } else if (cleaned.length <= 6) {
-      return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
-    } else if (cleaned.length <= 8) {
-      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
+    // Türkiye telefon numarası formatı (+90 5XX XXX XX XX)
+    if (cleaned.length === 0) {
+      return "";
+    }
+    
+    // Eğer 90 ile başlıyorsa (ülke kodu varsa)
+    if (cleaned.startsWith('90')) {
+      const withoutCountryCode = cleaned.substring(2);
+      if (withoutCountryCode.length <= 3) {
+        return `+90 ${withoutCountryCode}`;
+      } else if (withoutCountryCode.length <= 6) {
+        return `+90 ${withoutCountryCode.slice(0, 3)} ${withoutCountryCode.slice(3)}`;
+      } else if (withoutCountryCode.length <= 8) {
+        return `+90 ${withoutCountryCode.slice(0, 3)} ${withoutCountryCode.slice(3, 6)} ${withoutCountryCode.slice(6)}`;
+      } else {
+        return `+90 ${withoutCountryCode.slice(0, 3)} ${withoutCountryCode.slice(3, 6)} ${withoutCountryCode.slice(6, 8)} ${withoutCountryCode.slice(8, 10)}`;
+      }
+    }
+    
+    // Eğer 0 ile başlıyorsa 0'ı kaldır
+    const phoneNumber = cleaned.startsWith('0') ? cleaned.substring(1) : cleaned;
+    
+    // Türk cep telefonu formatı (5XX XXX XX XX)
+    if (phoneNumber.length <= 3) {
+      return `+90 ${phoneNumber}`;
+    } else if (phoneNumber.length <= 6) {
+      return `+90 ${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3)}`;
+    } else if (phoneNumber.length <= 8) {
+      return `+90 ${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6)}`;
     } else {
-      return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
+      return `+90 ${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6, 8)} ${phoneNumber.slice(8, 10)}`;
     }
   };
 
@@ -164,13 +186,13 @@ export function WhatsAppSettingsManager() {
                 id="whatsapp_number"
                 value={settings.whatsapp_number}
                 onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="5XX XXX XX XX"
+                placeholder="+90 5XX XXX XX XX"
                 maxLength={13}
                 className="flex-1"
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Türkiye formatında telefon numarası girin (örn: 5XX XXX XX XX)
+              WhatsApp numaranızı Türkiye formatında girin (örn: +90 555 123 45 67 veya 0555 123 45 67)
             </p>
           </div>
 
@@ -304,4 +326,4 @@ export function WhatsAppSettingsManager() {
       </Card>
     </div>
   );
-} 
+}
