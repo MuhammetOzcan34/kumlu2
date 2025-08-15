@@ -21,7 +21,7 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
   const popupTitle = settings?.brand_popup_title || "Kullandığımız Markalar";
   const popupDescription = settings?.brand_popup_description || "Kaliteli hizmet için tercih ettiğimiz markalar";
   const popupDuration = parseInt(settings?.brand_popup_duration || "3000"); // 3 saniye varsayılan
-  const popupEnabled = settings?.brand_popup_enabled !== "false";
+  const popupEnabled = settings?.brand_popup_enabled === true || settings?.brand_popup_enabled === "true";
 
   // Logo ayarları - Sadece yüklenen logoları göster
   const logos = [

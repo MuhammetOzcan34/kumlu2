@@ -124,7 +124,7 @@ const Hesaplama = () => {
   };
 
   // Alan güncelleme fonksiyonu
-  const alanGuncelle = (id: string, field: keyof AlanBilgisi, value: any) => {
+  const alanGuncelle = (id: string, field: keyof AlanBilgisi, value: string | string[]) => {
     setAlanlar(alanlar.map(alan => 
       alan.id === id ? { ...alan, [field]: value } : alan
     ));
@@ -141,7 +141,15 @@ const Hesaplama = () => {
     let toplamMalzemeFiyati = 0;
     let toplamMontajFiyati = 0;
     let toplamMetrekare = 0;
-    const alanDetaylari: any[] = [];
+    const alanDetaylari: {
+      id: string;
+      malzeme: string;
+      metrekare: number;
+      malzemeFiyati: number;
+      montajFiyati: number;
+      ekOzellikler: string[];
+      ekOzellikArtisi: number;
+    }[] = [];
 
     // Ek özellik fiyat artışları (Google Sheets'ten)
     const ekOzellikFiyatlari = {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -42,17 +42,60 @@ import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager'
 export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any>(null);
+  // Tip tanımlamaları
+  interface Profile {
+    id: string;
+    user_id: string;
+    display_name?: string;
+    role: string;
+    created_at: string;
+  }
+
+  interface Kategori {
+    id: string;
+    ad: string;
+    sira_no: number;
+  }
+
+  interface Fotograf {
+    id: string;
+    baslik: string;
+    aciklama?: string;
+    resim_url: string;
+    sira_no: number;
+  }
+
+  interface Ayar {
+    id: string;
+    anahtar: string;
+    deger: string;
+  }
+
+  interface Kampanya {
+    id: string;
+    kampanya_adi: string;
+    platform: string;
+    durum: string;
+    butce_gunluk?: number;
+    kategoriler?: {
+      ad: string;
+    };
+    created_at: string;
+  }
+
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [kategoriler, setKategoriler] = useState<any[]>([]);
-  const [fotograflar, setFotograflar] = useState<any[]>([]);
-  const [ayarlar, setAyarlar] = useState<any[]>([]);
-  const [kampanyalar, setKampanyalar] = useState<any[]>([]);
+  const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
+  const [fotograflar, setFotograflar] = useState<Fotograf[]>([]);
+  const [ayarlar, setAyarlar] = useState<Ayar[]>([]);
+  const [kampanyalar, setKampanyalar] = useState<Kampanya[]>([]);
   const [showKampanyaForm, setShowKampanyaForm] = useState(false);
-  const [editingKampanya, setEditingKampanya] = useState<any>(null);
+  const [editingKampanya, setEditingKampanya] = useState<Kampanya | null>(null);
   const [activeTab, setActiveTab] = useState("kampanyalar");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+
 
   useEffect(() => {
     console.log('🔄 Admin - Sayfa yükleniyor...');
@@ -98,9 +141,9 @@ export default function Admin() {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, user?.email, loadUserProfile]);
 
-  const loadUserProfile = async (userId: string) => {
+  const loadUserProfile = useCallback(async (userId: string) => {
     try {
       console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
       setLoading(true);
@@ -176,7 +219,7 @@ export default function Admin() {
       setLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  };
+  }, [user?.email, navigate, toast]);
 
   const loadAdminData = async () => {
     try {
@@ -248,10 +291,11 @@ export default function Admin() {
 
       toast({ title: "Kampanya silindi" });
       loadAdminData();
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
       toast({
         title: "Hata",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -287,10 +331,11 @@ export default function Admin() {
       });
       
       navigate("/auth");
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Çıkış sırasında bir hata oluştu';
       toast({
         title: "Çıkış hatası",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }

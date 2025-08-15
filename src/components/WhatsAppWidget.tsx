@@ -22,7 +22,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   const [phone, setPhone] = useState("");
   const { data: settings } = useSettings();
 
-  const whatsappNumber = settings?.whatsapp_number || "5555555555";
+  const whatsappNumber = settings?.whatsapp_number || "+90 555 555 55 55";
   
   // Türkiye uyumlu telefon numarası formatı için temizleme ve düzenleme
   const cleanWhatsappNumber = (() => {
@@ -46,6 +46,27 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
     
     // Varsayılan olarak 90 ekle
     return '90' + cleaned;
+  })();
+  
+  // Görüntüleme için formatlanmış numara
+  const displayWhatsappNumber = (() => {
+    if (!whatsappNumber || whatsappNumber.includes('+90')) {
+      return whatsappNumber;
+    }
+    
+    // Eğer numara +90 ile başlamıyorsa ekle
+    const cleaned = whatsappNumber.replace(/[^0-9]/g, '');
+    if (cleaned.startsWith('90')) {
+      const phoneNumber = cleaned.substring(2);
+      return `+90 ${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6, 8)} ${phoneNumber.slice(8, 10)}`;
+    } else if (cleaned.startsWith('5')) {
+      return `+90 ${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
+    } else if (cleaned.startsWith('05')) {
+      const phoneNumber = cleaned.substring(1);
+      return `+90 ${phoneNumber.slice(0, 3)} ${phoneNumber.slice(3, 6)} ${phoneNumber.slice(6, 8)} ${phoneNumber.slice(8, 10)}`;
+    }
+    
+    return whatsappNumber;
   })();
   const whatsappMessage = settings?.whatsapp_default_message || "Merhaba, bilgi almak istiyorum.";
   const whatsappEnabled = settings?.whatsapp_enabled !== "false";

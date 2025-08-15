@@ -415,7 +415,7 @@ export const getWatermarkConfig = async () => {
     return null;
   }
 
-  const config: any = {};
+  const config: Record<string, string> = {};
   data?.forEach(setting => {
     config[setting.anahtar] = setting.deger;
   });
@@ -532,7 +532,7 @@ export const processImageWithWatermark = async (
       {
         size: config.size,
         opacity: config.opacity,
-        position: config.position as any,
+        position: config.position as WatermarkPosition,
         angle: config.angle,
         patternRows: config.patternRows,
         patternCols: config.patternCols

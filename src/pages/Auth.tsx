@@ -73,10 +73,10 @@ export default function Auth() {
         title: "Kayıt başarılı",
         description: "E-posta adresinizi kontrol edin ve hesabınızı doğrulayın.",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Kayıt hatası",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
         variant: "destructive",
       });
     } finally {
@@ -104,10 +104,10 @@ export default function Auth() {
       // Giriş başarılı olduktan sonra admin paneline yönlendir
       navigate("/admin");
       
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Giriş hatası",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
         variant: "destructive",
       });
     } finally {

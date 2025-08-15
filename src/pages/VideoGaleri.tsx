@@ -8,13 +8,22 @@ import { useVideos } from "@/hooks/useVideos";
 import { Play } from "lucide-react";
 import { useState } from "react";
 
+interface Video {
+  id: string;
+  baslik: string;
+  aciklama?: string;
+  kategori?: string;
+  thumbnail_url?: string;
+  video_url?: string;
+}
+
 const VideoGaleri = () => {
   const phoneNumber = useSetting("telefon") || "+90 555 123 45 67";
   const { videos, loading } = useVideos();
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleVideoClick = (video: any) => {
+  const handleVideoClick = (video: Video) => {
     setSelectedVideo(video);
     setIsModalOpen(true);
   };

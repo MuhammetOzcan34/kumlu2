@@ -29,7 +29,7 @@ export const useCategories = (type?: CategoryType) => {
           .order("sira_no", { ascending: true });
         
         if (type) {
-          query = query.eq("tip", type as any); // Temporary fix for enum type mismatch
+          query = query.eq("tip", type);
           console.log(`🔍 useCategories - ${type} tipindeki kategoriler filtreleniyor`);
         }
         
