@@ -30,6 +30,14 @@ const Kumlamalar = () => {
     console.log('🔍 Kumlamalar - Fotoğraf sayısı:', photos.length);
   }, [activeCategory, photos.length]);
   
+  // Kategori değiştiğinde selectedImageIndex'i sıfırla
+  useEffect(() => {
+    if (activeCategory) {
+      console.log('🔄 Kategori değişti, selectedImageIndex sıfırlanıyor');
+      setSelectedImageIndex(-1);
+    }
+  }, [activeCategory]);
+  
   // Fotoğrafları ImageModal formatına dönüştür
   const galleryImages = useMemo(() => {
     return photos.map((photo, index) => ({

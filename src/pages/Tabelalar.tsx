@@ -16,6 +16,11 @@ const Tabelalar = () => {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
   
+  // Kategori değiştiğinde modal'ı kapat
+  useEffect(() => {
+    setSelectedImageIndex(-1);
+  }, [activeCategory]);
+  
   // Aktif kategoriye göre fotoğrafları çek (tabela kullanım alanı ile)
   const { data: photos = [], isLoading: photosLoading } = usePhotos(
     activeCategory && typeof activeCategory === 'string' && activeCategory.trim() !== '' && activeCategory !== 'undefined' ? activeCategory : undefined, 

@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
-  <rect width="200" height="100" fill="#ffffff" fill-opacity="0.8" rx="10" ry="10"/>
-  <text x="100" y="60" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#333333">LOGO</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Arka plan daire -->
+  <circle cx="256" cy="256" r="256" fill="#FF6B35"/>
+  
+  <!-- İç daire -->
+  <circle cx="256" cy="256" r="200" fill="#1a1a1a"/>
+  
+  <!-- Kumlu Folyo logosu - K ve F harfleri -->
+  <text x="256" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" text-anchor="middle" fill="#FF6B35">K</text>
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="80" font-weight="bold" text-anchor="middle" fill="#ffffff">F</text>
 </svg>
