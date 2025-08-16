@@ -73,12 +73,19 @@ const Kumlamalar = () => {
 
   // Sayfa yüklendiğinde pop-up'ı göster
   useEffect(() => {
+    console.log('🚀 Kumlamalar: Pop-up timer başlatılıyor...');
     const timer = setTimeout(() => {
+      console.log('⏰ Kumlamalar: 1 saniye geçti, showBrandPopup true yapılıyor');
       setShowBrandPopup(true);
     }, 1000); // 1 saniye sonra pop-up'ı göster
 
     return () => clearTimeout(timer);
   }, []);
+
+  // showBrandPopup state değişimini takip et
+  useEffect(() => {
+    console.log('🔔 Kumlamalar: showBrandPopup değişti:', showBrandPopup);
+  }, [showBrandPopup]);
 
   // Aktif kategoriyi memo ile cache'le
   const currentCategory = useMemo(() => {

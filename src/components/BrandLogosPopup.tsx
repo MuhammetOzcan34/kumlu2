@@ -21,7 +21,7 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
   const popupTitle = settings?.brand_popup_title || "Kullandığımız Markalar";
   const popupDescription = settings?.brand_popup_description || "Kaliteli hizmet için tercih ettiğimiz markalar";
   const popupDuration = parseInt(settings?.brand_popup_duration || "3000"); // 3 saniye varsayılan
-  const popupEnabled = settings?.brand_popup_enabled === true || settings?.brand_popup_enabled === "true";
+  const popupEnabled = settings?.brand_popup_enabled === "true" || settings?.brand_popup_enabled === true;
 
   // Logo ayarları - Sadece yüklenen logoları göster
   const logos = [
@@ -68,10 +68,32 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
     setLoadedImages(prev => new Set([...prev, logoId]));
   }, []);
 
-  // Eğer pop-up devre dışı bırakılmışsa veya hiç logo yüklenmemişse hiçbir şey gösterme
+  // Debug log'ları - Pop-up'ın neden açılmadığını anlamak için
+  console.log('🔍 BrandLogosPopup Debug:', {
+    isOpen,
+    popupEnabled,
+    logosLength: logos.length,
+    settings: {
+      brand_popup_enabled: settings?.brand_popup_enabled,
+      brand_popup_title: settings?.brand_popup_title,
+      brand_logo_1_image: settings?.brand_logo_1_image,
+      brand_logo_2_image: settings?.brand_logo_2_image,
+      brand_logo_3_image: settings?.brand_logo_3_image
+    },
+    logos: logos.map(logo => ({ id: logo.id, name: logo.name, hasImage: !!logo.image }))
+  });
+
+  // Pop-up etkin değilse veya logo yoksa gösterme
   if (!popupEnabled || logos.length === 0) {
+    console.log('🚫 BrandLogosPopup: Pop-up gösterilmiyor', {
+      popupEnabled,
+      logosLength: logos.length,
+      isOpen
+    });
     return null;
   }
+  
+  console.log('✅ Pop-up açılıyor:', { popupEnabled, logosLength: logos.length });
 
   useEffect(() => {
     if (isOpen) {
