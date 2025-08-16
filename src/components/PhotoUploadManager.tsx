@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     }
   }, [selectedUsageArea, allCategories]);
 
-  const handleUpload = async () => {
+  const handleUpload = useCallback(async () => {
     if (!photos || photos.length === 0) {
       toast.error('Lütfen en az bir fotoğraf seçin');
       return;
@@ -220,7 +220,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [photos, selectedUsageArea, addLogo, firmaLogo, selectedCategory, filteredCategories, onPhotoUploaded]);
 
   return (
     <Card>

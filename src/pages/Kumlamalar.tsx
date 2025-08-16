@@ -75,9 +75,9 @@ const Kumlamalar = () => {
   useEffect(() => {
     console.log('🚀 Kumlamalar: Pop-up timer başlatılıyor...');
     const timer = setTimeout(() => {
-      console.log('⏰ Kumlamalar: 1 saniye geçti, showBrandPopup true yapılıyor');
+      console.log('⏰ Kumlamalar: 0.5 saniye geçti, showBrandPopup true yapılıyor');
       setShowBrandPopup(true);
-    }, 1000); // 1 saniye sonra pop-up'ı göster
+    }, 500); // 0.5 saniye sonra pop-up'ı göster
 
     return () => clearTimeout(timer);
   }, []);

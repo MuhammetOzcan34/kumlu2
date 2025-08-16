@@ -6,6 +6,19 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Logo cache sistemi - Aynı logo için tekrar yükleme yapmaz
+ */
+interface LogoCache {
+  [key: string]: {
+    image: HTMLImageElement;
+    timestamp: number;
+  };
+}
+
+const logoCache: LogoCache = {};
+const CACHE_DURATION = 30 * 60 * 1000; // 30 dakika cache süresi
+
+/**
  * Filigran ekleme ayarları
  */
 interface WatermarkOptions {
@@ -64,51 +77,64 @@ const getOptimizationSettings = (originalWidth: number, originalHeight: number):
   const totalPixels = originalWidth * originalHeight;
   const aspectRatio = originalWidth / originalHeight;
   
-  // Çok büyük fotoğraflar (8MP+) - Agresif sıkıştırma
+  // Çok büyük fotoğraflar (8MP+) - Ultra agresif sıkıştırma
   if (totalPixels > 8000000) {
     return {
-      maxWidth: aspectRatio > 1.5 ? 1600 : 1400, // Panoramik fotoğraflar için daha geniş
-      maxHeight: aspectRatio < 0.7 ? 1600 : 1200, // Dikey fotoğraflar için daha yüksek
-      quality: 0.75,
+      maxWidth: aspectRatio > 1.5 ? 1200 : 1000, // Daha da küçük boyutlar
+      maxHeight: aspectRatio < 0.7 ? 1200 : 800,
+      quality: 0.60, // Çok düşük kalite ama hala kabul edilebilir
       format: 'jpeg',
       compressionLevel: 'high'
     };
   }
   
-  // Büyük fotoğraflar (4-8MP) - Orta sıkıştırma
+  // Büyük fotoğraflar (4-8MP) - Çok agresif sıkıştırma
   if (totalPixels > 4000000) {
     return {
-      maxWidth: aspectRatio > 1.5 ? 1400 : 1200,
-      maxHeight: aspectRatio < 0.7 ? 1400 : 1000,
-      quality: 0.80,
+      maxWidth: aspectRatio > 1.5 ? 1000 : 900,
+      maxHeight: aspectRatio < 0.7 ? 1000 : 700,
+      quality: 0.65, // Düşük kalite
       format: 'jpeg',
-      compressionLevel: 'medium'
+      compressionLevel: 'high'
     };
   }
   
-  // Orta boyut fotoğraflar (2-4MP) - Dengeli optimizasyon
+  // Orta boyut fotoğraflar (2-4MP) - Agresif sıkıştırma
   if (totalPixels > 2000000) {
     return {
-      maxWidth: aspectRatio > 1.5 ? 1200 : 1000,
-      maxHeight: aspectRatio < 0.7 ? 1200 : 900,
-      quality: 0.82,
+      maxWidth: aspectRatio > 1.5 ? 900 : 800,
+      maxHeight: aspectRatio < 0.7 ? 900 : 650,
+      quality: 0.70, // Orta-düşük kalite
       format: 'jpeg',
-      compressionLevel: 'medium'
+      compressionLevel: 'high'
     };
   }
   
-  // Küçük fotoğraflar (2MP altı) - Minimal sıkıştırma
+  // Küçük fotoğraflar (2MP altı) - Orta sıkıştırma
   return {
-    maxWidth: aspectRatio > 1.5 ? 1000 : 800,
-    maxHeight: aspectRatio < 0.7 ? 1000 : 600,
-    quality: 0.85,
+    maxWidth: aspectRatio > 1.5 ? 800 : 600,
+    maxHeight: aspectRatio < 0.7 ? 800 : 500,
+    quality: 0.75, // Orta kalite
     format: 'jpeg',
-    compressionLevel: 'low'
+    compressionLevel: 'medium'
   };
 };
 
 /**
- * Optimize edilmiş logo yükleme fonksiyonu - Güçlü fallback sistemi
+ * Cache'den eski logoları temizler
+ */
+const cleanExpiredCache = (): void => {
+  const now = Date.now();
+  Object.keys(logoCache).forEach(key => {
+    if (now - logoCache[key].timestamp > CACHE_DURATION) {
+      delete logoCache[key];
+      console.log(`🗑️ Cache'den eski logo temizlendi: ${key}`);
+    }
+  });
+};
+
+/**
+ * Optimize edilmiş logo yükleme fonksiyonu - Cache sistemi ile
  * @param logoUrl Logo URL'si (opsiyonel, belirtilmezse yerel logo kullanılır)
  * @returns Logo yükleme sonucu
  */
@@ -119,11 +145,27 @@ export const loadLogo = (logoUrl?: string): Promise<LogoLoadResult> => {
       return;
     }
     
+    // Cache temizliği
+    cleanExpiredCache();
+    
+    // Cache'de var mı kontrol et
+    const cacheKey = logoUrl;
+    if (logoCache[cacheKey]) {
+      console.log(`📋 Logo cache'den alındı: ${logoUrl}`);
+      resolve({ success: true, image: logoCache[cacheKey].image });
+      return;
+    }
+    
     const img = new Image();
     img.crossOrigin = 'anonymous'; // CORS hatalarını önlemek için kritik
 
     img.onload = () => {
-      console.log(`✅ Logo başarıyla yüklendi: ${img.src}`);
+      console.log(`✅ Logo başarıyla yüklendi ve cache'e eklendi: ${img.src}`);
+      // Cache'e ekle
+      logoCache[cacheKey] = {
+        image: img,
+        timestamp: Date.now()
+      };
       resolve({ success: true, image: img });
     };
 

@@ -153,7 +153,7 @@ export default function Admin() {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, loadUserProfile]);
 
   const loadUserProfile = useCallback(async (userId: string) => {
     try {

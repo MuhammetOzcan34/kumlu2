@@ -67,14 +67,15 @@ export const ElfsightInstagramFeed = () => {
       </div>
       
       {/* Elfsight Widget - Mobil Uyumlu */}
-      <div className="w-full max-w-4xl flex justify-center px-2 sm:px-4">
+      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
         <div 
-          className={`elfsight-app-${settings.elfsight_widget_id} w-full`}
+          className={`elfsight-app-${settings.elfsight_widget_id} w-full overflow-hidden`}
           data-elfsight-app-lazy
           style={{
             minHeight: '300px',
             width: '100%',
-            maxWidth: '100%'
+            maxWidth: '100%',
+            display: 'block'
           }}
         ></div>
       </div>

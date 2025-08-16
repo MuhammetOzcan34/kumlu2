@@ -27,7 +27,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   // Türkiye uyumlu telefon numarası formatı için temizleme ve düzenleme
   const cleanWhatsappNumber = (() => {
     // Boşlukları ve özel karakterleri temizle
-    let cleaned = whatsappNumber.replace(/[^0-9]/g, '');
+    const cleaned = whatsappNumber.replace(/[^0-9]/g, '');
     
     // Eğer numara 90 ile başlıyorsa (ülke kodu varsa) olduğu gibi bırak
     if (cleaned.startsWith('90') && cleaned.length === 12) {
@@ -74,12 +74,13 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   // Mobil cihaz kontrolü
   const isMobile = window.innerWidth <= 768;
 
-  // Eğer WhatsApp devre dışı bırakılmışsa widget'ı gösterme
-  if (!whatsappEnabled) {
-    return null;
-  }
-
   useEffect(() => {
+    // Eğer WhatsApp devre dışı bırakılmışsa event listener'ları ekleme
+    if (!whatsappEnabled) {
+      return;
+    }
+
+
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && isMobile) {
         const deltaX = e.clientX - dragStart.x;
@@ -131,7 +132,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging, dragStart, isMobile]);
+  }, [isDragging, dragStart, isMobile, whatsappEnabled]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isMobile) {
@@ -178,6 +179,11 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
     right: "20px",
     zIndex: 1000
   };
+
+  // Eğer WhatsApp devre dışı bırakılmışsa widget'ı gösterme
+  if (!whatsappEnabled) {
+    return null;
+  }
 
   return (
     <div className={cn("", className)} style={widgetStyle}>

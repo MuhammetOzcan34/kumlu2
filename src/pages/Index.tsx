@@ -1,5 +1,5 @@
 import { Palette, FileText, Settings, Image, Wrench, Eye, Car } from "lucide-react";
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, memo, useEffect } from "react";
 
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -138,6 +138,21 @@ const Index = () => {
   // Slider verilerini memoize et
   const slides = useMemo(() => sliderPhotos || [], [sliderPhotos]);
 
+  // Image preloading - kritik görselleri önceden yükle
+  useEffect(() => {
+    if (slides.length > 0) {
+      // İlk 3 slider görselini preload et
+      const preloadImages = slides.slice(0, 3);
+      preloadImages.forEach((slide) => {
+        const img = new Image();
+        img.src = slide.image;
+        // Preload işlemini sessizce yap
+        img.onload = () => console.log(`🚀 Preloaded: ${slide.title}`);
+        img.onerror = () => console.warn(`⚠️ Preload failed: ${slide.title}`);
+      });
+    }
+  }, [slides]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
@@ -162,7 +177,7 @@ const Index = () => {
           
           {/* Instagram Section - Mobil Uyumlu */}
           <section className="mb-8 w-full">
-            <div className="w-full overflow-hidden">
+            <div className="w-full max-w-6xl mx-auto">
               <InstagramFeed />
             </div>
           </section>

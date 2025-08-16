@@ -391,36 +391,7 @@ export type Database = {
         }
         Relationships: []
       }
-      ek_ozellikler: {
-        Row: {
-          id: string
-          ad: string
-          aciklama: string | null
-          carpani: number
-          aktif: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          ad: string
-          aciklama?: string | null
-          carpani?: number
-          aktif?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          ad?: string
-          aciklama?: string | null
-          carpani?: number
-          aktif?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+
     }
     Views: {
       [_ in never]: never

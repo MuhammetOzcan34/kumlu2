@@ -33,11 +33,11 @@ interface HesaplamaSonuc {
   alanDetaylari: {
     id: string;
     malzeme: string;
+    en: number;
+    boy: number;
     metrekare: number;
-    malzemeFiyati: number;
-    montajFiyati: number;
-    ekOzellikler: string[];
-    ekOzellikArtisi: number;
+    birimFiyat: number;
+    toplamFiyat: number;
   }[];
 }
 
@@ -47,7 +47,7 @@ const Hesaplama = () => {
   
   // Form state'leri
   const [alanlar, setAlanlar] = useState<AlanBilgisi[]>([
-    { id: '1', malzeme: '', en: '', boy: '', ekOzellikler: [] }
+    { id: '1', malzeme: '', en: '', boy: '' }
   ]);
   const [montajIsteniyor, setMontajIsteniyor] = useState(false);
   const [sehir, setSehir] = useState("");
@@ -110,8 +110,7 @@ const Hesaplama = () => {
       id: Date.now().toString(),
       malzeme: '',
       en: '',
-      boy: '',
-      ekOzellikler: []
+      boy: ''
     };
     setAlanlar([...alanlar, yeniAlan]);
   };
@@ -147,17 +146,9 @@ const Hesaplama = () => {
       metrekare: number;
       malzemeFiyati: number;
       montajFiyati: number;
-      ekOzellikler: string[];
-      ekOzellikArtisi: number;
     }[] = [];
 
-    // Ek özellik fiyat artışları (Google Sheets'ten)
-    const ekOzellikFiyatlari = {
-      "UV Korumalı": 0.15, // %15 artış
-      "Yansıtıcı": 0.20,   // %20 artış
-      "Özel Kesim": 0.25,  // %25 artış
-      "Hızlı Teslimat": 0.30 // %30 artış
-    };
+
 
     // Her alan için hesaplama
     alanlar.forEach(alan => {
@@ -196,9 +187,7 @@ const Hesaplama = () => {
         malzeme: urun.ad,
         metrekare,
         malzemeFiyati,
-        montajFiyati,
-        ekOzellikler: alan.ekOzellikler,
-        ekOzellikArtisi
+        montajFiyati
       });
     });
 
@@ -284,19 +273,7 @@ const Hesaplama = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
-                {/* Ölçü Alanı Ekleme Butonu */}
-                <div className="space-y-4">
-                  <Button
-                    onClick={alanEkle}
-                    className="w-full md:w-auto text-lg py-6 px-8 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-6 w-6" />
-                    Ölçü Alanı Ekle
-                  </Button>
-                  <p className="text-sm text-muted-foreground text-center md:text-left">
-                    Birden fazla ölçü girmek için basınız
-                  </p>
-                </div>
+                {/* Ölçü Alanı Ekleme Butonu Kaldırıldı - Artık her alan kartının altında */}
 
                 {/* Alan Bilgileri */}
                 <div className="space-y-6">
@@ -370,53 +347,94 @@ const Hesaplama = () => {
                             </p>
                           </div>
                         )}
-
-
+                      </div>
+                      
+                      {/* Daha Fazla Ölçü Alanı Ekle Butonu - Her kartın altında */}
+                      <div className="pt-4 border-t border-border/50">
+                        <Button
+                          onClick={alanEkle}
+                          variant="outline"
+                          className="w-full text-sm py-3 px-4 border-dashed border-2 hover:border-primary hover:bg-primary/5 flex items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-all"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Daha Fazla Ölçü Alanı Ekle
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* Uygulama & Montaj */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">Uygulama & Montaj</Label>
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      id="montaj"
-                      checked={montajIsteniyor}
-                      onChange={(e) => setMontajIsteniyor(e.target.checked)}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="montaj"
-                      className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        montajIsteniyor
-                          ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                          : 'border-border hover:border-primary/70 hover:bg-primary/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
-                          montajIsteniyor 
-                            ? 'border-primary bg-primary' 
-                            : 'border-gray-300'
-                        }`}>
-                          {montajIsteniyor && (
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-2xl">🔧</span>
-                        <div>
-                          <div className="font-semibold text-lg">Montaj Hizmeti İstiyorum</div>
+                {/* Montaj Hizmeti Seçimi */}
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <Label className="text-xl font-semibold text-primary">Montaj Hizmeti Seçimi</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Ürününüzü nasıl teslim almak istiyorsunuz?
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Sadece Ürün Seçeneği */}
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        id="sadece-urun"
+                        name="montaj-secimi"
+                        checked={!montajIsteniyor}
+                        onChange={() => setMontajIsteniyor(false)}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="sadece-urun"
+                        className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                          !montajIsteniyor
+                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                            : 'border-border hover:border-primary/70 hover:bg-primary/5'
+                        }`}
+                      >
+                        <div className="text-center space-y-3">
+                          <div className="text-4xl">📦</div>
+                          <div className="font-semibold text-lg">Sadece Ürün</div>
                           <div className="text-sm text-muted-foreground">
-                            Profesyonel montaj ve uygulama hizmeti
+                            Ürünü kargo ile alacağım veya mağazadan teslim alacağım
+                          </div>
+                          <div className="text-xs font-medium text-green-600">
+                            ✓ Daha ekonomik
                           </div>
                         </div>
-                      </div>
-                    </label>
+                      </label>
+                    </div>
+                    
+                    {/* Montaj + Ürün Seçeneği */}
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        id="montaj-dahil"
+                        name="montaj-secimi"
+                        checked={montajIsteniyor}
+                        onChange={() => setMontajIsteniyor(true)}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="montaj-dahil"
+                        className={`block p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                          montajIsteniyor
+                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                            : 'border-border hover:border-primary/70 hover:bg-primary/5'
+                        }`}
+                      >
+                        <div className="text-center space-y-3">
+                          <div className="text-4xl">🔧</div>
+                          <div className="font-semibold text-lg">Montaj + Ürün</div>
+                          <div className="text-sm text-muted-foreground">
+                            Profesyonel ekibimiz evinize gelip montajını yapsın
+                          </div>
+                          <div className="text-xs font-medium text-blue-600">
+                            ✓ Sadece İstanbul
+                          </div>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                   
                   {montajIsteniyor && (

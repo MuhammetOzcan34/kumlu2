@@ -9,21 +9,21 @@ import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { lazy, Suspense } from 'react';
 import Index from "./pages/Index";
-import Kumlamalar from "./pages/Kumlamalar";
-import AracGiydirme from "./pages/AracGiydirme";
-import Tabelalar from "./pages/Tabelalar";
-import Referanslar from "./pages/Referanslar";
-import VideoGaleri from "./pages/VideoGaleri";
-import ServisBedelleri from "./pages/ServisBedelleri";
-import Hesaplama from "./pages/Hesaplama";
-import Iletisim from "./pages/Iletisim";
-import Auth from "./pages/Auth";
-import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
-import KullanimSartlari from "./pages/KullanimSartlari";
-import NotFound from "./pages/NotFound";
 
-// Lazy load büyük componentler
+// Lazy load büyük ve az kullanılan sayfalar - performans optimizasyonu
+const Kumlamalar = lazy(() => import('./pages/Kumlamalar'));
+const AracGiydirme = lazy(() => import('./pages/AracGiydirme'));
+const Tabelalar = lazy(() => import('./pages/Tabelalar'));
+const Referanslar = lazy(() => import('./pages/Referanslar'));
+const VideoGaleri = lazy(() => import('./pages/VideoGaleri'));
+const ServisBedelleri = lazy(() => import('./pages/ServisBedelleri'));
+const Hesaplama = lazy(() => import('./pages/Hesaplama'));
+const Iletisim = lazy(() => import('./pages/Iletisim'));
+const Auth = lazy(() => import('./pages/Auth'));
 const Admin = lazy(() => import('./pages/Admin'));
+const GizlilikPolitikasi = lazy(() => import('./pages/GizlilikPolitikasi'));
+const KullanimSartlari = lazy(() => import('./pages/KullanimSartlari'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Gelişmiş loading bileşeni
 const LoadingSpinner = () => (
