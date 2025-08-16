@@ -29,5 +29,10 @@
     }
   ],
   "categories": ["business", "utilities"],
-  "lang": "tr"
+  "lang": "tr",
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/",
+    "update_via_cache": "none"
+  }
 }

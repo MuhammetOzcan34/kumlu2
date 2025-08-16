@@ -15,6 +15,30 @@ root.render(
   </StrictMode>
 );
 
+// Service Worker kaydı - PWA desteği için
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  navigator.serviceWorker.register('/sw.js');
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', {
+      scope: '/'
+    })
+    .then((registration) => {
+      console.log('SW registered: ', registration);
+      
+      // Güncelleme kontrolü
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Yeni service worker hazır, kullanıcıya bildir
+              console.log('New content is available; please refresh.');
+            }
+          });
+        }
+      });
+    })
+    .catch((registrationError) => {
+      console.warn('SW registration failed: ', registrationError);
+    });
+  });
 }
