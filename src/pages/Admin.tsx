@@ -189,10 +189,6 @@ export default function Admin() {
   }, [navigate, toast, user, session]);
 
   useEffect(() => {
-    console.log('🔄 Admin - Sayfa yükleniyor...');
-    
-    // Auth durumu takibi
-  useEffect(() => {
     console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
