@@ -1,4 +1,4 @@
-import { Palette, FileText, Settings, Image, Wrench, Eye, Car } from "lucide-react";
+import { Palette, FileText, Settings, Image as ImageIcon, Wrench, Eye, Car } from "lucide-react";
 import { useState, useMemo, memo, useEffect } from "react";
 
 import { MobileNavigation } from "@/components/MobileNavigation";
@@ -35,7 +35,7 @@ const services = [
   },
   {
     title: "Dijital Baskı",
-    icon: Image,
+    icon: ImageIcon,
     href: "/kumlamalar",
     gradient: "bg-gradient-to-r from-coral-pink to-warm-orange"
   },
