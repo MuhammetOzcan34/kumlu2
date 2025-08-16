@@ -1,73 +1,210 @@
-# Welcome to your Lovable project
+# Kumlu Folyo Projesi
 
-## Project info
+## 📋 Proje Hakkında
 
-**URL**: https://lovable.dev/projects/3b80850a-d449-43bf-ba14-af8d48db4322
+Kumlu Folyo, modern web teknolojileri kullanılarak geliştirilmiş bir React uygulamasıdır. Bu proje, folyo ve baskı hizmetleri için tasarlanmış kapsamlı bir web platformudur.
 
-## How can I edit this code?
+## 🚀 Teknolojiler
 
-There are several ways of editing your application.
+### Frontend
+- **React 18.3.1** - Modern UI kütüphanesi
+- **TypeScript** - Tip güvenliği için
+- **Vite** - Hızlı geliştirme ve build aracı
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Modern UI bileşenleri
+- **React Router DOM** - Sayfa yönlendirme
+- **React Hook Form** - Form yönetimi
+- **Zod** - Şema doğrulama
+- **Tanstack Query** - Veri yönetimi
+- **Lucide React** - İkonlar
+- **Sonner** - Toast bildirimleri
+- **Recharts** - Grafik ve çizelgeler
 
-**Use Lovable**
+### Backend & Veritabanı
+- **Supabase** - Backend-as-a-Service
+  - PostgreSQL veritabanı
+  - Gerçek zamanlı abonelikler
+  - Kimlik doğrulama
+  - Dosya depolama
+  - Row Level Security (RLS)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3b80850a-d449-43bf-ba14-af8d48db4322) and start prompting.
+### PWA Özellikleri
+- Progressive Web App desteği
+- Offline çalışma yeteneği
+- Mobil uygulama benzeri deneyim
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📁 Proje Yapısı
 
-**Use your preferred IDE**
+```
+kumlu2-master/
+├── public/                 # Statik dosyalar
+│   ├── manifest.json      # PWA manifest
+│   ├── pwa-*.png         # PWA ikonları
+│   └── sw.js             # Service Worker
+├── src/
+│   ├── components/       # Yeniden kullanılabilir bileşenler
+│   ├── contexts/         # React Context'leri
+│   ├── hooks/           # Özel React Hook'ları
+│   ├── pages/           # Sayfa bileşenleri
+│   ├── lib/             # Yardımcı kütüphaneler
+│   ├── integrations/    # Dış entegrasyonlar (Supabase)
+│   └── assets/          # Görseller ve diğer varlıklar
+├── supabase/
+│   ├── migrations/      # Veritabanı migration dosyaları
+│   ├── functions/       # Edge Functions
+│   └── config.toml      # Supabase yapılandırması
+└── *.sql               # Veritabanı script dosyaları
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Kurulum ve Çalıştırma
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Gereksinimler
+- Node.js (v18 veya üzeri)
+- npm veya yarn
+- Supabase hesabı
 
-Follow these steps:
+### Adım 1: Projeyi Klonlayın
+```bash
+git clone <PROJE_GIT_URL>
+cd kumlu2-master
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Adım 2: Bağımlılıkları Yükleyin
+```bash
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Adım 3: Ortam Değişkenlerini Ayarlayın
+`.env` dosyasını oluşturun ve aşağıdaki değişkenleri ekleyin:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Adım 4: Geliştirme Sunucusunu Başlatın
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Uygulama `http://localhost:5173` adresinde çalışacaktır.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📊 Veritabanı Yapısı
 
-**Use GitHub Codespaces**
+### Ana Tablolar
+- **profiles** - Kullanıcı profilleri
+- **ayarlar** - Uygulama ayarları
+- **kategoriler** - Ürün kategorileri
+- **kampanyalar** - Pazarlama kampanyaları
+- **servis_bedelleri** - Hizmet ücretleri
+- **video_galeri** - Video içerikleri
+- **fotograflar** - Görsel galeri
+- **hesaplama_urunleri** - Hesaplama ürünleri
+- **hesaplama_fiyatlar** - Fiyat hesaplamaları
+- **ek_ozellikler** - Ek özellikler
+- **marka_logolari** - Marka logoları
+- **user_roles** - Kullanıcı rolleri
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Güvenlik
+- Row Level Security (RLS) politikaları aktif
+- Anonim kullanıcılar için okuma izinleri
+- Kimlik doğrulamalı kullanıcılar için tam erişim
 
-## What technologies are used for this project?
+## 🔧 Geliştirme Komutları
 
-This project is built with:
+```bash
+# Geliştirme sunucusunu başlat
+npm run dev
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Projeyi build et
+npm run build
 
-## How can I deploy this project?
+# Build edilen projeyi önizle
+npm run start
 
-Simply open [Lovable](https://lovable.dev/projects/3b80850a-d449-43bf-ba14-af8d48db4322) and click on Share -> Publish.
+# Tip kontrolü yap
+npm run type-check
 
-## Can I connect a custom domain to my Lovable project?
+# Kod kalitesi kontrolü
+npm run lint
+```
 
-Yes, you can!
+## 🚀 Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Vercel ile Deployment
+Proje Vercel için optimize edilmiştir:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Vercel hesabınıza giriş yapın
+2. Projeyi import edin
+3. Ortam değişkenlerini ayarlayın
+4. Deploy edin
+
+### Supabase Migration'ları
+Veritabanı değişikliklerini uygulamak için:
+
+```bash
+# Migration dosyalarını çalıştır
+supabase db push
+
+# Yerel geliştirme için
+supabase start
+```
+
+## 🔐 Güvenlik Özellikleri
+
+- **RLS Politikaları**: Tüm tablolarda satır seviyesi güvenlik
+- **API Anahtarı Güvenliği**: Anon key ile sınırlı erişim
+- **CORS Yapılandırması**: Güvenli cross-origin istekleri
+- **Input Validation**: Zod ile şema doğrulama
+
+## 📱 PWA Özellikleri
+
+- **Offline Çalışma**: Service Worker ile cache yönetimi
+- **Yüklenebilir**: Ana ekrana ekleme desteği
+- **Responsive**: Tüm cihazlarda uyumlu
+- **Fast Loading**: Vite ile optimize edilmiş yükleme
+
+## 🐛 Hata Ayıklama
+
+### Yaygın Sorunlar
+
+1. **401 Unauthorized Hatası**
+   - Supabase RLS politikalarını kontrol edin
+   - API anahtarlarının doğruluğunu kontrol edin
+
+2. **PWA İkon Hatası**
+   - `public/pwa-*.png` dosyalarının varlığını kontrol edin
+   - Manifest.json dosyasındaki yolları kontrol edin
+
+3. **Build Hataları**
+   - TypeScript hatalarını kontrol edin: `npm run type-check`
+   - Lint hatalarını düzeltin: `npm run lint`
+
+## 📝 Katkıda Bulunma
+
+1. Projeyi fork edin
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
+4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📄 Lisans
+
+Bu proje özel bir projedir. Tüm hakları saklıdır.
+
+## 📞 İletişim
+
+Proje ile ilgili sorularınız için:
+- GitHub Issues kullanın
+- Proje sahibi ile iletişime geçin
+
+## 🔄 Versiyon Geçmişi
+
+- **v1.0.0** - İlk stabil sürüm
+  - Temel CRUD işlemleri
+  - Supabase entegrasyonu
+  - PWA desteği
+  - RLS güvenlik politikaları
+
+---
+
+**Not**: Bu proje aktif olarak geliştirilmektedir. Güncellemeler için düzenli olarak kontrol edin.
