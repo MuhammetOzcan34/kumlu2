@@ -121,7 +121,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchmove", handleTouchMove, { passive: true });
       document.addEventListener("touchend", handleTouchEnd);
     }
 
