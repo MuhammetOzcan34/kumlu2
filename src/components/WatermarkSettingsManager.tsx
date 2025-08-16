@@ -110,7 +110,7 @@ export const WatermarkSettingsManager: React.FC = () => {
     // Watermark logosu yükle
     const logoResult = await loadWatermarkLogo();
     if (!logoResult.success || !logoResult.image) {
-      toast.error('Watermark logosu yüklenemedi');
+      toast.error('Watermark logosu bulunamadı. Lütfen önce bir logo yükleyin.');
       return;
     }
     

@@ -494,7 +494,7 @@ export const loadWatermarkLogo = async (): Promise<LogoLoadResult> => {
     }
     
     // Son çare olarak hata döndür (default-logo.svg kullanma)
-    return { success: false, error: new Error('Hiçbir logo yüklenemedi') };
+    return { success: false, error: new Error('Watermark logosu bulunamadı') };
     
   } catch (error) {
     console.error('Filigran logosu yüklenirken hata:', error);

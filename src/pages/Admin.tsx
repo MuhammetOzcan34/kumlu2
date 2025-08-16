@@ -59,10 +59,22 @@ export default function Admin() {
 
   interface Fotograf {
     id: string;
-    baslik: string;
-    aciklama?: string;
-    resim_url: string;
-    sira_no: number;
+    baslik: string | null;
+    aciklama: string | null;
+    dosya_yolu: string;
+    kategori_id: string | null;
+    kategori_adi: string | null;
+    kullanim_alani: string[] | null;
+    aktif: boolean | null;
+    created_at: string;
+    updated_at: string;
+    boyut: number | null;
+    gorsel_tipi: string | null;
+    logo_eklendi: boolean | null;
+    watermark_applied: boolean | null;
+    sira_no: number | null;
+    thumbnail_yolu: string | null;
+    mime_type: string | null;
   }
 
   interface Ayar {
@@ -141,7 +153,7 @@ export default function Admin() {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
       subscription.unsubscribe();
     };
-  }, [navigate, user?.email, loadUserProfile]);
+  }, [navigate]);
 
   const loadUserProfile = useCallback(async (userId: string) => {
     try {
@@ -160,13 +172,14 @@ export default function Admin() {
         // Eğer profil bulunamazsa, otomatik olarak oluşturmaya çalış
         if (error.code === 'PGRST116') {
           console.log('🔧 Admin - Profil bulunamadı, oluşturuluyor...');
+          const currentUser = user || session?.user;
           const { data: newProfile, error: createError } = await supabase
             .from("profiles")
             .insert({
               id: userId,
               user_id: userId,
-              display_name: user?.email || 'Kullanıcı',
-              role: user?.email === 'ckumlama@gmail.com' ? 'admin' : 'user'
+              display_name: currentUser?.email || 'Kullanıcı',
+              role: currentUser?.email === 'ckumlama@gmail.com' ? 'admin' : 'user'
             })
             .select()
             .single();
@@ -219,7 +232,7 @@ export default function Admin() {
       setLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  }, [user?.email, navigate, toast]);
+  }, [navigate, toast, user, session]);
 
   const loadAdminData = async () => {
     try {
