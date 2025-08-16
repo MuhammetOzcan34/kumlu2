@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { PhoneButton } from "@/components/PhoneButton";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -55,10 +55,10 @@ const Kumlamalar = () => {
   }, [selectedImageIndex]);
 
   // Fotoğraf tıklama handler'ı
-  const handleImageClick = (index: number) => {
+  const handleImageClick = useCallback((index: number) => {
     console.log(`🎯 Kumlamalar CLICK: Clicked index ${index}. Previous index was ${selectedImageIndex}.`);
     setSelectedImageIndex(index);
-  };
+  }, [selectedImageIndex]);
 
   // İlk kategoriyi otomatik seç
   useEffect(() => {
@@ -161,6 +161,12 @@ const Kumlamalar = () => {
                           src={image.image} 
                           alt={image.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
                         />
                       </div>
                     ))}
@@ -214,4 +220,8 @@ const Kumlamalar = () => {
   );
 };
 
-export default Kumlamalar;
+// React.memo ile bileşeni optimize et
+const MemoizedKumlamalar = React.memo(Kumlamalar);
+MemoizedKumlamalar.displayName = 'Kumlamalar';
+
+export default MemoizedKumlamalar;

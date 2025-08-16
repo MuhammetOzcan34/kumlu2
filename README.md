@@ -1,210 +1,245 @@
 # Kumlu Folyo Projesi
 
-## 📋 Proje Hakkında
+## 📋 Proje Açıklaması
 
-Kumlu Folyo, modern web teknolojileri kullanılarak geliştirilmiş bir React uygulamasıdır. Bu proje, folyo ve baskı hizmetleri için tasarlanmış kapsamlı bir web platformudur.
+Kumlu Folyo, modern web teknolojileri kullanılarak geliştirilmiş kapsamlı bir işletme web sitesidir. Proje, folyo kaplama, araç giydirme, tabela üretimi ve kumlamalara yönelik hizmetleri tanıtan, müşteri etkileşimini artıran ve işletme yönetimini kolaylaştıran özellikler sunar.
 
-## 🚀 Teknolojiler
+### 🎯 Temel Özellikler
+
+- **Responsive Tasarım**: Mobil ve masaüstü cihazlarda mükemmel görünüm
+- **Admin Paneli**: Kapsamlı içerik yönetim sistemi
+- **Fotoğraf Galerisi**: Filigran desteği ile profesyonel görsel yönetimi
+- **Video Galeri**: YouTube entegrasyonu ile video içerik yönetimi
+- **Instagram Entegrasyonu**: Otomatik sosyal medya içerik çekimi
+- **WhatsApp Widget**: Müşteri iletişimini kolaylaştıran anlık mesajlaşma
+- **Marka Logoları Popup**: Referans firmaları gösterimi
+- **Hesaplama Araçları**: Hizmet bedeli hesaplama modülleri
+- **İletişim Formu**: Müşteri talep yönetimi
+- **PWA Desteği**: Mobil uygulama deneyimi
+- **Dark/Light Mode**: Kullanıcı tercihine göre tema değiştirme
+
+## 🛠️ Teknoloji Stack'i
 
 ### Frontend
 - **React 18.3.1** - Modern UI kütüphanesi
-- **TypeScript** - Tip güvenliği için
+- **TypeScript** - Tip güvenli geliştirme
 - **Vite** - Hızlı geliştirme ve build aracı
+- **React Router DOM 6.24.1** - SPA routing (v7 future flags aktif)
 - **Tailwind CSS** - Utility-first CSS framework
-- **shadcn/ui** - Modern UI bileşenleri
-- **React Router DOM** - Sayfa yönlendirme
+- **Radix UI** - Erişilebilir UI bileşenleri
+- **Lucide React** - Modern ikon kütüphanesi
+- **React Query (TanStack)** - Server state yönetimi
 - **React Hook Form** - Form yönetimi
-- **Zod** - Şema doğrulama
-- **Tanstack Query** - Veri yönetimi
-- **Lucide React** - İkonlar
+- **Zod** - Schema validation
 - **Sonner** - Toast bildirimleri
-- **Recharts** - Grafik ve çizelgeler
+- **Recharts** - Grafik ve chart bileşenleri
 
-### Backend & Veritabanı
+### Backend & Database
 - **Supabase** - Backend-as-a-Service
   - PostgreSQL veritabanı
-  - Gerçek zamanlı abonelikler
-  - Kimlik doğrulama
-  - Dosya depolama
+  - Real-time subscriptions
+  - Authentication
+  - File storage
   - Row Level Security (RLS)
 
-### PWA Özellikleri
-- Progressive Web App desteği
-- Offline çalışma yeteneği
-- Mobil uygulama benzeri deneyim
+### Development Tools
+- **ESLint** - Kod kalitesi kontrolü
+- **TypeScript ESLint** - TypeScript linting
+- **Autoprefixer** - CSS vendor prefix
+- **PostCSS** - CSS işleme
 
-## 📁 Proje Yapısı
-
-```
-kumlu2-master/
-├── public/                 # Statik dosyalar
-│   ├── manifest.json      # PWA manifest
-│   ├── pwa-*.png         # PWA ikonları
-│   └── sw.js             # Service Worker
-├── src/
-│   ├── components/       # Yeniden kullanılabilir bileşenler
-│   ├── contexts/         # React Context'leri
-│   ├── hooks/           # Özel React Hook'ları
-│   ├── pages/           # Sayfa bileşenleri
-│   ├── lib/             # Yardımcı kütüphaneler
-│   ├── integrations/    # Dış entegrasyonlar (Supabase)
-│   └── assets/          # Görseller ve diğer varlıklar
-├── supabase/
-│   ├── migrations/      # Veritabanı migration dosyaları
-│   ├── functions/       # Edge Functions
-│   └── config.toml      # Supabase yapılandırması
-└── *.sql               # Veritabanı script dosyaları
-```
-
-## 🛠️ Kurulum ve Çalıştırma
+## 🚀 Kurulum Talimatları
 
 ### Gereksinimler
-- Node.js (v18 veya üzeri)
-- npm veya yarn
+- Node.js 18+ 
+- npm veya pnpm
 - Supabase hesabı
 
-### Adım 1: Projeyi Klonlayın
+### 1. Projeyi Klonlayın
 ```bash
-git clone <PROJE_GIT_URL>
+git clone [repository-url]
 cd kumlu2-master
 ```
 
-### Adım 2: Bağımlılıkları Yükleyin
+### 2. Bağımlılıkları Yükleyin
 ```bash
 npm install
+# veya
+pnpm install
 ```
 
-### Adım 3: Ortam Değişkenlerini Ayarlayın
-`.env` dosyasını oluşturun ve aşağıdaki değişkenleri ekleyin:
+### 3. Ortam Değişkenlerini Ayarlayın
+`.env.local` dosyası oluşturun:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### Adım 4: Geliştirme Sunucusunu Başlatın
+### 4. Veritabanını Kurun
+Supabase projenizi oluşturduktan sonra, `supabase/migrations` klasöründeki SQL dosyalarını sırayla çalıştırın.
+
+### 5. Geliştirme Sunucusunu Başlatın
 ```bash
 npm run dev
 ```
 
-Uygulama `http://localhost:5173` adresinde çalışacaktır.
+### 6. Projeyi Build Edin
+```bash
+npm run build
+```
 
-## 📊 Veritabanı Yapısı
+## 🗄️ Veritabanı Yapısı
 
 ### Ana Tablolar
-- **profiles** - Kullanıcı profilleri
-- **ayarlar** - Uygulama ayarları
-- **kategoriler** - Ürün kategorileri
-- **kampanyalar** - Pazarlama kampanyaları
-- **servis_bedelleri** - Hizmet ücretleri
-- **video_galeri** - Video içerikleri
-- **fotograflar** - Görsel galeri
-- **hesaplama_urunleri** - Hesaplama ürünleri
-- **hesaplama_fiyatlar** - Fiyat hesaplamaları
-- **ek_ozellikler** - Ek özellikler
-- **marka_logolari** - Marka logoları
-- **user_roles** - Kullanıcı rolleri
 
-### Güvenlik
-- Row Level Security (RLS) politikaları aktif
-- Anonim kullanıcılar için okuma izinleri
-- Kimlik doğrulamalı kullanıcılar için tam erişim
+#### `ayarlar` Tablosu
+- Sistem ayarlarını saklar (anahtar-değer çiftleri)
+- Şirket bilgileri, sosyal medya linkleri, tema ayarları
+- Watermark, WhatsApp, Instagram ayarları
 
-## 🔧 Geliştirme Komutları
+#### `kategoriler` Tablosu
+- Hizmet kategorilerini yönetir
+- Fotoğraf galerisi kategorilendirmesi
 
-```bash
-# Geliştirme sunucusunu başlat
-npm run dev
+#### `fotograflar` Tablosu
+- Fotoğraf galerisi verilerini saklar
+- Kategori ilişkilendirmesi
+- Filigran ve metadata bilgileri
 
-# Projeyi build et
-npm run build
+#### `videos` Tablosu
+- Video galeri içeriklerini yönetir
+- YouTube video ID'leri ve metadata
 
-# Build edilen projeyi önizle
-npm run start
+#### `hesaplama_urunleri` Tablosu
+- Hesaplama araçları için ürün bilgileri
+- Fiyat hesaplama parametreleri
 
-# Tip kontrolü yap
-npm run type-check
+#### `servis_bedelleri` Tablosu
+- Hizmet fiyatlandırma bilgileri
+- Dinamik fiyat yönetimi
 
-# Kod kalitesi kontrolü
-npm run lint
+### Storage Buckets
+- `fotograflar` - Fotoğraf dosyaları
+- `watermark` - Filigran logo dosyaları
+- `pwa-icons` - PWA ikon dosyaları
+
+## 📁 Proje Yapısı
+
 ```
+src/
+├── components/          # React bileşenleri
+│   ├── ui/             # Temel UI bileşenleri (Radix UI)
+│   ├── AdminSidebar.tsx
+│   ├── PhotoGalleryManager.tsx
+│   ├── WatermarkSettingsManager.tsx
+│   └── ...
+├── pages/              # Sayfa bileşenleri
+│   ├── Index.tsx       # Ana sayfa
+│   ├── Admin.tsx       # Admin paneli
+│   ├── Iletisim.tsx    # İletişim sayfası
+│   └── ...
+├── hooks/              # Custom React hooks
+│   ├── useSettings.ts  # Ayarlar yönetimi
+│   ├── usePhotos.ts    # Fotoğraf işlemleri
+│   └── ...
+├── contexts/           # React Context providers
+│   └── SettingsContext.tsx
+├── integrations/       # Dış servis entegrasyonları
+│   └── supabase/       # Supabase client ve utilities
+├── lib/                # Yardımcı kütüphaneler
+│   ├── utils.ts        # Genel utility fonksiyonları
+│   └── watermark.ts    # Filigran işleme mantığı
+├── utils/              # Utility fonksiyonları
+└── assets/             # Statik dosyalar
+
+supabase/
+├── migrations/         # Veritabanı migration dosyaları
+└── config.toml         # Supabase yapılandırması
+```
+
+## 🔄 Son Güncellemeler
+
+### React Router v7 Future Flags ✅
+- `v7_startTransition` flag'i etkinleştirildi
+- `v7_relativeSplatPath` flag'i etkinleştirildi
+- React Router v7 uyumluluğu sağlandı
+
+### Watermark (Filigran) Sistemi ✅
+- Gelişmiş filigran ayarları eklendi
+- Pattern ve pozisyon tabanlı filigran desteği
+- Opaklık, boyut ve açı kontrolü
+- Supabase Storage entegrasyonu
+- Admin panelinden filigran yönetimi
+
+### Yeni Özellikler
+- Marka logoları popup sistemi
+- Instagram feed entegrasyonu
+- PWA ikon yönetimi
+- Video galeri sistemi
+- Hesaplama araçları modülü
 
 ## 🚀 Deployment
 
-### Vercel ile Deployment
-Proje Vercel için optimize edilmiştir:
+### Vercel Deployment
+1. Vercel hesabınıza projeyi bağlayın
+2. Ortam değişkenlerini Vercel dashboard'dan ayarlayın
+3. Otomatik deployment aktif olacaktır
 
-1. Vercel hesabınıza giriş yapın
-2. Projeyi import edin
-3. Ortam değişkenlerini ayarlayın
-4. Deploy edin
-
-### Supabase Migration'ları
-Veritabanı değişikliklerini uygulamak için:
-
+### Manuel Deployment
 ```bash
-# Migration dosyalarını çalıştır
-supabase db push
-
-# Yerel geliştirme için
-supabase start
+npm run build
+# dist/ klasörünü web sunucunuza yükleyin
 ```
 
-## 🔐 Güvenlik Özellikleri
+### Ortam Değişkenleri (Production)
+```env
+VITE_SUPABASE_URL=your_production_supabase_url
+VITE_SUPABASE_ANON_KEY=your_production_supabase_anon_key
+```
 
-- **RLS Politikaları**: Tüm tablolarda satır seviyesi güvenlik
-- **API Anahtarı Güvenliği**: Anon key ile sınırlı erişim
-- **CORS Yapılandırması**: Güvenli cross-origin istekleri
-- **Input Validation**: Zod ile şema doğrulama
+## 👨‍💻 Geliştirici Notları
 
-## 📱 PWA Özellikleri
+### Kod Kalitesi
+```bash
+# Tip kontrolü
+npm run type-check
 
-- **Offline Çalışma**: Service Worker ile cache yönetimi
-- **Yüklenebilir**: Ana ekrana ekleme desteği
-- **Responsive**: Tüm cihazlarda uyumlu
-- **Fast Loading**: Vite ile optimize edilmiş yükleme
+# Linting
+npm run lint
 
-## 🐛 Hata Ayıklama
+# Geliştirme sunucusu
+npm run dev
+```
 
-### Yaygın Sorunlar
+### Önemli Dosyalar
+- `src/App.tsx` - Ana uygulama bileşeni ve routing
+- `src/integrations/supabase/client.ts` - Supabase client yapılandırması
+- `src/contexts/SettingsContext.tsx` - Global ayarlar yönetimi
+- `src/lib/watermark.ts` - Filigran işleme mantığı
 
-1. **401 Unauthorized Hatası**
-   - Supabase RLS politikalarını kontrol edin
-   - API anahtarlarının doğruluğunu kontrol edin
+### Geliştirme İpuçları
+1. **Bileşen Geliştirme**: Yeni bileşenler `src/components/` altında oluşturun
+2. **Sayfa Ekleme**: Yeni sayfalar `src/pages/` altında oluşturun ve `App.tsx`'e route ekleyin
+3. **Veritabanı Değişiklikleri**: `supabase/migrations/` altında yeni migration dosyaları oluşturun
+4. **Stil Değişiklikleri**: Tailwind CSS utility sınıflarını kullanın
+5. **State Yönetimi**: Basit state için React hooks, karmaşık state için React Query kullanın
 
-2. **PWA İkon Hatası**
-   - `public/pwa-*.png` dosyalarının varlığını kontrol edin
-   - Manifest.json dosyasındaki yolları kontrol edin
+### Güvenlik Notları
+- RLS (Row Level Security) politikaları aktif
+- Admin işlemleri için authentication gerekli
+- File upload güvenlik kontrolleri mevcut
+- CORS ayarları yapılandırılmış
 
-3. **Build Hataları**
-   - TypeScript hatalarını kontrol edin: `npm run type-check`
-   - Lint hatalarını düzeltin: `npm run lint`
-
-## 📝 Katkıda Bulunma
-
-1. Projeyi fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
-
-## 📄 Lisans
-
-Bu proje özel bir projedir. Tüm hakları saklıdır.
-
-## 📞 İletişim
-
-Proje ile ilgili sorularınız için:
-- GitHub Issues kullanın
-- Proje sahibi ile iletişime geçin
-
-## 🔄 Versiyon Geçmişi
-
-- **v1.0.0** - İlk stabil sürüm
-  - Temel CRUD işlemleri
-  - Supabase entegrasyonu
-  - PWA desteği
-  - RLS güvenlik politikaları
+### Performans Optimizasyonları
+- Lazy loading ile sayfa bileşenleri
+- Image optimization ve lazy loading
+- React Query ile cache yönetimi
+- Bundle size optimizasyonu
 
 ---
 
-**Not**: Bu proje aktif olarak geliştirilmektedir. Güncellemeler için düzenli olarak kontrol edin.
+**Proje Durumu**: Aktif Geliştirme 🚧  
+**Son Güncelleme**: Ocak 2025  
+**Versiyon**: 1.0.0  
+
+Herhangi bir sorun veya öneriniz için lütfen issue açın veya iletişime geçin.

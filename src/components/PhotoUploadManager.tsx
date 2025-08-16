@@ -62,7 +62,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
       setFilteredCategories([]);
       setSelectedCategory('');
     }
-  }, [selectedUsageArea, allCategories]);
+  }, [selectedUsageArea, allCategories, usageAreas]);
 
   const handleUpload = useCallback(async () => {
     if (!photos || photos.length === 0) {

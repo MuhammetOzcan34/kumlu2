@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ interface Video {
   created_at: string;
 }
 
-export const VideoGaleriManager: React.FC = () => {
+const VideoGaleriManager: React.FC = () => {
   const [videolar, setVideolar] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -42,7 +42,7 @@ export const VideoGaleriManager: React.FC = () => {
     aktif: true
   });
 
-  const kategoriler = [
+  const kategoriler = useMemo(() => [
     'Cam Kumlama',
     'Araç Giydirme',
     'Tabela Üretimi',
@@ -50,13 +50,13 @@ export const VideoGaleriManager: React.FC = () => {
     'Tanıtım',
     'Referanslar',
     'Diğer'
-  ];
+  ], []);
 
   useEffect(() => {
     loadVideolar();
   }, []);
 
-  const loadVideolar = async () => {
+  const loadVideolar = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('video_galeri')
@@ -72,16 +72,16 @@ export const VideoGaleriManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const validateYouTubeUrl = (url: string) => {
+  const validateYouTubeUrl = useCallback((url: string) => {
     const patterns = [
       /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
       /^https?:\/\/youtu\.be\/[\w-]+/,
       /^https?:\/\/(www\.)?youtube\.com\/embed\/[\w-]+/
     ];
     return patterns.some(pattern => pattern.test(url));
-  };
+  }, []);
 
   const handleSubmit = async () => {
     try {
@@ -174,7 +174,7 @@ export const VideoGaleriManager: React.FC = () => {
     }
   };
 
-  const getYouTubeEmbedUrl = (url: string) => {
+  const getYouTubeEmbedUrl = useCallback((url: string) => {
     if (url.includes('youtube.com/watch?v=')) {
       const videoId = url.split('v=')[1]?.split('&')[0];
       return `https://www.youtube.com/embed/${videoId}`;
@@ -185,7 +185,7 @@ export const VideoGaleriManager: React.FC = () => {
       return url;
     }
     return '';
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -502,3 +502,9 @@ export const VideoGaleriManager: React.FC = () => {
     </Card>
   );
 };
+
+// React.memo ile bileşeni optimize et
+const MemoizedVideoGaleriManager = React.memo(VideoGaleriManager);
+MemoizedVideoGaleriManager.displayName = 'VideoGaleriManager';
+
+export default MemoizedVideoGaleriManager;

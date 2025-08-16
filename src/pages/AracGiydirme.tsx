@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { PhoneButton } from "@/components/PhoneButton";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -51,10 +51,10 @@ const AracGiydirme = () => {
   }, [selectedImageIndex]);
 
   // Fotoğraf tıklama handler'ı
-  const handleImageClick = (index: number) => {
+  const handleImageClick = useCallback((index: number) => {
     console.log(`🎯 AraçGiydirme CLICK: Clicked index ${index}. Previous index was ${selectedImageIndex}.`);
     setSelectedImageIndex(index);
-  };
+  }, [selectedImageIndex]);
 
   // İlk kategoriyi otomatik seç
   useEffect(() => {
@@ -143,6 +143,12 @@ const AracGiydirme = () => {
                         src={image.image} 
                         alt={image.title}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
                     </div>
                   ))}
@@ -201,4 +207,8 @@ const AracGiydirme = () => {
   );
 };
 
-export default AracGiydirme;
+// React.memo ile bileşeni optimize et
+const MemoizedAracGiydirme = React.memo(AracGiydirme);
+MemoizedAracGiydirme.displayName = 'AracGiydirme';
+
+export default MemoizedAracGiydirme;

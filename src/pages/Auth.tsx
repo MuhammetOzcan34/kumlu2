@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,27 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Profil oluşturma fonksiyonunu optimize et
+  const createUserProfile = useCallback(async (userId: string, userEmail: string | undefined) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          email: userEmail,
+          display_name: userEmail?.split('@')[0] || 'Kullanıcı',
+          role: userEmail === 'ckumlama@gmail.com' ? 'admin' : 'user'
+        });
+
+      if (error && error.code !== '23505') { // 23505: unique constraint violation (profil zaten var)
+        console.error('Profil oluşturma hatası:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Profil oluşturma işlemi başarısız:', error);
+    }
+  }, []);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -59,7 +80,7 @@ export default function Auth() {
     try {
       const redirectUrl = `${window.location.origin}/`;
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -68,6 +89,11 @@ export default function Auth() {
       });
 
       if (error) throw error;
+
+      // Kullanıcı oluşturulduysa profil de oluştur (optimize edilmiş)
+      if (data.user && data.user.email) {
+        await createUserProfile(data.user.id, data.user.email);
+      }
 
       toast({
         title: "Kayıt başarılı",
@@ -89,7 +115,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -102,6 +128,7 @@ export default function Auth() {
       });
       
       // Giriş başarılı olduktan sonra admin paneline yönlendir
+      // Profil kontrolü Admin.tsx'de yapılacak, burada gereksiz istek yapmıyoruz
       navigate("/admin");
       
     } catch (error) {

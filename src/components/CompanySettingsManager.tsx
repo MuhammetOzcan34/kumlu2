@@ -47,7 +47,7 @@ export const CompanySettingsManager: React.FC = () => {
 
       if (error) throw error;
 
-      const settingsMap: any = {};
+      const settingsMap: Record<string, string> = {};
       data.forEach(item => {
         settingsMap[item.anahtar] = item.deger || '';
       });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,19 @@ export const ContactForm: React.FC = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Timeout referansları için
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  
+  // Component unmount'da tüm timeout'ları temizle
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+      });
+      timeoutRefs.current.clear();
+    };
+  }, []);
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     setFormData(prev => ({
@@ -51,7 +64,13 @@ export const ContactForm: React.FC = () => {
     try {
       // Burada gerçek bir API endpoint'e gönderilebilir
       // Şimdilik sadece başarılı mesajı gösteriyoruz
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simüle edilmiş API çağrısı
+      await new Promise(resolve => {
+        const timeoutId = setTimeout(() => {
+          resolve(undefined);
+          timeoutRefs.current.delete(timeoutId);
+        }, 1000);
+        timeoutRefs.current.add(timeoutId);
+      }); // Simüle edilmiş API çağrısı
       
       toast.success('Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
       
@@ -155,4 +174,4 @@ export const ContactForm: React.FC = () => {
       </CardContent>
     </Card>
   );
-}; 
+};

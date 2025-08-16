@@ -1,0 +1,150 @@
+-- Watermark sistemi için veritabanı kurulumu
+
+-- Ayarlar tablosu (firma logo URL ve diğer ayarlar için)
+CREATE TABLE public.ayarlar (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  anahtar TEXT NOT NULL UNIQUE,
+  deger TEXT,
+  aciklama TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Kategoriler tablosu
+CREATE TABLE public.kategoriler (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  ad TEXT NOT NULL,
+  tip TEXT NOT NULL, -- kumlama, tabela, arac-giydirme gibi
+  aciklama TEXT,
+  aktif BOOLEAN NOT NULL DEFAULT true,
+  sira_no INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Fotograflar tablosu
+CREATE TABLE public.fotograflar (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  baslik TEXT NOT NULL,
+  aciklama TEXT,
+  dosya_yolu TEXT NOT NULL,
+  kategori_id UUID REFERENCES public.kategoriler(id) ON DELETE SET NULL,
+  kategori_adi TEXT,
+  kullanim_alani TEXT[] NOT NULL DEFAULT '{}',
+  gorsel_tipi TEXT NOT NULL DEFAULT 'galeri', -- slider, referans_logo, galeri
+  mime_type TEXT NOT NULL DEFAULT 'image/jpeg',
+  boyut BIGINT,
+  logo_eklendi BOOLEAN NOT NULL DEFAULT false,
+  aktif BOOLEAN NOT NULL DEFAULT true,
+  sira_no INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Storage bucket'ı oluştur
+INSERT INTO storage.buckets (id, name, public) VALUES ('fotograflar', 'fotograflar', true);
+
+-- RLS politikalarını etkinleştir
+ALTER TABLE public.ayarlar ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kategoriler ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fotograflar ENABLE ROW LEVEL SECURITY;
+
+-- Ayarlar tablosu politikaları (herkese okuma izni)
+CREATE POLICY "Ayarlar herkese görünür" 
+ON public.ayarlar 
+FOR SELECT 
+USING (true);
+
+CREATE POLICY "Ayarlar admin tarafından düzenlenebilir" 
+ON public.ayarlar 
+FOR ALL 
+USING (true);
+
+-- Kategoriler tablosu politikaları
+CREATE POLICY "Kategoriler herkese görünür" 
+ON public.kategoriler 
+FOR SELECT 
+USING (true);
+
+CREATE POLICY "Kategoriler admin tarafından düzenlenebilir" 
+ON public.kategoriler 
+FOR ALL 
+USING (true);
+
+-- Fotograflar tablosu politikaları
+CREATE POLICY "Fotograflar herkese görünür" 
+ON public.fotograflar 
+FOR SELECT 
+USING (true);
+
+CREATE POLICY "Fotograflar admin tarafından düzenlenebilir" 
+ON public.fotograflar 
+FOR ALL 
+USING (true);
+
+-- Storage politikaları
+CREATE POLICY "Fotograflar herkese görünür" 
+ON storage.objects 
+FOR SELECT 
+USING (bucket_id = 'fotograflar');
+
+CREATE POLICY "Fotograflar yüklenebilir" 
+ON storage.objects 
+FOR INSERT 
+WITH CHECK (bucket_id = 'fotograflar');
+
+CREATE POLICY "Fotograflar güncellenebilir" 
+ON storage.objects 
+FOR UPDATE 
+USING (bucket_id = 'fotograflar');
+
+CREATE POLICY "Fotograflar silinebilir" 
+ON storage.objects 
+FOR DELETE 
+USING (bucket_id = 'fotograflar');
+
+-- Timestamp trigger fonksiyonu
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Timestamp trigger'ları
+CREATE TRIGGER update_ayarlar_updated_at
+  BEFORE UPDATE ON public.ayarlar
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_kategoriler_updated_at
+  BEFORE UPDATE ON public.kategoriler
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_fotograflar_updated_at
+  BEFORE UPDATE ON public.fotograflar
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Başlangıç verileri
+INSERT INTO public.ayarlar (anahtar, deger, aciklama) VALUES 
+('firma_logo_url', '', 'Fotoğraflara eklenecek firma logosu URL''si'),
+('watermark_opacity', '0.25', 'Filigran opaklık değeri (0-1 arası)'),
+('watermark_size', '0.15', 'Filigran boyut oranı (0-1 arası)'),
+('watermark_angle', '-30', 'Filigran açısı (derece)'),
+('watermark_pattern_rows', '4', 'Pattern satır sayısı'),
+('watermark_pattern_cols', '3', 'Pattern sütun sayısı');
+
+-- Örnek kategoriler
+INSERT INTO public.kategoriler (ad, tip, aciklama) VALUES 
+('Endüstriyel Kumlama', 'kumlama', 'Büyük ölçekli endüstriyel kumlama işleri'),
+('Araç Kumlama', 'kumlama', 'Araç parçaları ve gövde kumlama'),
+('Metal İşleri', 'kumlama', 'Metal yüzey hazırlık ve temizlik'),
+('Işıklı Tabelalar', 'tabela', 'LED ve neon ışıklı tabela sistemleri'),
+('Cephe Tabelaları', 'tabela', 'Bina cephe tabela uygulamaları'),
+('Yönlendirme Tabelaları', 'tabela', 'İç ve dış mekan yönlendirme sistemleri'),
+('Araç Kaplama', 'arac-giydirme', 'Tam araç kaplama hizmetleri'),
+('Reklam Folyo', 'arac-giydirme', 'Araç üzeri reklam folyo uygulamaları'),
+('Koruyucu Film', 'arac-giydirme', 'Araç koruyucu film uygulamaları');

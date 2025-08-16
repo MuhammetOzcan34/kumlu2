@@ -1,0 +1,1445 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Switch } from '../components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Upload,
+  Download,
+  Settings,
+  Users,
+  Image,
+  Video,
+  FileText,
+  BarChart3,
+  Shield,
+  Eye,
+  EyeOff,
+  Save,
+  X,
+  Search,
+  Filter,
+  RefreshCw,
+  Calendar,
+  DollarSign,
+  Target,
+  TrendingUp,
+  Globe,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Info,
+  ExternalLink,
+  Copy,
+  MoreHorizontal,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '../components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+
+// Arayüz tanımları
+interface Kategori {
+  id: string;
+  ad: string;
+  slug: string;
+  aciklama?: string;
+  tip: 'kumlama' | 'tabela' | 'arac-giydirme';
+  aktif: boolean;
+  sira_no?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Fotograf {
+  id: string;
+  baslik?: string;
+  aciklama?: string;
+  dosya_yolu: string;
+  thumbnail_yolu?: string;
+  kategori_id?: string;
+  kategori_adi?: string;
+  aktif: boolean;
+  sira_no?: number;
+  boyut?: number;
+  mime_type?: string;
+  gorsel_tipi?: string;
+  kullanim_alani?: string[];
+  logo_eklendi?: boolean;
+  watermark_applied?: boolean;
+  created_at: string;
+  updated_at: string;
+  kategori?: Kategori;
+}
+
+interface Video {
+  id: string;
+  baslik: string;
+  aciklama?: string;
+  youtube_url: string;
+  youtube_id?: string;
+  thumbnail_url?: string;
+  kategori?: string;
+  aktif: boolean;
+  sira_no?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Ayar {
+  id: string;
+  anahtar: string;
+  deger?: string;
+  aciklama?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Kampanya {
+  id: string;
+  kampanya_adi: string;
+  platform: string;
+  durum: string;
+  reklam_metni?: string;
+  hedef_url?: string;
+  hedef_kitle?: string;
+  butce_toplam?: number;
+  butce_gunluk?: number;
+  baslangic_tarihi?: string;
+  bitis_tarihi?: string;
+  kategori_id?: string;
+  aktif: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  display_name?: string;
+  role?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const Admin: React.FC = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  
+  // State tanımları
+  const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
+  const [fotograflar, setFotograflar] = useState<Fotograf[]>([]);
+  const [videolar, setVideolar] = useState<Video[]>([]);
+  const [ayarlar, setAyarlar] = useState<Ayar[]>([]);
+  const [kampanyalar, setKampanyalar] = useState<Kampanya[]>([]);
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  
+  // Form state'leri
+  const [selectedTab, setSelectedTab] = useState('kategoriler');
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [uploadingFile, setUploadingFile] = useState(false);
+  
+  // Form verileri
+  const [formData, setFormData] = useState<any>({});
+  
+  // Kullanıcı kimlik doğrulama ve yetkilendirme kontrolü
+  const checkUserAndLoadProfile = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Oturum hatası:', sessionError);
+        navigate('/auth');
+        return;
+      }
+      
+      if (!session?.user) {
+        navigate('/auth');
+        return;
+      }
+      
+      setUser(session.user);
+      
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profil çekme hatası:', profileError);
+        navigate('/');
+        return;
+      }
+      
+      if (!profile) {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: session.user.id,
+            display_name: session.user.email?.split('@')[0] || 'Kullanıcı',
+            role: 'user'
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('Profil oluşturma hatası:', createError);
+          navigate('/');
+          return;
+        }
+        
+        setUserProfile(newProfile);
+        navigate('/');
+        return;
+      }
+      
+      setUserProfile(profile);
+      
+      if (profile.role !== 'admin') {
+        navigate('/');
+        return;
+      }
+      
+      setIsAuthorized(true);
+      
+      await Promise.all([
+        fetchKategoriler(),
+        fetchFotograflar(),
+        fetchVideolar(),
+        fetchAyarlar(),
+        fetchKampanyalar(),
+        fetchUserProfiles()
+      ]);
+      
+    } catch (error) {
+      console.error('Beklenmeyen hata:', error);
+      navigate('/');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Verileri çekme fonksiyonları
+  const fetchKategoriler = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('kategoriler')
+        .select('*')
+        .order('sira_no', { ascending: true });
+      
+      if (error) throw error;
+      setKategoriler(data || []);
+    } catch (error) {
+      console.error('Kategoriler çekme hatası:', error);
+      toast.error('Kategoriler yüklenirken hata oluştu');
+    }
+  };
+  
+  const fetchFotograflar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('fotograflar')
+        .select(`
+          *,
+          kategori:kategoriler(*)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setFotograflar(data || []);
+    } catch (error) {
+      console.error('Fotoğraflar çekme hatası:', error);
+      toast.error('Fotoğraflar yüklenirken hata oluştu');
+    }
+  };
+  
+  const fetchVideolar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('video_galeri')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setVideolar(data || []);
+    } catch (error) {
+      console.error('Videolar çekme hatası:', error);
+      toast.error('Videolar yüklenirken hata oluştu');
+    }
+  };
+  
+  const fetchAyarlar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ayarlar')
+        .select('*')
+        .order('anahtar', { ascending: true });
+      
+      if (error) throw error;
+      setAyarlar(data || []);
+    } catch (error) {
+      console.error('Ayarlar çekme hatası:', error);
+      toast.error('Ayarlar yüklenirken hata oluştu');
+    }
+  };
+  
+  const fetchKampanyalar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reklam_kampanyalari')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setKampanyalar(data || []);
+    } catch (error) {
+      console.error('Kampanyalar çekme hatası:', error);
+      toast.error('Kampanyalar yüklenirken hata oluştu');
+    }
+  };
+  
+  const fetchUserProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUserProfiles(data || []);
+    } catch (error) {
+      console.error('Kullanıcı profilleri çekme hatası:', error);
+      toast.error('Kullanıcı profilleri yüklenirken hata oluştu');
+    }
+  };
+  
+  // CRUD İşlemleri
+  
+  // Kategori işlemleri
+  const handleKategoriSave = async () => {
+    try {
+      if (editingItem?.id) {
+        const { error } = await supabase
+          .from('kategoriler')
+          .update({
+            ad: formData.ad,
+            slug: formData.slug || formData.ad?.toLowerCase().replace(/\s+/g, '-'),
+            aciklama: formData.aciklama,
+            tip: formData.tip,
+            aktif: formData.aktif ?? true,
+            sira_no: formData.sira_no || 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success('Kategori güncellendi');
+      } else {
+        const { error } = await supabase
+          .from('kategoriler')
+          .insert({
+            ad: formData.ad,
+            slug: formData.slug || formData.ad?.toLowerCase().replace(/\s+/g, '-'),
+            aciklama: formData.aciklama,
+            tip: formData.tip,
+            aktif: formData.aktif ?? true,
+            sira_no: formData.sira_no || 0
+          });
+        
+        if (error) throw error;
+        toast.success('Kategori eklendi');
+      }
+      
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setFormData({});
+      fetchKategoriler();
+    } catch (error) {
+      console.error('Kategori kaydetme hatası:', error);
+      toast.error('Kategori kaydedilirken hata oluştu');
+    }
+  };
+  
+  const handleKategoriDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('kategoriler')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success('Kategori silindi');
+      fetchKategoriler();
+    } catch (error) {
+      console.error('Kategori silme hatası:', error);
+      toast.error('Kategori silinirken hata oluştu');
+    }
+  };
+  
+  // Fotoğraf işlemleri
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setUploadingFile(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `fotograflar/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      const { error: insertError } = await supabase
+        .from('fotograflar')
+        .insert({
+          baslik: formData.baslik || file.name,
+          aciklama: formData.aciklama,
+          dosya_yolu: publicUrl,
+          kategori_id: formData.kategori_id,
+          aktif: formData.aktif ?? true,
+          sira_no: formData.sira_no || 0,
+          boyut: file.size,
+          mime_type: file.type
+        });
+      
+      if (insertError) throw insertError;
+      
+      toast.success('Fotoğraf yüklendi');
+      setIsDialogOpen(false);
+      setFormData({});
+      fetchFotograflar();
+    } catch (error) {
+      console.error('Fotoğraf yükleme hatası:', error);
+      toast.error('Fotoğraf yüklenirken hata oluştu');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+  
+  const handleFotografDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('fotograflar')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success('Fotoğraf silindi');
+      fetchFotograflar();
+    } catch (error) {
+      console.error('Fotoğraf silme hatası:', error);
+      toast.error('Fotoğraf silinirken hata oluştu');
+    }
+  };
+  
+  // Video işlemleri
+  const handleVideoSave = async () => {
+    try {
+      const youtubeId = extractYouTubeId(formData.youtube_url);
+      if (!youtubeId) {
+        toast.error('Geçerli bir YouTube URL\'si girin');
+        return;
+      }
+      
+      if (editingItem?.id) {
+        const { error } = await supabase
+          .from('video_galeri')
+          .update({
+            baslik: formData.baslik,
+            aciklama: formData.aciklama,
+            youtube_url: formData.youtube_url,
+            youtube_id: youtubeId,
+            thumbnail_url: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+            kategori: formData.kategori,
+            aktif: formData.aktif ?? true,
+            sira_no: formData.sira_no || 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success('Video güncellendi');
+      } else {
+        const { error } = await supabase
+          .from('video_galeri')
+          .insert({
+            baslik: formData.baslik,
+            aciklama: formData.aciklama,
+            youtube_url: formData.youtube_url,
+            youtube_id: youtubeId,
+            thumbnail_url: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+            kategori: formData.kategori,
+            aktif: formData.aktif ?? true,
+            sira_no: formData.sira_no || 0
+          });
+        
+        if (error) throw error;
+        toast.success('Video eklendi');
+      }
+      
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setFormData({});
+      fetchVideolar();
+    } catch (error) {
+      console.error('Video kaydetme hatası:', error);
+      toast.error('Video kaydedilirken hata oluştu');
+    }
+  };
+  
+  const handleVideoDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('video_galeri')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success('Video silindi');
+      fetchVideolar();
+    } catch (error) {
+      console.error('Video silme hatası:', error);
+      toast.error('Video silinirken hata oluştu');
+    }
+  };
+  
+  // Ayar işlemleri
+  const handleAyarSave = async () => {
+    try {
+      if (editingItem?.id) {
+        const { error } = await supabase
+          .from('ayarlar')
+          .update({
+            deger: formData.deger,
+            aciklama: formData.aciklama,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success('Ayar güncellendi');
+      } else {
+        const { error } = await supabase
+          .from('ayarlar')
+          .insert({
+            anahtar: formData.anahtar,
+            deger: formData.deger,
+            aciklama: formData.aciklama
+          });
+        
+        if (error) throw error;
+        toast.success('Ayar eklendi');
+      }
+      
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setFormData({});
+      fetchAyarlar();
+    } catch (error) {
+      console.error('Ayar kaydetme hatası:', error);
+      toast.error('Ayar kaydedilirken hata oluştu');
+    }
+  };
+  
+  const handleAyarDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('ayarlar')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success('Ayar silindi');
+      fetchAyarlar();
+    } catch (error) {
+      console.error('Ayar silme hatası:', error);
+      toast.error('Ayar silinirken hata oluştu');
+    }
+  };
+  
+  // Kampanya işlemleri
+  const handleKampanyaSave = async () => {
+    try {
+      if (editingItem?.id) {
+        const { error } = await supabase
+          .from('reklam_kampanyalari')
+          .update({
+            kampanya_adi: formData.kampanya_adi,
+            platform: formData.platform,
+            durum: formData.durum,
+            reklam_metni: formData.reklam_metni,
+            hedef_url: formData.hedef_url,
+            hedef_kitle: formData.hedef_kitle,
+            butce_toplam: formData.butce_toplam,
+            butce_gunluk: formData.butce_gunluk,
+            baslangic_tarihi: formData.baslangic_tarihi,
+            bitis_tarihi: formData.bitis_tarihi,
+            kategori_id: formData.kategori_id,
+            aktif: formData.aktif ?? true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success('Kampanya güncellendi');
+      } else {
+        const { error } = await supabase
+          .from('reklam_kampanyalari')
+          .insert({
+            kampanya_adi: formData.kampanya_adi,
+            platform: formData.platform,
+            durum: formData.durum,
+            reklam_metni: formData.reklam_metni,
+            hedef_url: formData.hedef_url,
+            hedef_kitle: formData.hedef_kitle,
+            butce_toplam: formData.butce_toplam,
+            butce_gunluk: formData.butce_gunluk,
+            baslangic_tarihi: formData.baslangic_tarihi,
+            bitis_tarihi: formData.bitis_tarihi,
+            kategori_id: formData.kategori_id,
+            aktif: formData.aktif ?? true
+          });
+        
+        if (error) throw error;
+        toast.success('Kampanya eklendi');
+      }
+      
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setFormData({});
+      fetchKampanyalar();
+    } catch (error) {
+      console.error('Kampanya kaydetme hatası:', error);
+      toast.error('Kampanya kaydedilirken hata oluştu');
+    }
+  };
+  
+  const handleKampanyaDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('reklam_kampanyalari')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast.success('Kampanya silindi');
+      fetchKampanyalar();
+    } catch (error) {
+      console.error('Kampanya silme hatası:', error);
+      toast.error('Kampanya silinirken hata oluştu');
+    }
+  };
+  
+  // Kullanıcı rol güncelleme
+  const handleUserRoleUpdate = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          role: newRole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      toast.success('Kullanıcı rolü güncellendi');
+      fetchUserProfiles();
+    } catch (error) {
+      console.error('Kullanıcı rol güncelleme hatası:', error);
+      toast.error('Kullanıcı rolü güncellenirken hata oluştu');
+    }
+  };
+  
+  // Yardımcı fonksiyonlar
+  const extractYouTubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+  
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  const openEditDialog = (item: any, type: string) => {
+    setEditingItem(item);
+    setFormData(item || {});
+    setSelectedTab(type);
+    setIsDialogOpen(true);
+  };
+  
+  const openNewDialog = (type: string) => {
+    setEditingItem(null);
+    setFormData({});
+    setSelectedTab(type);
+    setIsDialogOpen(true);
+  };
+  
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/auth');
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+      toast.error('Çıkış yapılırken hata oluştu');
+    }
+  };
+  
+  useEffect(() => {
+    checkUserAndLoadProfile();
+  }, []);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-lg">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthorized) {
+    return null;
+  }
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Shield className="h-8 w-8 text-blue-600 mr-3" />
+              <h1 className="text-xl font-semibold text-gray-900">
+                Yönetici Paneli
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Hoş geldin, {userProfile?.display_name || 'Admin'}
+              </span>
+              <Button variant="outline" onClick={handleLogout}>
+                Çıkış Yap
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      {/* Ana İçerik */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="kategoriler" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Kategoriler
+            </TabsTrigger>
+            <TabsTrigger value="fotograflar" className="flex items-center gap-2">
+              <Image className="h-4 w-4" />
+              Fotoğraflar
+            </TabsTrigger>
+            <TabsTrigger value="videolar" className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Videolar
+            </TabsTrigger>
+            <TabsTrigger value="ayarlar" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Ayarlar
+            </TabsTrigger>
+            <TabsTrigger value="kampanyalar" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Kampanyalar
+            </TabsTrigger>
+            <TabsTrigger value="kullanicilar" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Kullanıcılar
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* Kategoriler Tab */}
+          <TabsContent value="kategoriler" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Kategoriler</CardTitle>
+                    <CardDescription>
+                      Hizmet kategorilerini yönetin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openNewDialog('kategoriler')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Yeni Kategori
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Kategori ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filtrele" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tümü</SelectItem>
+                        <SelectItem value="kumlama">Kumlama</SelectItem>
+                        <SelectItem value="tabela">Tabela</SelectItem>
+                        <SelectItem value="arac-giydirme">Araç Giydirme</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ad</TableHead>
+                        <TableHead>Slug</TableHead>
+                        <TableHead>Tip</TableHead>
+                        <TableHead>Durum</TableHead>
+                        <TableHead>Sıra</TableHead>
+                        <TableHead>Oluşturulma</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {kategoriler
+                        .filter(kategori => 
+                          kategori.ad.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                          (filterType === 'all' || kategori.tip === filterType)
+                        )
+                        .map((kategori) => (
+                        <TableRow key={kategori.id}>
+                          <TableCell className="font-medium">{kategori.ad}</TableCell>
+                          <TableCell>
+                            <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                              {kategori.slug}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {kategori.tip}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={kategori.aktif ? "default" : "secondary"}>
+                              {kategori.aktif ? 'Aktif' : 'Pasif'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{kategori.sira_no}</TableCell>
+                          <TableCell>{formatDate(kategori.created_at)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditDialog(kategori, 'kategoriler')}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Düzenle
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleKategoriDelete(kategori.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Sil
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Fotoğraflar Tab */}
+          <TabsContent value="fotograflar" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Fotoğraf Galerisi</CardTitle>
+                    <CardDescription>
+                      Fotoğrafları yönetin ve yükleyin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openNewDialog('fotograflar')}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Fotoğraf Yükle
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Fotoğraf ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {fotograflar
+                      .filter(foto => 
+                        foto.baslik?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        foto.aciklama?.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((foto) => (
+                      <Card key={foto.id} className="overflow-hidden">
+                        <div className="aspect-square relative">
+                          <img
+                            src={foto.dosya_yolu}
+                            alt={foto.baslik || 'Fotoğraf'}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 right-2">
+                            <Badge variant={foto.aktif ? "default" : "secondary"}>
+                              {foto.aktif ? 'Aktif' : 'Pasif'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-sm mb-1 truncate">
+                            {foto.baslik || 'Başlıksız'}
+                          </h3>
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                            {foto.aciklama || 'Açıklama yok'}
+                          </p>
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{foto.boyut ? formatFileSize(foto.boyut) : 'Bilinmiyor'}</span>
+                            <span>{foto.kategori?.ad || 'Kategorisiz'}</span>
+                          </div>
+                          <div className="flex justify-between items-center mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(foto, 'fotograflar')}
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Düzenle
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleFotografDelete(foto.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Sil
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Videolar Tab */}
+          <TabsContent value="videolar" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Video Galerisi</CardTitle>
+                    <CardDescription>
+                      YouTube videolarını yönetin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openNewDialog('videolar')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Video Ekle
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Video ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Thumbnail</TableHead>
+                        <TableHead>Başlık</TableHead>
+                        <TableHead>Kategori</TableHead>
+                        <TableHead>Durum</TableHead>
+                        <TableHead>Oluşturulma</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {videolar
+                        .filter(video => 
+                          video.baslik.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((video) => (
+                        <TableRow key={video.id}>
+                          <TableCell>
+                            <div className="w-16 h-12 relative">
+                              <img
+                                src={video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_id}/default.jpg`}
+                                alt={video.baslik}
+                                className="w-full h-full object-cover rounded"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{video.baslik}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {video.kategori || 'Genel'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={video.aktif ? "default" : "secondary"}>
+                              {video.aktif ? 'Aktif' : 'Pasif'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatDate(video.created_at)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <a
+                                    href={video.youtube_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center"
+                                  >
+                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    YouTube'da Aç
+                                  </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditDialog(video, 'videolar')}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Düzenle
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleVideoDelete(video.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Sil
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Ayarlar Tab */}
+          <TabsContent value="ayarlar" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Site Ayarları</CardTitle>
+                    <CardDescription>
+                      Genel site ayarlarını yönetin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openNewDialog('ayarlar')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Yeni Ayar
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Ayar ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Anahtar</TableHead>
+                        <TableHead>Değer</TableHead>
+                        <TableHead>Açıklama</TableHead>
+                        <TableHead>Güncelleme</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ayarlar
+                        .filter(ayar => 
+                          ayar.anahtar.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          ayar.deger?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((ayar) => (
+                        <TableRow key={ayar.id}>
+                          <TableCell className="font-medium">
+                            <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                              {ayar.anahtar}
+                            </code>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={ayar.deger}>
+                              {ayar.deger || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={ayar.aciklama}>
+                              {ayar.aciklama || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatDate(ayar.updated_at)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(ayar.deger || '');
+                                    toast.success('Değer kopyalandı');
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Değeri Kopyala
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditDialog(ayar, 'ayarlar')}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Düzenle
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleAyarDelete(ayar.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Sil
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Kampanyalar Tab */}
+          <TabsContent value="kampanyalar" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Reklam Kampanyaları</CardTitle>
+                    <CardDescription>
+                      Dijital pazarlama kampanyalarını yönetin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => openNewDialog('kampanyalar')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Yeni Kampanya
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Kampanya ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Kampanya Adı</TableHead>
+                        <TableHead>Platform</TableHead>
+                        <TableHead>Durum</TableHead>
+                        <TableHead>Bütçe</TableHead>
+                        <TableHead>Tarih Aralığı</TableHead>
+                        <TableHead>Aktif</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {kampanyalar
+                        .filter(kampanya => 
+                          kampanya.kampanya_adi.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((kampanya) => (
+                        <TableRow key={kampanya.id}>
+                          <TableCell className="font-medium">{kampanya.kampanya_adi}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {kampanya.platform}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={kampanya.durum === 'aktif' ? 'default' : 
+                                      kampanya.durum === 'beklemede' ? 'secondary' : 'destructive'}
+                            >
+                              {kampanya.durum}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>Toplam: ₺{kampanya.butce_toplam?.toLocaleString() || '0'}</div>
+                              <div className="text-gray-500">Günlük: ₺{kampanya.butce_gunluk?.toLocaleString() || '0'}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{kampanya.baslangic_tarihi ? new Date(kampanya.baslangic_tarihi).toLocaleDateString('tr-TR') : '-'}</div>
+                              <div className="text-gray-500">{kampanya.bitis_tarihi ? new Date(kampanya.bitis_tarihi).toLocaleDateString('tr-TR') : '-'}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={kampanya.aktif ? "default" : "secondary"}>
+                              {kampanya.aktif ? 'Aktif' : 'Pasif'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {kampanya.hedef_url && (
+                                  <DropdownMenuItem asChild>
+                                    <a
+                                      href={kampanya.hedef_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center"
+                                    >
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      Hedef URL'yi Aç
+                                    </a>
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => openEditDialog(kampanya, 'kampanyalar')}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Düzenle
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleKampanyaDelete(kampanya.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Sil
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Kullanıcılar Tab */}
+          <TabsContent value="kullanicilar" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Kullanıcı Yönetimi</CardTitle>
+                    <CardDescription>
+                      Kullanıcı rollerini ve izinlerini yönetin
+                    </CardDescription>
+                  </div>
+                  <Button onClick={fetchUserProfiles}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Yenile
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Kullanıcı ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Kullanıcı ID</TableHead>
+                        <TableHead>Görünen Ad</TableHead>
+                        <TableHead>Rol</TableHead>
+                        <TableHead>Kayıt Tarihi</TableHead>
+                        <TableHead className="text-right">İşlemler</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {userProfiles
+                        .filter(profile => 
+                          profile.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          profile.user_id.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((profile) => (
+                        <TableRow key={profile.id}>
+                          <TableCell>
+                            <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                              {profile.user_id.substring(0, 8)}...
+                            </code>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {profile.display_name || 'Bilinmiyor'}
+                

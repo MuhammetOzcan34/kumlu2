@@ -83,20 +83,9 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
     logos: logos.map(logo => ({ id: logo.id, name: logo.name, hasImage: !!logo.image }))
   });
 
-  // Pop-up etkin değilse veya logo yoksa gösterme
-  if (!popupEnabled || logos.length === 0) {
-    console.log('🚫 BrandLogosPopup: Pop-up gösterilmiyor', {
-      popupEnabled,
-      logosLength: logos.length,
-      isOpen
-    });
-    return null;
-  }
-  
-  console.log('✅ Pop-up açılıyor:', { popupEnabled, logosLength: logos.length });
-
+  // useEffect'i koşulsuz çağır
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && popupEnabled && logos.length > 0) {
       setIsVisible(true);
       setIsAnimating(true);
 
@@ -111,7 +100,19 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
 
       return () => clearTimeout(timer);
     }
-  }, [isOpen, popupDuration, onClose]);
+  }, [isOpen, popupDuration, onClose, popupEnabled, logos.length]);
+
+  // Pop-up etkin değilse veya logo yoksa gösterme
+  if (!popupEnabled || logos.length === 0) {
+    console.log('🚫 BrandLogosPopup: Pop-up gösterilmiyor', {
+      popupEnabled,
+      logosLength: logos.length,
+      isOpen
+    });
+    return null;
+  }
+  
+  console.log('✅ Pop-up açılıyor:', { popupEnabled, logosLength: logos.length });
 
   if (!isVisible) {
     return null;

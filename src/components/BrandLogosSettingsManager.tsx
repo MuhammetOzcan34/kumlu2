@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,11 +47,7 @@ export function BrandLogosSettingsManager() {
   
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -88,7 +84,7 @@ export function BrandLogosSettingsManager() {
         const settingsMap = data.reduce((acc, item) => {
           acc[item.anahtar] = item.deger;
           return acc;
-        }, {} as any);
+        }, {} as Record<string, string>);
 
         setSettings({
           brand_popup_enabled: settingsMap.brand_popup_enabled === "true",
@@ -115,16 +111,21 @@ export function BrandLogosSettingsManager() {
           brand_logo_6_description: settingsMap.brand_logo_6_description || ""
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Hata",
-        description: "Ayarlar yüklenirken bir hata oluştu: " + error.message,
+        description: "Ayarlar yüklenirken bir hata oluştu: " + errorMessage,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const uploadLogo = async (file: File, index: number) => {
     try {
@@ -167,10 +168,11 @@ export function BrandLogosSettingsManager() {
         description: "Logo başarıyla yüklendi.",
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Hata",
-        description: "Logo yüklenirken bir hata oluştu: " + error.message,
+        description: "Logo yüklenirken bir hata oluştu: " + errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -229,10 +231,11 @@ export function BrandLogosSettingsManager() {
         title: "Başarılı",
         description: "Marka logoları ayarları kaydedildi.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Hata",
-        description: "Ayarlar kaydedilirken bir hata oluştu: " + error.message,
+        description: "Ayarlar kaydedilirken bir hata oluştu: " + errorMessage,
         variant: "destructive",
       });
     } finally {

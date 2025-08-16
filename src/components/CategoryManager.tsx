@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,9 +46,20 @@ export const CategoryManager: React.FC = () => {
     aktif: true,
     sira_no: 0
   });
+  
+  // Timeout referansları için
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
   useEffect(() => {
     loadCategories();
+    
+    // Cleanup function - component unmount'da tüm timeout'ları temizle
+    return () => {
+      timeoutRefs.current.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+      });
+      timeoutRefs.current.clear();
+    };
   }, []);
 
   const loadCategories = async () => {
@@ -177,9 +188,11 @@ export const CategoryManager: React.FC = () => {
       
       // Kategorileri yeniden yükle - daha uzun bir bekleme süresi
       console.log('⏱️ CategoryManager - Kategoriler yeniden yüklenecek (1 saniye bekleniyor)');
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         loadCategories();
+        timeoutRefs.current.delete(timeoutId);
       }, 1000); // Veritabanının güncellenme süresi için daha uzun bir bekleme
+      timeoutRefs.current.add(timeoutId);
     } catch (error) {
       console.error('❌ CategoryManager - Kategori kaydetme hatası:', error);
       toast.error('Kategori kaydedilemedi');
@@ -217,9 +230,11 @@ export const CategoryManager: React.FC = () => {
       
       // Kategorileri yeniden yükle - daha uzun bir bekleme süresi
       console.log('⏱️ CategoryManager - Kategoriler yeniden yüklenecek (1.5 saniye bekleniyor)');
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         loadCategories();
+        timeoutRefs.current.delete(timeoutId);
       }, 1500); // Veritabanının güncellenme süresi için daha uzun bir bekleme
+      timeoutRefs.current.add(timeoutId);
     } catch (error) {
       console.error('❌ CategoryManager - Kategori silme hatası:', error);
       toast.error('Kategori silinemedi');

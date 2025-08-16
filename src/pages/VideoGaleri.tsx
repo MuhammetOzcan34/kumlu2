@@ -6,7 +6,7 @@ import { VideoModal } from "@/components/VideoModal";
 import { useSetting } from "@/hooks/useSettings";
 import { useVideos } from "@/hooks/useVideos";
 import { Play } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useCallback } from "react";
 
 interface Video {
   id: string;
@@ -23,10 +23,10 @@ const VideoGaleri = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleVideoClick = (video: Video) => {
+  const handleVideoClick = useCallback((video: Video) => {
     setSelectedVideo(video);
     setIsModalOpen(true);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,6 +63,12 @@ const VideoGaleri = () => {
                       src={video.thumbnail_url || ''} 
                       alt={video.baslik}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
                       <Play className="w-12 h-12 text-white" />
@@ -103,4 +109,8 @@ const VideoGaleri = () => {
   );
 };
 
-export default VideoGaleri;
+// React.memo ile bileşeni optimize et
+const MemoizedVideoGaleri = React.memo(VideoGaleri);
+MemoizedVideoGaleri.displayName = 'VideoGaleri';
+
+export default MemoizedVideoGaleri;

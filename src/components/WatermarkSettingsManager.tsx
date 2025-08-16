@@ -55,9 +55,10 @@ export const WatermarkSettingsManager: React.FC = () => {
       await updateWatermarkSetting('watermark_logo_url', `watermark/${fileName}`);
       
       toast.success('Watermark logosu başarıyla yüklendi');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Logo yükleme hatası:', error);
-      toast.error('Logo yüklenirken hata oluştu: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+      toast.error('Logo yüklenirken hata oluştu: ' + errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -135,7 +136,7 @@ export const WatermarkSettingsManager: React.FC = () => {
           {
             size: watermarkSize,
             opacity: watermarkOpacity,
-            position: watermarkPosition as any,
+            position: watermarkPosition as 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'pattern',
             angle: watermarkAngle,
             patternRows: patternRows,
             patternCols: patternCols

@@ -10,6 +10,7 @@ import { HeroButtons } from "@/components/HeroButtons";
 import { ImageModal } from "@/components/ImageModal";
 import { InstagramFeed } from "@/components/InstagramFeed";
 import { TeklifFormu } from "@/components/TeklifFormu";
+import { BrandLogosPopup } from "@/components/BrandLogosPopup";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -104,6 +105,7 @@ ServicesGrid.displayName = "ServicesGrid";
 
 const Index = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
+  const [showBrandPopup, setShowBrandPopup] = useState(false);
 
   // Slider için fotoğrafları çek - optimize edilmiş query
   const { data: sliderPhotos } = useQuery({
@@ -153,6 +155,15 @@ const Index = () => {
     }
   }, [slides]);
 
+  // Brand popup'ı sayfa yüklendikten sonra göster
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowBrandPopup(true);
+    }, 2000); // 2 saniye sonra popup'ı göster
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
@@ -197,6 +208,12 @@ const Index = () => {
           onPrev={() => setSelectedImageIndex(Math.max(selectedImageIndex - 1, 0))}
         />
       )}
+      
+      {/* Brand Logos Popup */}
+      <BrandLogosPopup 
+        isOpen={showBrandPopup} 
+        onClose={() => setShowBrandPopup(false)} 
+      />
     </div>
   );
 };

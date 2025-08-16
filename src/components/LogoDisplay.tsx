@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSetting } from "@/hooks/useSettings";
 import { Image, Upload } from "lucide-react";
@@ -7,9 +7,22 @@ import { supabase } from "@/integrations/supabase/client";
 export const LogoDisplay: React.FC = () => {
   const companyLogo = useSetting("firma_logo_url");
   const companyName = useSetting("firma_adi");
+  
+  // Timeout referansları için
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
   console.log('🔍 LogoDisplay - companyLogo:', companyLogo);
   console.log('🔍 LogoDisplay - companyName:', companyName);
+  
+  // Component unmount'da tüm timeout'ları temizle
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+      });
+      timeoutRefs.current.clear();
+    };
+  }, []);
   console.log('🔍 LogoDisplay - companyLogo type:', typeof companyLogo);
   console.log('🔍 LogoDisplay - companyLogo length:', companyLogo?.length);
   console.log('🔍 LogoDisplay - companyLogo trimmed:', companyLogo?.trim());
@@ -20,31 +33,7 @@ export const LogoDisplay: React.FC = () => {
     return `${supabaseUrl}/storage/v1/object/public/fotograflar/`;
   };
 
-  // Logo değiştiğinde favicon ve PWA ikonlarını güncelle - güvenli yaklaşım
-  useEffect(() => {
-    if (companyLogo && companyLogo.trim()) {
-      // DOM hazır olana kadar bekle ve güvenli şekilde güncelle
-      const timeoutId = setTimeout(() => {
-        try {
-          // Document ready kontrolü
-          if (document.readyState === 'complete') {
-            updateFaviconAndIcons(companyLogo);
-          } else {
-            // DOM henüz hazır değilse, load eventini bekle
-            window.addEventListener('load', () => {
-              updateFaviconAndIcons(companyLogo);
-            }, { once: true });
-          }
-        } catch (error) {
-          console.warn('Favicon güncelleme hatası:', error);
-        }
-      }, 200); // Daha uzun gecikme ile DOM'un kesinlikle hazır olmasını sağla
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [companyLogo]);
-
-  const updateFaviconAndIcons = (logoUrl: string) => {
+  const updateFaviconAndIcons = useCallback((logoUrl: string) => {
     try {
       const fullLogoUrl = logoUrl.startsWith('http') 
         ? logoUrl 
@@ -74,24 +63,57 @@ export const LogoDisplay: React.FC = () => {
       updatePWAManifest(fullLogoUrl);
 
       // Browser cache'i temizlemek için force reload
-      setTimeout(() => {
+      const mainTimeoutId = setTimeout(() => {
         // Sadece favicon'u yeniden yükle
         const links = document.querySelectorAll('link[rel="icon"]');
         links.forEach((link) => {
           const linkElement = link as HTMLLinkElement;
           const originalHref = linkElement.href;
           linkElement.href = '';
-          setTimeout(() => {
+          const innerTimeoutId = setTimeout(() => {
             linkElement.href = originalHref;
+            timeoutRefs.current.delete(innerTimeoutId);
           }, 100);
+          timeoutRefs.current.add(innerTimeoutId);
         });
+        timeoutRefs.current.delete(mainTimeoutId);
       }, 500);
+      timeoutRefs.current.add(mainTimeoutId);
 
       console.log('✅ Favicon ve PWA ikonları güncellendi:', fullLogoUrl);
     } catch (error) {
       console.error('Favicon güncelleme hatası:', error);
     }
-  };
+  }, []);
+
+  // Logo değiştiğinde favicon ve PWA ikonlarını güncelle - güvenli yaklaşım
+  useEffect(() => {
+    if (companyLogo && companyLogo.trim()) {
+      // DOM hazır olana kadar bekle ve güvenli şekilde güncelle
+      const timeoutId = setTimeout(() => {
+        try {
+          // Document ready kontrolü
+          if (document.readyState === 'complete') {
+            updateFaviconAndIcons(companyLogo);
+          } else {
+            // DOM henüz hazır değilse, load eventini bekle
+            window.addEventListener('load', () => {
+              updateFaviconAndIcons(companyLogo);
+            }, { once: true });
+          }
+        } catch (error) {
+          console.warn('Favicon güncelleme hatası:', error);
+        }
+        timeoutRefs.current.delete(timeoutId);
+      }, 200); // Daha uzun gecikme ile DOM'un kesinlikle hazır olmasını sağla
+      timeoutRefs.current.add(timeoutId);
+
+      return () => {
+        clearTimeout(timeoutId);
+        timeoutRefs.current.delete(timeoutId);
+      };
+    }
+  }, [companyLogo, updateFaviconAndIcons]);
 
   const updatePWAManifest = (logoUrl: string) => {
     try {
@@ -156,7 +178,11 @@ export const LogoDisplay: React.FC = () => {
           // Eski manifest URL'sini güvenli şekilde temizle
           const oldHref = manifestLink.href;
           if (oldHref && oldHref.startsWith('blob:')) {
-            setTimeout(() => URL.revokeObjectURL(oldHref), 1000);
+            const cleanupTimeoutId = setTimeout(() => {
+              URL.revokeObjectURL(oldHref);
+              timeoutRefs.current.delete(cleanupTimeoutId);
+            }, 1000);
+            timeoutRefs.current.add(cleanupTimeoutId);
           }
           
           manifestLink.href = manifestUrl;

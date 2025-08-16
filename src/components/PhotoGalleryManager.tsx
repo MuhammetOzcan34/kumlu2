@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ interface Category {
   tip: string;
 }
 
-export const PhotoGalleryManager: React.FC = () => {
+const PhotoGalleryManager: React.FC = memo(() => {
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
@@ -62,7 +62,7 @@ export const PhotoGalleryManager: React.FC = () => {
     console.log('Photo cache invalidated and refetched');
   };
 
-  const usageAreas = [
+  const usageAreas = useMemo(() => [
     { id: 'ana-sayfa-slider', label: 'Ana Sayfa Slider' },
     { id: 'galeri', label: 'Fotoğraf Galerisi' },
     { id: 'referanslar', label: 'Referanslar Sayfası' },
@@ -70,18 +70,14 @@ export const PhotoGalleryManager: React.FC = () => {
     { id: 'iletisim', label: 'İletişim Sayfası' },
     { id: 'blog', label: 'Blog/Haberler' },
     { id: 'arac-giydirme', label: 'Araç Giydirme Sayfası' }
-  ];
+  ], []);
 
   useEffect(() => {
     loadPhotos();
     loadCategories();
   }, []);
 
-  useEffect(() => {
-    filterPhotos();
-  }, [photos, selectedCategoryFilter, statusFilter, usageAreaFilter]);
-
-  const filterPhotos = () => {
+  const filterPhotos = useCallback(() => {
     let filtered = [...photos];
 
     // Kategori filtresi
@@ -103,9 +99,13 @@ export const PhotoGalleryManager: React.FC = () => {
     }
 
     setFilteredPhotos(filtered);
-  };
+  }, [photos, selectedCategoryFilter, statusFilter, usageAreaFilter]);
 
-  const loadPhotos = async () => {
+  useEffect(() => {
+    filterPhotos();
+  }, [filterPhotos]);
+
+  const loadPhotos = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('fotograflar')
@@ -120,9 +120,9 @@ export const PhotoGalleryManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('kategoriler')
@@ -135,12 +135,12 @@ export const PhotoGalleryManager: React.FC = () => {
     } catch (error) {
       console.error('Kategoriler yüklenirken hata:', error);
     }
-  };
+  }, []);
 
-  const getImageUrl = (path: string) => {
+  const getImageUrl = useCallback((path: string) => {
     const { data } = supabase.storage.from('fotograflar').getPublicUrl(path);
     return data.publicUrl;
-  };
+  }, []);
 
   const handleEdit = (photo: Photo) => {
     setEditingPhoto(photo);
@@ -458,6 +458,12 @@ export const PhotoGalleryManager: React.FC = () => {
                     src={getImageUrl(photo.dosya_yolu)}
                     alt={photo.baslik || 'Fotoğraf'}
                     className="w-full h-full object-cover rounded-md"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
                   />
                   <div className="absolute top-1 right-1 flex gap-1">
                     {photo.logo_eklendi && (
@@ -709,4 +715,8 @@ export const PhotoGalleryManager: React.FC = () => {
        </CardContent>
      </Card>
    );
- };
+ });
+
+ PhotoGalleryManager.displayName = 'PhotoGalleryManager';
+
+ export { PhotoGalleryManager };

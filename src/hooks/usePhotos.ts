@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { requestLimiter } from "@/utils/debounce";
 
 export interface Photo {
   id: string;
@@ -17,6 +18,14 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
   return useQuery({
     queryKey: ["photos", categoryId, usageArea],
     queryFn: async () => {
+      const requestKey = `photos-${categoryId || 'all'}-${usageArea || 'all'}`;
+      
+      // Request limiting kontrolü
+      if (!requestLimiter.canMakeRequest(requestKey)) {
+        console.log('🚫 Request throttled:', requestKey);
+        // Önceki veriyi döndür veya boş array
+        return [];
+      }
       let query = supabase
         .from("fotograflar")
         .select("*")
@@ -62,7 +71,7 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
         return []; // Return empty array instead of throwing
       }
       
-      console.log('📸 Fotoğraflar yüklendi:', data?.length || 0, 'adet');
+      console.log('📸 Fotoğraflar yüklendi:', data?.length || 0, 'adet', 'Key:', requestKey);
       return data as Photo[] || [];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

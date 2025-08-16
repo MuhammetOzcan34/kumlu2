@@ -14,7 +14,7 @@ interface TeklifFormuProps {
   triggerButtonVariant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
   asServiceCard?: boolean;
-  serviceIcon?: any;
+  serviceIcon?: React.ComponentType<{ className?: string }>;
   serviceGradient?: string;
 }
 

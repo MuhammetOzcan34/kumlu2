@@ -44,6 +44,66 @@ export interface Category {
   updated_at: string;
 }
 
+// Ana kategoriler fetch fonksiyonu - invalidateCache'den önce tanımlanmalı
+const fetchCategories = async (tip?: string) => {
+  console.log('🔄 Kategoriler yükleniyor...', { tip });
+  
+  const cacheKey = `categories_${tip || 'all'}`;
+  
+  return await withFallback(
+    // Primary function
+    async () => {
+      return await requestQueue.add(async () => {
+        return await withRetry(async () => {
+          let query = supabase
+            .from("kategoriler")
+            .select("*")
+            .eq("aktif", true)
+            .order("sira_no", { ascending: true });
+
+          if (tip) {
+            query = query.eq("tip", tip);
+          }
+
+          const { data, error } = await query;
+
+          if (error) {
+            console.error('❌ Kategoriler yüklenirken hata:', error);
+            
+            if (isResourceError(error)) {
+              throw new Error('ERR_INSUFFICIENT_RESOURCES');
+            }
+            
+            throw error;
+          }
+
+          console.log('✅ Kategoriler başarıyla yüklendi:', data?.length || 0);
+          return data || [];
+        }, {
+          maxAttempts: 5,
+          baseDelay: 2000,
+          maxDelay: 30000,
+          shouldRetry: (error) => {
+            return isResourceError(error) || error.message?.includes('network');
+          }
+        });
+      }, {
+        id: `categories_${tip || 'all'}`,
+        priority: 'high',
+        cacheTTL: 10 * 60 * 1000, // 10 dakika
+        deduplicate: true
+      });
+    },
+    // Fallback function
+    () => {
+      console.log('🔄 Fallback: Boş kategori listesi döndürülüyor');
+      return getFallbackData<Category[]>('categories', []);
+    },
+    // Cache key
+    cacheKey
+  );
+};
+
 export const useCategories = (tip?: CategoryType) => {
   const queryClient = useQueryClient();
   const lastFetchTime = useRef<number>(0);
@@ -79,12 +139,12 @@ export const useCategories = (tip?: CategoryType) => {
     };
   }, [queryClient, tip]);
   
-  // Cache invalidation fonksiyonu
+  // Cache invalidation fonksiyonu - artık fetchCategories dependency'si kaldırıldı
   const invalidateCache = useCallback(() => {
     console.log('🗑️ Kategori cache temizleniyor');
     queryClient.invalidateQueries({ queryKey: ['categories'] });
     queryClient.removeQueries({ queryKey: ['categories'] });
-  }, [queryClient, fetchCategories]);
+  }, [queryClient]);
   
   // Debounced cache invalidation
   const debouncedInvalidate = useDebounce(invalidateCache, 1000);
@@ -103,65 +163,7 @@ export const useCategories = (tip?: CategoryType) => {
     });
   }, [queryClient, tip]);
   
-  // Ana kategoriler fetch fonksiyonu
-  const fetchCategories = useCallback(async (tip?: string) => {
-    console.log('🔄 Kategoriler yükleniyor...', { tip });
-    
-    const cacheKey = `categories_${tip || 'all'}`;
-    
-    return await withFallback(
-      // Primary function
-      async () => {
-        return await requestQueue.add(async () => {
-          return await withRetry(async () => {
-            let query = supabase
-              .from("kategoriler")
-              .select("*")
-              .eq("aktif", true)
-              .order("sira_no", { ascending: true });
 
-            if (tip) {
-              query = query.eq("tip", tip);
-            }
-
-            const { data, error } = await query;
-
-            if (error) {
-              console.error('❌ Kategoriler yüklenirken hata:', error);
-              
-              if (isResourceError(error)) {
-                throw new Error('ERR_INSUFFICIENT_RESOURCES');
-              }
-              
-              throw error;
-            }
-
-            console.log('✅ Kategoriler başarıyla yüklendi:', data?.length || 0);
-            return data || [];
-          }, {
-            maxAttempts: 5,
-            baseDelay: 2000,
-            maxDelay: 30000,
-            shouldRetry: (error) => {
-              return isResourceError(error) || error.message?.includes('network');
-            }
-          });
-        }, {
-          id: `categories_${tip || 'all'}`,
-          priority: 'high',
-          cacheTTL: 10 * 60 * 1000, // 10 dakika
-          deduplicate: true
-        });
-      },
-      // Fallback function
-      () => {
-        console.log('🔄 Fallback: Boş kategori listesi döndürülüyor');
-        return getFallbackData<Category[]>('categories', []);
-      },
-      // Cache key
-      cacheKey
-    );
-  }, []);
   
   // Memoized query key
   const queryKey = useMemo(() => CACHE_KEYS.categories(tip), [tip]);

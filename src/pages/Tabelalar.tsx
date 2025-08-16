@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { PhoneButton } from "@/components/PhoneButton";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -50,10 +50,10 @@ const Tabelalar = () => {
   }, [selectedImageIndex]);
 
   // Fotoğraf tıklama handler'ı
-  const handleImageClick = (index: number) => {
+  const handleImageClick = useCallback((index: number) => {
     console.log(`🎯 Tabelalar CLICK: Clicked index ${index}. Previous index was ${selectedImageIndex}.`);
     setSelectedImageIndex(index);
-  };
+  }, [selectedImageIndex]);
 
   // İlk kategoriyi otomatik seç
   useEffect(() => {
@@ -140,6 +140,12 @@ const Tabelalar = () => {
                           src={image.image} 
                           alt={image.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
                         />
                       </div>
                     ))}
@@ -187,4 +193,8 @@ const Tabelalar = () => {
   );
 };
 
-export default Tabelalar;
+// React.memo ile bileşeni optimize et
+const MemoizedTabelalar = React.memo(Tabelalar);
+MemoizedTabelalar.displayName = 'Tabelalar';
+
+export default MemoizedTabelalar;

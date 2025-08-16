@@ -147,12 +147,10 @@ const APIInstagramFeed = memo(() => {
   const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(instagramPostCount);
 
-  // Eğer access token ayarlanmamışsa bileşeni gösterme
-  if (!instagramAccessToken) {
-    return null;
-  }
-
+  // Hook'ları koşulsuz tanımla
   const loadInstagramPosts = useCallback(async () => {
+    if (!instagramAccessToken) return;
+    
     setLoading(true);
     setError(null);
     
@@ -204,8 +202,15 @@ const APIInstagramFeed = memo(() => {
   }, []);
 
   useEffect(() => {
-    loadInstagramPosts();
-  }, [loadInstagramPosts]);
+    if (instagramAccessToken) {
+      loadInstagramPosts();
+    }
+  }, [loadInstagramPosts, instagramAccessToken]);
+
+  // Eğer access token ayarlanmamışsa bileşeni gösterme
+  if (!instagramAccessToken) {
+    return null;
+  }
 
   const displayedPosts = posts.slice(0, displayCount);
 

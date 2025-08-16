@@ -7,17 +7,14 @@ import { memoryManager, connectionManager } from './utils';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug: Ortam değişkenlerini kontrol et
-console.log('🔍 Supabase Ortam Değişkenleri:');
-console.log('VITE_SUPABASE_URL:', SUPABASE_URL);
-console.log('VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? `${SUPABASE_ANON_KEY.substring(0, 20)}...` : 'TANIMSIZ');
+// Ortam değişkenlerinin varlığını kontrol et
+console.log('🔍 Supabase ortam değişkenleri kontrol ediliyor...');
+console.log('SUPABASE_URL:', SUPABASE_URL ? '✅ Tanımlı' : '❌ Eksik');
+console.log('SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '✅ Tanımlı' : '❌ Eksik');
 
-// Ortam değişkenlerinin tanımlı olduğundan emin ol
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('❌ Supabase ortam değişkenleri eksik!');
-  console.error('VITE_SUPABASE_URL:', SUPABASE_URL);
-  console.error('VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY);
-  throw new Error('Supabase ortam değişkenleri (.env dosyasında) tanımlanmamış!');
+  throw new Error('Supabase ortam değişkenleri tanımlanmamış');
 }
 
 // Connection ID generator
@@ -55,6 +52,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
           signal: controller.signal,
           headers: {
             ...options.headers,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
             'Connection': 'keep-alive',

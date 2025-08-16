@@ -8,12 +8,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Kampanya {
+  id: string;
+  kampanya_adi: string;
+  platform: string;
+  durum: string;
+  kategori_id: string;
+  butce_gunluk: string;
+  baslangic_tarihi: string;
+  bitis_tarihi: string;
+  hedef_url: string;
+  reklam_metni: string;
+}
+
+interface Kategori {
+  id: string;
+  ad: string;
+}
+
 interface KampanyaFormProps {
   isOpen: boolean;
   onOpenChange?: (open: boolean) => void; // İsteğe bağlı prop eklendi
   onClose?: () => void; // Mevcut onClose prop'u korundu
-  kampanya?: any;
-  kategoriler: any[];
+  kampanya?: Kampanya;
+  kategoriler: Kategori[];
   onSuccess: () => void;
 }
 
@@ -106,10 +124,11 @@ export function KampanyaForm({
 
       onSuccess();
       handleClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
       toast({
         title: "Hata",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

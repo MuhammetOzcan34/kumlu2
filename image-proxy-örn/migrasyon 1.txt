@@ -1,0 +1,96 @@
+-- Ayarlar tablosu - Firma logo URL ve diğer ayarlar için
+CREATE TABLE public.ayarlar (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  anahtar TEXT NOT NULL UNIQUE,
+  deger TEXT,
+  aciklama TEXT,
+  kategori TEXT DEFAULT 'genel',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Kategoriler tablosu - Fotoğraf kategorileri için
+CREATE TABLE public.kategoriler (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  ad TEXT NOT NULL,
+  aciklama TEXT,
+  tip TEXT NOT NULL, -- 'kumlama', 'tabela', 'arac-giydirme'
+  aktif BOOLEAN DEFAULT true,
+  sira_no INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Fotograflar tablosu - Ana fotoğraf veritabanı
+CREATE TABLE public.fotograflar (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  baslik TEXT NOT NULL,
+  aciklama TEXT,
+  dosya_yolu TEXT NOT NULL,
+  kategori_id UUID REFERENCES public.kategoriler(id) ON DELETE SET NULL,
+  kategori_adi TEXT, -- Kategori adının kopyası (denormalize)
+  kullanim_alani TEXT[] DEFAULT '{}', -- 'ana-sayfa-slider', 'kumlama', 'tabela', 'arac-giydirme', 'referanslar'
+  gorsel_tipi TEXT DEFAULT 'galeri', -- 'slider', 'galeri', 'referans_logo'
+  mime_type TEXT DEFAULT 'image/jpeg',
+  boyut BIGINT,
+  logo_eklendi BOOLEAN DEFAULT false,
+  aktif BOOLEAN DEFAULT true,
+  sira_no INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Storage bucket oluştur
+INSERT INTO storage.buckets (id, name, public) VALUES ('fotograflar', 'fotograflar', true);
+
+-- RLS politikalarını etkinleştir
+ALTER TABLE public.ayarlar ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kategoriler ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fotograflar ENABLE ROW LEVEL SECURITY;
+
+-- Ayarlar tablosu için RLS politikaları
+CREATE POLICY "Ayarlar herkese görünür" ON public.ayarlar FOR SELECT USING (true);
+CREATE POLICY "Sadece authenticated kullanıcılar ayar değiştirebilir" ON public.ayarlar FOR ALL USING (auth.role() = 'authenticated');
+
+-- Kategoriler tablosu için RLS politikaları  
+CREATE POLICY "Kategoriler herkese görünür" ON public.kategoriler FOR SELECT USING (true);
+CREATE POLICY "Sadece authenticated kullanıcılar kategori değiştirebilir" ON public.kategoriler FOR ALL USING (auth.role() = 'authenticated');
+
+-- Fotograflar tablosu için RLS politikaları
+CREATE POLICY "Aktif fotoğraflar herkese görünür" ON public.fotograflar FOR SELECT USING (aktif = true);
+CREATE POLICY "Sadece authenticated kullanıcılar fotoğraf değiştirebilir" ON public.fotograflar FOR ALL USING (auth.role() = 'authenticated');
+
+-- Storage için RLS politikaları
+CREATE POLICY "Fotograflar herkese görünür" ON storage.objects FOR SELECT USING (bucket_id = 'fotograflar');
+CREATE POLICY "Authenticated kullanıcılar fotoğraf yükleyebilir" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'fotograflar' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated kullanıcılar fotoğraf güncelleyebilir" ON storage.objects FOR UPDATE USING (bucket_id = 'fotograflar' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated kullanıcılar fotoğraf silebilir" ON storage.objects FOR DELETE USING (bucket_id = 'fotograflar' AND auth.role() = 'authenticated');
+
+-- Timestamp trigger fonksiyonu
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger'ları oluştur
+CREATE TRIGGER update_ayarlar_updated_at BEFORE UPDATE ON public.ayarlar FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_kategoriler_updated_at BEFORE UPDATE ON public.kategoriler FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER update_fotograflar_updated_at BEFORE UPDATE ON public.fotograflar FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Başlangıç verileri
+INSERT INTO public.ayarlar (anahtar, deger, aciklama, kategori) VALUES
+('firma_logo_url', '', 'Fotoğraflara eklenecek logo dosya yolu', 'logo'),
+('site_baslik', 'Fotoğraf Galerisi', 'Site başlığı', 'genel'),
+('site_aciklama', 'Profesyonel fotoğraf galerisi', 'Site açıklaması', 'genel');
+
+-- Örnek kategoriler
+INSERT INTO public.kategoriler (ad, aciklama, tip, sira_no) VALUES
+('Endüstriyel Kumlama', 'Endüstriyel metal yüzeylerin kumlaması', 'kumlama', 1),
+('Dekoratif Kumlama', 'Cam ve dekoratif yüzeylerin kumlaması', 'kumlama', 2),
+('LED Tabelalar', 'LED aydınlatmalı tabelalar', 'tabela', 1),
+('Klasik Tabelalar', 'Geleneksel tabelalar', 'tabela', 2),
+('Araç Reklam Kaplama', 'Araç üzerine reklam kaplaması', 'arac-giydirme', 1),
+('Araç Koruyucu Film', 'Araç koruyucu film uygulaması', 'arac-giydirme', 2);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,11 +21,7 @@ export function WhatsAppSettingsManager() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -46,7 +42,7 @@ export function WhatsAppSettingsManager() {
         const settingsMap = data.reduce((acc, item) => {
           acc[item.anahtar] = item.deger;
           return acc;
-        }, {} as any);
+        }, {} as Record<string, string>);
 
         setSettings({
           whatsapp_enabled: settingsMap.whatsapp_enabled === "true",
@@ -57,16 +53,20 @@ export function WhatsAppSettingsManager() {
           whatsapp_response_time: settingsMap.whatsapp_response_time || ""
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Hata",
-        description: "Ayarlar yüklenirken bir hata oluştu: " + error.message,
+        description: "Ayarlar yüklenirken bir hata oluştu: " + (error instanceof Error ? error.message : 'Bilinmeyen hata'),
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const saveSettings = async () => {
     try {
@@ -92,10 +92,10 @@ export function WhatsAppSettingsManager() {
         title: "Başarılı",
         description: "WhatsApp ayarları kaydedildi.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Hata",
-        description: "Ayarlar kaydedilirken bir hata oluştu: " + error.message,
+        description: "Ayarlar kaydedilirken bir hata oluştu: " + (error instanceof Error ? error.message : 'Bilinmeyen hata'),
         variant: "destructive",
       });
     } finally {

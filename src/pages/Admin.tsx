@@ -20,7 +20,7 @@ import { PhotoUploadManager } from "@/components/PhotoUploadManager";
 import { PhotoGalleryManager } from "@/components/PhotoGalleryManager";
 import { CompanySettingsManager } from "@/components/CompanySettingsManager";
 import { CategoryManager } from "@/components/CategoryManager";
-import { VideoGaleriManager } from "@/components/VideoGaleriManager";
+import VideoGaleriManager from "@/components/VideoGaleriManager";
 import { WhatsAppSettingsManager } from "@/components/WhatsAppSettingsManager";
 import { BrandLogosSettingsManager } from "@/components/BrandLogosSettingsManager";
 import { InstagramSettingsManager } from "@/components/InstagramSettingsManager";
@@ -109,7 +109,7 @@ export default function Admin() {
 
 
 
-  const loadUserProfile = useCallback(async (userId: string) => {
+  const loadUserProfile = useCallback(async (userId: string, currentSession?: Session | null) => {
     try {
       console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
       setLoading(true);
@@ -126,7 +126,7 @@ export default function Admin() {
         // Eğer profil bulunamazsa, otomatik olarak oluşturmaya çalış
         if (error.code === 'PGRST116') {
           console.log('🔧 Admin - Profil bulunamadı, oluşturuluyor...');
-          const currentUser = user || session?.user;
+          const currentUser = currentSession?.user;
           const { data: newProfile, error: createError } = await supabase
             .from("profiles")
             .insert({
@@ -186,7 +186,7 @@ export default function Admin() {
       setLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  }, [navigate, toast, user, session]);
+  }, [navigate, toast]);
 
   useEffect(() => {
     console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
@@ -202,9 +202,12 @@ export default function Admin() {
           navigate("/auth");
         } else {
           console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 500);
+          // Debounce ile aşırı istek önleme
+          const timeoutId = setTimeout(() => {
+            loadUserProfile(session.user.id, session);
+          }, 300);
+          
+          return () => clearTimeout(timeoutId);
         }
       }
     );
@@ -221,7 +224,7 @@ export default function Admin() {
         navigate("/auth");
       } else {
         console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-        loadUserProfile(session.user.id);
+        loadUserProfile(session.user.id, session);
       }
     }).catch(error => {
       console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
@@ -231,7 +234,7 @@ export default function Admin() {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
       subscription.unsubscribe();
     };
-  }, [navigate, loadUserProfile]);
+  }, [navigate, loadUserProfile]); // loadUserProfile useCallback ile optimize edildi
 
   const loadAdminData = async () => {
     try {
