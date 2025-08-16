@@ -4,8 +4,21 @@ import type { Database } from './types';
 import { memoryManager, connectionManager } from './utils';
 
 // Ortam değişkenlerinden Supabase URL ve anon key'i al
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://kepfuptrmccexgyzhcti.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlcGZ1cHRybWNjZXhneXpoY3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwOTE0MDcsImV4cCI6MjA2OTY2NzQwN30.9FAlJYC5UVUKh3407eqag5PX90vaUtBreG5d4AcCVm0";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Debug: Ortam değişkenlerini kontrol et
+console.log('🔍 Supabase Ortam Değişkenleri:');
+console.log('VITE_SUPABASE_URL:', SUPABASE_URL);
+console.log('VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? `${SUPABASE_ANON_KEY.substring(0, 20)}...` : 'TANIMSIZ');
+
+// Ortam değişkenlerinin tanımlı olduğundan emin ol
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('❌ Supabase ortam değişkenleri eksik!');
+  console.error('VITE_SUPABASE_URL:', SUPABASE_URL);
+  console.error('VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY);
+  throw new Error('Supabase ortam değişkenleri (.env dosyasında) tanımlanmamış!');
+}
 
 // Connection ID generator
 let connectionIdCounter = 0;
