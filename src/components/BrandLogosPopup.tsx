@@ -119,21 +119,21 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
 
   return (
     <div className={cn(
-      "fixed inset-0 z-50 flex items-center justify-center p-4",
+      "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4",
       "bg-black/50 backdrop-blur-sm transition-opacity duration-300",
       isAnimating ? "opacity-100" : "opacity-0",
       className
     )}>
       <Card className={cn(
-        "w-full max-w-2xl max-h-[80vh] overflow-hidden",
+        "w-full max-w-xs sm:max-w-md md:max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden",
         "transform transition-all duration-300",
         isAnimating ? "scale-100 opacity-100" : "scale-95 opacity-0"
       )}>
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white pb-4">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-bold">{popupTitle}</CardTitle>
-              <p className="text-sm opacity-90 mt-1">{popupDescription}</p>
+            <div className="flex-1 pr-2">
+              <CardTitle className="text-base sm:text-xl font-bold leading-tight">{popupTitle}</CardTitle>
+              <p className="text-xs sm:text-sm opacity-90 mt-1 leading-tight">{popupDescription}</p>
             </div>
             <Button
               variant="ghost"
@@ -152,26 +152,27 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
           </div>
         </CardHeader>
         
-        <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <CardContent className="p-3 sm:p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
             {logos.map((logo) => (
               <div
                 key={logo.id}
-                className="flex flex-col items-center p-4 rounded-lg border border-border hover:border-primary/50 transition-colors group bg-background/50"
+                className="flex flex-col items-center p-2 sm:p-4 rounded-lg border border-border hover:border-primary/50 transition-colors group bg-background/50"
               >
-                <div className="w-12 h-12 mb-2 flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 mb-1 sm:mb-2 flex items-center justify-center bg-white rounded-lg p-1 sm:p-1.5 shadow-sm relative">
                   {!loadedImages.has(logo.id) && (
-                    <div className="w-full h-full bg-gray-200 animate-pulse rounded" />
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded absolute inset-0" />
                   )}
                   <img
                     src={logo.image}
                     alt={logo.name}
                     className={cn(
-                      "max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-200",
+                      "max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-200 relative z-10",
                       loadedImages.has(logo.id) ? "opacity-100" : "opacity-0"
                     )}
-                    style={{ maxWidth: '40px', maxHeight: '40px' }}
-                    loading="lazy"
+                    style={{ maxWidth: '24px', maxHeight: '24px' }}
+                    loading="eager"
+                    decoding="async"
                     onLoad={() => handleImageLoad(logo.id)}
                     onError={(e) => {
                       // Hata durumunda logoyu gizle
@@ -180,16 +181,16 @@ export function BrandLogosPopup({ isOpen, onClose, className }: BrandLogosPopupP
                     }}
                   />
                 </div>
-                <h3 className="font-medium text-xs text-center mb-1 line-clamp-1">{logo.name}</h3>
-                <p className="text-xs text-muted-foreground text-center leading-tight line-clamp-2">
+                <h3 className="font-medium text-xs sm:text-xs text-center mb-0.5 sm:mb-1 line-clamp-1">{logo.name}</h3>
+                <p className="text-xs sm:text-xs text-muted-foreground text-center leading-tight line-clamp-1 sm:line-clamp-2">
                   {logo.description}
                 </p>
               </div>
             ))}
           </div>
           
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-3 sm:mt-6 text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Bu pop-up {popupDuration / 1000} saniye sonra otomatik olarak kapanacak
             </p>
           </div>

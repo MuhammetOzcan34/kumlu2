@@ -394,7 +394,13 @@ const Hesaplama = () => {
                       >
                         <div className="text-center space-y-3">
                           <div className="text-4xl">📦</div>
-                          <div className="font-semibold text-lg">Sadece Ürün</div>
+                          <div className="font-semibold text-lg flex items-center justify-center gap-2">
+                            {!montajIsteniyor && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>}
+                            {montajIsteniyor && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
+                            Sadece Ürün
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             Ürünü kargo ile alacağım veya mağazadan teslim alacağım
                           </div>
@@ -425,9 +431,15 @@ const Hesaplama = () => {
                       >
                         <div className="text-center space-y-3">
                           <div className="text-4xl">🔧</div>
-                          <div className="font-semibold text-lg">Montaj + Ürün</div>
+                          <div className="font-semibold text-lg flex items-center justify-center gap-2">
+                            {montajIsteniyor && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>}
+                            {!montajIsteniyor && <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>}
+                            Ürün + Montaj
+                          </div>
                           <div className="text-sm text-muted-foreground">
-                            Profesyonel ekibimiz evinize gelip montajını yapsın
+                            Profesyonel ekibimiz adresinize gelip montajını yapsın.
                           </div>
                           <div className="text-xs font-medium text-blue-600">
                             ✓ Sadece İstanbul

@@ -109,52 +109,6 @@ export default function Admin() {
 
 
 
-  useEffect(() => {
-    console.log('🔄 Admin - Sayfa yükleniyor...');
-    
-    // Auth state listener kurulumu
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔐 Admin - Auth durumu değişti:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-          navigate("/auth");
-        } else {
-          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          setTimeout(() => {
-            loadUserProfile(session.user.id);
-          }, 500);
-        }
-      }
-    );
-
-    // Mevcut oturum kontrolü
-    console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-        navigate("/auth");
-      } else {
-        console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-        loadUserProfile(session.user.id);
-      }
-    }).catch(error => {
-      console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
-    });
-
-    return () => {
-      console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
-      subscription.unsubscribe();
-    };
-  }, [navigate, loadUserProfile]);
-
   const loadUserProfile = useCallback(async (userId: string) => {
     try {
       console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
@@ -233,6 +187,55 @@ export default function Admin() {
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
   }, [navigate, toast, user, session]);
+
+  useEffect(() => {
+    console.log('🔄 Admin - Sayfa yükleniyor...');
+    
+    // Auth durumu takibi
+  useEffect(() => {
+    console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('🔄 Admin - Auth durumu değişti:', event, session ? 'Oturum var' : 'Oturum yok');
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session?.user) {
+          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
+          navigate("/auth");
+        } else {
+          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
+          setTimeout(() => {
+            loadUserProfile(session.user.id);
+          }, 500);
+        }
+      }
+    );
+
+    // Mevcut oturum kontrolü
+    console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (!session?.user) {
+        console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
+        navigate("/auth");
+      } else {
+        console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
+        loadUserProfile(session.user.id);
+      }
+    }).catch(error => {
+      console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
+    });
+
+    return () => {
+      console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
+      subscription.unsubscribe();
+    };
+  }, [navigate, loadUserProfile]);
 
   const loadAdminData = async () => {
     try {
@@ -849,4 +852,4 @@ export default function Admin() {
       )}
     </div>
   );
-}
+};
