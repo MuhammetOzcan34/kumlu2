@@ -284,17 +284,22 @@ const Hesaplama = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
-                {/* Alan Bilgileri */}
-                <div className="space-y-6">
-                  {/* Alan Ekleme Butonu */}
+                {/* Ölçü Alanı Ekleme Butonu */}
+                <div className="space-y-4">
                   <Button
                     onClick={alanEkle}
                     className="w-full md:w-auto text-lg py-6 px-8 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2"
                   >
                     <Plus className="h-6 w-6" />
-                    Alan Ekle
+                    Ölçü Alanı Ekle
                   </Button>
+                  <p className="text-sm text-muted-foreground text-center md:text-left">
+                    Birden fazla ölçü girmek için basınız
+                  </p>
+                </div>
 
+                {/* Alan Bilgileri */}
+                <div className="space-y-6">
                   {/* Alan Listesi */}
                   {alanlar.map((alan, index) => (
                     <div key={alan.id} className="space-y-4 p-6 rounded-lg border">
@@ -405,7 +410,7 @@ const Hesaplama = () => {
                         </div>
                         <span className="text-2xl">🔧</span>
                         <div>
-                          <div className="font-semibold text-lg">Montaj Hizmeti</div>
+                          <div className="font-semibold text-lg">Montaj Hizmeti İstiyorum</div>
                           <div className="text-sm text-muted-foreground">
                             Profesyonel montaj ve uygulama hizmeti
                           </div>
@@ -475,7 +480,6 @@ const Hesaplama = () => {
                 <Button 
                   onClick={hesaplaFiyat} 
                   className="w-full"
-                  disabled={!alanlar.every(alan => alan.malzeme && alan.en && alan.boy)}
                 >
                   Hesapla
                 </Button>

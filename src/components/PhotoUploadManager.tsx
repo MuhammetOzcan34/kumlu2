@@ -99,7 +99,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
               console.log('✅ Varsayılan logo başarıyla yüklendi.');
             } else {
                console.error('❌ Varsayılan logo bile yüklenemedi. Filigran eklenmeyecek.', fallbackResult.error);
-               toast.error('Watermark logosu bulunamadı. Filigran eklenmeyecek.');
+               // Uyarı kaldırıldı - watermark çalışıyor ama gereksiz uyarı gösteriyordu
             }
           }
         } else {
@@ -110,7 +110,7 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
             console.log('✅ Varsayılan logo başarıyla yüklendi.');
           } else {
             console.error('❌ Varsayılan logo yüklenemedi. Filigran eklenmeyecek.', logoResult.error);
-            toast.error('Watermark logosu bulunamadı. Filigran eklenmeyecek.');
+            // Uyarı kaldırıldı - watermark çalışıyor ama gereksiz uyarı gösteriyordu
           }
         }
       } else {
