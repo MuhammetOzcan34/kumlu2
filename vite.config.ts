@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
       // Terser yerine esbuild kullan (daha hızlı)
       minify: 'esbuild',
       rollupOptions: {
+        external: ['react-is'],
         output: {
           manualChunks: {
             // Vendor kütüphaneleri ayrı chunk'lara böl
@@ -54,7 +55,8 @@ export default defineConfig(({ mode }) => {
         '@supabase/supabase-js',
         '@tanstack/react-query',
         'react-router-dom',
-        'lucide-react'
+        'lucide-react',
+        'react-is'
       ],
       // Büyük kütüphaneleri önceden bundle'la
       force: true,
