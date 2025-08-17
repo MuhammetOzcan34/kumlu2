@@ -114,17 +114,18 @@ export default function Admin() {
       console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
       setLoading(true);
       
-      const { data, error } = await supabase
+      // Önce profiles tablosundan kullanıcı bilgilerini al
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (error) {
-        console.error("❌ Admin - Profil yükleme hatası:", error);
+      if (profileError) {
+        console.error("❌ Admin - Profil yükleme hatası:", profileError);
         
         // Eğer profil bulunamazsa, otomatik olarak oluşturmaya çalış
-        if (error.code === 'PGRST116') {
+        if (profileError.code === 'PGRST116') {
           console.log('🔧 Admin - Profil bulunamadı, oluşturuluyor...');
           const currentUser = currentSession?.user;
           const { data: newProfile, error: createError } = await supabase
@@ -133,7 +134,7 @@ export default function Admin() {
               id: userId,
               user_id: userId,
               display_name: currentUser?.email || 'Kullanıcı',
-              role: currentUser?.email === 'ckumlama@gmail.com' ? 'admin' : 'user'
+              role: 'user' // Varsayılan rol user
             })
             .select()
             .single();
@@ -151,10 +152,6 @@ export default function Admin() {
           
           console.log('✅ Admin - Yeni profil oluşturuldu:', newProfile);
           setProfile(newProfile);
-          
-          if (newProfile?.role === "admin") {
-            await loadAdminData();
-          }
         } else {
           toast({
             title: "Profil Yükleme Hatası",
@@ -166,14 +163,38 @@ export default function Admin() {
         return;
       }
 
-      console.log('✅ Admin - Kullanıcı profili yüklendi:', data);
-      setProfile(data);
+      console.log('✅ Admin - Kullanıcı profili yüklendi:', profileData);
       
-      if (data?.role === "admin") {
+      // Şimdi kullanici_rolleri tablosundan rol bilgisini kontrol et
+      const currentUser = currentSession?.user;
+      const { data: roleData, error: roleError } = await supabase
+        .from("kullanici_rolleri")
+        .select("role, is_super_admin")
+        .eq("email", currentUser?.email)
+        .single();
+
+      let userRole = 'user'; // Varsayılan rol
+      
+      if (!roleError && roleData) {
+        userRole = roleData.role;
+        console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
+      } else {
+        console.log('⚠️ Admin - kullanici_rolleri tablosunda rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
+      }
+      
+      // Profile nesnesine rol bilgisini ekle
+      const profileWithRole = {
+        ...profileData,
+        role: userRole
+      };
+      
+      setProfile(profileWithRole);
+      
+      if (userRole === "admin") {
         console.log('🔑 Admin - Kullanıcı admin rolüne sahip, yönetim verileri yükleniyor');
         await loadAdminData();
       } else {
-        console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', data?.role);
+        console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', userRole);
       }
     } catch (error) {
       console.error("❌ Admin - Profil yükleme hatası:", error);
