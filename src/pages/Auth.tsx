@@ -61,7 +61,7 @@ export default function Auth() {
           user_id: userId,
           email: userEmail,
           display_name: userEmail?.split('@')[0] || 'Kullanıcı',
-          role: userEmail === 'ckumlama@gmail.com' ? 'admin' : 'user'
+          role: userEmail === 'admin@kumlu2.com' ? 'admin' : 'user'
         });
 
       if (error && error.code !== '23505') { // 23505: unique constraint violation (profil zaten var)
@@ -79,12 +79,18 @@ export default function Auth() {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
+      
+      // Kullanıcı rolünü belirle (admin email kontrolü)
+      const userRole = email === 'admin@kumlu2.com' ? 'admin' : 'user';
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: {
+            role: userRole // Role bilgisini raw_app_meta_data içine ekle
+          }
         },
       });
 

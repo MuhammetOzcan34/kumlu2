@@ -165,21 +165,34 @@ export default function Admin() {
 
       console.log('✅ Admin - Kullanıcı profili yüklendi:', profileData);
       
-      // Şimdi kullanici_rolleri tablosundan rol bilgisini kontrol et
+      // Önce user_metadata\'dan rol bilgisini kontrol et
       const currentUser = currentSession?.user;
-      const { data: roleData, error: roleError } = await supabase
-        .from("kullanici_rolleri")
-        .select("role, is_super_admin")
-        .eq("email", currentUser?.email)
-        .single();
-
       let userRole = 'user'; // Varsayılan rol
       
-      if (!roleError && roleData) {
-        userRole = roleData.role;
-        console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
-      } else {
-        console.log('⚠️ Admin - kullanici_rolleri tablosunda rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
+      // 1. Öncelik: app_metadata.role (JWT token'dan gelen raw_app_meta_data)
+      if (currentUser?.app_metadata?.role) {
+        userRole = currentUser.app_metadata.role;
+        console.log('✅ Admin - Kullanıcı rolü JWT token\'dan (app_metadata) alındı:', userRole);
+      } 
+      // 2. İkinci öncelik: user_metadata.role (fallback)
+      else if (currentUser?.user_metadata?.role) {
+        userRole = currentUser.user_metadata.role;
+        console.log('✅ Admin - Kullanıcı rolü user_metadata\'dan alındı:', userRole);
+      }
+      // 3. Son çare: kullanici_rolleri tablosundan kontrol et
+      else {
+        const { data: roleData, error: roleError } = await supabase
+          .from("kullanici_rolleri")
+          .select("role, is_super_admin")
+          .eq("email", currentUser?.email)
+          .single();
+
+        if (!roleError && roleData) {
+          userRole = roleData.role;
+          console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
+        } else {
+          console.log('⚠️ Admin - Hiçbir yerden rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
+        }
       }
       
       // Profile nesnesine rol bilgisini ekle
