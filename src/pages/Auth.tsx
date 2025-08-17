@@ -182,6 +182,7 @@ export default function Auth() {
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                     required
                   />
                 </div>
@@ -212,6 +213,7 @@ export default function Auth() {
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                     required
                   />
                 </div>

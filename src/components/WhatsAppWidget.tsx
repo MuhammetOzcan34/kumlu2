@@ -123,6 +123,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
       document.addEventListener("touchmove", handleTouchMove, { passive: true });
+      document.addEventListener("touchstart", handleTouchStart, { passive: true });
       document.addEventListener("touchend", handleTouchEnd);
     }
 
@@ -192,7 +193,10 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
         <Button
           onClick={isMobile ? () => setIsOpen(true) : handleQuickContact}
           onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handleTouchStart(e);
+          }}
           className={cn(
             "rounded-full shadow-lg hover:shadow-xl transition-all duration-200",
             "bg-green-500 hover:bg-green-600 text-white",
