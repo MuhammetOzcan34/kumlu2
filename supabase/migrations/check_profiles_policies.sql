@@ -1,4 +1,4 @@
--- Profiles tablosundaki RLS politikalarını kontrol et
+-- Profiles tablosundaki mevcut RLS politikalarını kontrol et
 SELECT 
     schemaname,
     tablename,
@@ -11,8 +11,10 @@ SELECT
 FROM pg_policies 
 WHERE tablename = 'profiles';
 
--- Profiles tablosundaki mevcut verileri kontrol et
-SELECT id, user_id, email, role, created_at FROM profiles LIMIT 5;
-
--- kullanici_rolleri tablosundaki verileri kontrol et
-SELECT * FROM kullanici_rolleri LIMIT 5;
+-- Profiles tablosundaki mevcut izinleri kontrol et
+SELECT grantee, table_name, privilege_type 
+FROM information_schema.role_table_grants 
+WHERE table_schema = 'public' 
+AND table_name = 'profiles' 
+AND grantee IN ('anon', 'authenticated')
+ORDER BY grantee, privilege_type;
