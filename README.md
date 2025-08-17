@@ -1,108 +1,69 @@
-# Kumlu2 - Kumlama ve Araç Giydirme Hizmetleri Web Uygulaması
+# Kumlu Folyo - Profesyonel Hizmetler Web Sitesi
 
-## 📋 Proje Hakkında
+## Proje Açıklaması
 
-Kumlu2, kumlama ve araç giydirme hizmetleri sunan bir işletme için geliştirilmiş modern web uygulamasıdır. Uygulama, müşterilere hizmet portföyünü tanıtmak, fiyat hesaplaması yapmak ve iletişim kurmak için kapsamlı bir platform sunar.
+Kumlu Folyo, cam kumlama, tabela ve dijital baskı hizmetleri sunan profesyonel bir şirketin modern web sitesidir. React, TypeScript ve Supabase teknolojileri kullanılarak geliştirilmiştir.
 
-## 🚀 Özellikler
+## Özellikler
 
-### 🎯 Ana Özellikler
-- **Hizmet Portföyü**: Kumlama ve araç giydirme hizmetlerinin detaylı tanıtımı
-- **Fiyat Hesaplayıcı**: Interaktif hesaplama aracı ile anlık fiyat teklifi
-- **Galeri Sistemi**: Foto ve video galerisi ile referans çalışmalar
-- **İletişim Modülleri**: WhatsApp, telefon ve e-posta entegrasyonu
-- **Admin Paneli**: İçerik yönetimi ve sistem ayarları
-- **Responsive Tasarım**: Tüm cihazlarda uyumlu kullanıcı deneyimi
+### 🎨 Ana Özellikler
+- **Responsive Tasarım**: Tüm cihazlarda mükemmel görünüm
+- **PWA Desteği**: Mobil cihazlarda uygulama gibi çalışır
+- **Dinamik İçerik Yönetimi**: Admin paneli ile kolay içerik güncellemesi
+- **Fotoğraf Galerisi**: Kategorize edilmiş çalışma örnekleri
+- **WhatsApp Entegrasyonu**: Hızlı iletişim widget'ı
+- **Hesaplama Araçları**: Servis bedeli hesaplama modülleri
 
-### 🔐 Güvenlik ve Yetkilendirme
-- **Supabase Auth**: Güvenli kullanıcı kimlik doğrulama
-- **Row Level Security (RLS)**: Veri güvenliği politikaları
-- **Rol Tabanlı Erişim**: Admin, kullanıcı ve moderatör rolleri
-- **JWT Token**: Güvenli oturum yönetimi
+### 🛠️ Hizmet Alanları
+- Cam Kumlama
+- Tabela Üretimi
+- Dijital Baskı
+- Araç Giydirme
+- Video Galeri
+- Referans Çalışmaları
 
-## 🛠️ Teknoloji Stack
+### 👨‍💼 Yönetim Paneli
+- Fotoğraf yönetimi (yükleme, düzenleme, silme)
+- Kategori yönetimi
+- Firma ayarları (logo, iletişim bilgileri)
+- Slider görsel yönetimi
+- Kullanıcı yetkilendirmesi
+
+## Teknoloji Stack
 
 ### Frontend
 - **React 18** - Modern UI kütüphanesi
 - **TypeScript** - Tip güvenliği
 - **Vite** - Hızlı geliştirme ortamı
 - **Tailwind CSS** - Utility-first CSS framework
-- **React Router** - SPA routing
-- **React Query** - Server state yönetimi
-- **Zustand** - Client state yönetimi
+- **Shadcn/ui** - Modern UI bileşenleri
+- **React Query** - Veri yönetimi
+- **React Router** - Sayfa yönlendirme
+- **Zustand** - State yönetimi
 
 ### Backend & Database
 - **Supabase** - Backend-as-a-Service
-- **PostgreSQL** - İlişkisel veritabanı
-- **Row Level Security** - Veri güvenliği
-- **Real-time subscriptions** - Canlı veri güncellemeleri
+- **PostgreSQL** - Veritabanı
+- **Row Level Security (RLS)** - Güvenlik politikaları
+- **Storage** - Dosya yönetimi
 
-### UI Components
-- **Shadcn/ui** - Modern UI bileşenleri
-- **Lucide React** - İkon kütüphanesi
-- **Sonner** - Toast bildirimleri
-- **Recharts** - Grafik ve chart bileşenleri
+### Deployment
+- **Vercel** - Hosting platformu
+- **PWA** - Progressive Web App desteği
 
-## 📁 Proje Yapısı
-
-```
-kumlu2/
-├── src/
-│   ├── components/          # Yeniden kullanılabilir bileşenler
-│   │   ├── ui/             # Temel UI bileşenleri
-│   │   ├── layout/         # Layout bileşenleri
-│   │   └── forms/          # Form bileşenleri
-│   ├── pages/              # Sayfa bileşenleri
-│   │   ├── Index.tsx       # Ana sayfa
-│   │   ├── Admin.tsx       # Admin paneli
-│   │   ├── Auth.tsx        # Giriş/Kayıt
-│   │   └── ...
-│   ├── hooks/              # Custom React hooks
-│   ├── contexts/           # React context'leri
-│   ├── integrations/       # Dış servis entegrasyonları
-│   │   └── supabase/       # Supabase konfigürasyonu
-│   ├── utils/              # Yardımcı fonksiyonlar
-│   └── types/              # TypeScript tip tanımları
-├── supabase/
-│   ├── migrations/         # Veritabanı migration dosyaları
-│   └── config.toml         # Supabase konfigürasyonu
-├── public/                 # Statik dosyalar
-└── dist/                   # Build çıktıları
-```
-
-## 🗄️ Veritabanı Yapısı
-
-### Ana Tablolar
-- **profiles** - Kullanıcı profilleri
-- **kategoriler** - Hizmet kategorileri
-- **fotograflar** - Galeri fotoğrafları
-- **video_galeri** - Video içerikleri
-- **kampanyalar** - Kampanya bilgileri
-- **servis_bedelleri** - Hizmet fiyatları
-- **hesaplama_urunleri** - Hesaplama ürünleri
-- **hesaplama_fiyatlar** - Hesaplama fiyat tablosu
-- **sayfa_icerikleri** - Dinamik sayfa içerikleri
-- **ayarlar** - Sistem ayarları
-- **kullanici_rolleri** - Kullanıcı rol yönetimi
-
-### Güvenlik Politikaları
-- Kullanıcılar sadece kendi verilerini görebilir/düzenleyebilir
-- Admin kullanıcılar tüm verilere erişebilir
-- Anonim kullanıcılar sadece genel içerikleri görebilir
-
-## 🚀 Kurulum ve Çalıştırma
+## Kurulum
 
 ### Gereksinimler
 - Node.js 18+
 - npm veya pnpm
 - Supabase hesabı
 
-### Kurulum Adımları
+### Adımlar
 
 1. **Projeyi klonlayın**
 ```bash
 git clone [repository-url]
-cd kumlu2
+cd kumlu2-master-15.08
 ```
 
 2. **Bağımlılıkları yükleyin**
@@ -111,29 +72,18 @@ npm install
 ```
 
 3. **Ortam değişkenlerini ayarlayın**
-```bash
-cp .env.example .env.local
-```
-
-4. **Supabase konfigürasyonu**
-- Supabase projenizi oluşturun
-- `.env.local` dosyasına API anahtarlarını ekleyin:
+`.env` dosyası oluşturun:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-5. **Veritabanı migration'larını çalıştırın**
-```bash
-supabase db push
-```
-
-6. **Geliştirme sunucusunu başlatın**
+4. **Geliştirme sunucusunu başlatın**
 ```bash
 npm run dev
 ```
 
-## 📝 Kullanılabilir Komutlar
+## Kullanılabilir Komutlar
 
 ```bash
 # Geliştirme sunucusu
@@ -142,115 +92,122 @@ npm run dev
 # Production build
 npm run build
 
-# Build önizleme
-npm start
-
 # TypeScript kontrolü
 npm run type-check
 
-# Kod kalitesi kontrolü
+# ESLint kontrolü
 npm run lint
+
+# Preview (build sonrası)
+npm start
 ```
 
-## 🔧 Konfigürasyon
+## Proje Yapısı
 
-### Supabase Ayarları
-- **Authentication**: Email/password ile giriş
-- **Row Level Security**: Tüm tablolarda aktif
-- **Real-time**: Kritik tablolarda canlı güncellemeler
+```
+src/
+├── components/          # React bileşenleri
+│   ├── ui/             # Temel UI bileşenleri
+│   ├── admin/          # Admin paneli bileşenleri
+│   └── ...             # Diğer bileşenler
+├── pages/              # Sayfa bileşenleri
+├── hooks/              # Custom React hooks
+├── contexts/           # React Context'ler
+├── utils/              # Yardımcı fonksiyonlar
+├── types/              # TypeScript tip tanımları
+└── lib/                # Kütüphane konfigürasyonları
 
-### Vercel Deployment
-- `vercel.json` dosyası ile otomatik deployment
-- API route'ları için rewrites konfigürasyonu
-- Environment variables otomatik yönetimi
+supabase/
+├── migrations/         # Veritabanı migration dosyaları
+└── config.toml         # Supabase konfigürasyonu
 
-## 👥 Kullanıcı Rolleri
+public/
+├── manifest.json       # PWA manifest
+├── sw.js              # Service Worker
+└── ...                # Statik dosyalar
+```
 
-### Admin
-- Tüm içerikleri yönetebilir
-- Kullanıcı rollerini düzenleyebilir
-- Sistem ayarlarına erişebilir
-- Analytics ve raporları görebilir
+## Veritabanı Yapısı
 
-### Kullanıcı
-- Kendi profilini yönetebilir
-- Hesaplama araçlarını kullanabilir
-- İletişim formlarını gönderebilir
+### Ana Tablolar
+- `fotograflar` - Fotoğraf galerisi
+- `kategoriler` - Fotoğraf kategorileri
+- `ayarlar` - Site ayarları
+- `auth.users` - Kullanıcı yönetimi (Supabase Auth)
 
-### Anonim
-- Genel içerikleri görüntüleyebilir
-- Hesaplama araçlarını kullanabilir
-- İletişim bilgilerine erişebilir
+### Storage Buckets
+- `fotograflar` - Fotoğraf dosyaları
+- `watermark` - Filigran dosyaları
+- `images` - Genel görsel dosyalar
 
-## 🔒 Güvenlik
+## Güvenlik
 
-- **HTTPS**: Tüm iletişim şifreli
-- **JWT Tokens**: Güvenli oturum yönetimi
-- **RLS Policies**: Veri seviyesinde güvenlik
-- **Input Validation**: Tüm kullanıcı girdileri doğrulanır
-- **XSS Protection**: Cross-site scripting koruması
+- **Row Level Security (RLS)** tüm tablolarda aktif
+- Admin yetkisi `admin@kumlu2.com` e-posta adresi ile sınırlı
+- Dosya yükleme boyut ve tip kısıtlamaları
+- CORS politikaları yapılandırılmış
 
-## 📱 Responsive Tasarım
+## Önemli Özellikler
 
-- **Mobile First**: Önce mobil tasarım yaklaşımı
-- **Breakpoints**: Tailwind CSS breakpoint'leri
-- **Touch Friendly**: Dokunmatik cihazlar için optimize
-- **Performance**: Hızlı yükleme süreleri
+### PWA Desteği
+- Offline çalışma kapasitesi
+- Mobil cihazlarda uygulama gibi yükleme
+- Push notification desteği (gelecek güncellemeler için)
 
-## 🚀 Deployment
+### Performance Optimizasyonları
+- Lazy loading
+- Image optimization
+- Code splitting
+- Caching stratejileri
 
-### Vercel (Önerilen)
-1. Vercel hesabınıza bağlayın
-2. Environment variables'ları ayarlayın
-3. Otomatik deployment aktif
+### SEO Optimizasyonu
+- Meta tags
+- Open Graph protokolü
+- Twitter Cards
+- Sitemap (gelecek güncellemeler için)
 
-### Manuel Deployment
-1. `npm run build` ile build alın
-2. `dist/` klasörünü sunucuya yükleyin
-3. Environment variables'ları ayarlayın
-
-## 🐛 Hata Ayıklama
+## Sorun Giderme
 
 ### Yaygın Sorunlar
 
-1. **Supabase Bağlantı Hatası**
-   - API anahtarlarını kontrol edin
-   - URL'nin doğru olduğundan emin olun
+1. **Supabase bağlantı hatası**
+   - `.env` dosyasındaki anahtarları kontrol edin
+   - Supabase projesinin aktif olduğundan emin olun
 
-2. **RLS Policy Hatası**
-   - Kullanıcı rollerini kontrol edin
-   - Policy'lerin doğru tanımlandığından emin olun
+2. **Fotoğraf yükleme hatası**
+   - Storage bucket izinlerini kontrol edin
+   - Dosya boyutu limitlerini kontrol edin (max 50MB)
 
-3. **Build Hatası**
-   - TypeScript hatalarını düzeltin
-   - Bağımlılıkları güncelleyin
+3. **Build hatası**
+   - `npm run type-check` ile TypeScript hatalarını kontrol edin
+   - `node_modules` klasörünü silip yeniden yükleyin
 
-## 📞 İletişim ve Destek
-
-- **E-posta**: [destek-email]
-- **Telefon**: [telefon-numarası]
-- **WhatsApp**: [whatsapp-numarası]
-
-## 📄 Lisans
-
-Bu proje [Lisans Türü] lisansı altında lisanslanmıştır.
-
-## 🤝 Katkıda Bulunma
+## Katkıda Bulunma
 
 1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'inizi push edin (`git push origin feature/AmazingFeature`)
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
+4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
 5. Pull Request oluşturun
 
-## 📈 Performans
+## Lisans
 
-- **Lighthouse Score**: 90+
-- **First Contentful Paint**: <2s
-- **Largest Contentful Paint**: <3s
-- **Cumulative Layout Shift**: <0.1
+Bu proje özel mülkiyettedir. Tüm hakları saklıdır.
+
+## İletişim
+
+- **Web**: [kumlufolyo.org](https://kumlufolyo.org)
+- **E-posta**: info@kumlufolyo.org
+- **Telefon**: +90 XXX XXX XX XX
+
+## Güncellemeler
+
+### Son Düzeltmeler (v1.0.1)
+- ✅ Ayarlar tablosu RLS politikaları düzeltildi
+- ✅ Storage bucket CORS ayarları güncellendi
+- ✅ WhatsApp widget touchstart event'i passive yapıldı
+- ✅ Performance optimizasyonları uygulandı
 
 ---
 
-**Son Güncelleme**: Ağustos 2024
-**Versiyon**: 1.0.0
+**Not**: Bu README dosyası projenin güncel durumunu yansıtmaktadır. Herhangi bir sorun yaşarsanız yukarıdaki sorun giderme bölümünü kontrol edin veya geliştirici ile iletişime geçin.
