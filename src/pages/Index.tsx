@@ -13,7 +13,6 @@ import { TeklifFormu } from "@/components/TeklifFormu";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getSliderImageUrl, preloadImages } from "@/utils/storageUtils";
 
 // Servis kartları - memoize edilmiş
 const services = [
@@ -107,31 +106,13 @@ ServicesGrid.displayName = "ServicesGrid";
 const Index = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
 
-  // Slider için fotoğrafları çek - optimize edilmiş query
+  // Slider için fotoğrafları çek - CORB hatası önlemi ile boş array döndür
   const { data: sliderPhotos } = useQuery({
     queryKey: ["slider-photos"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("fotograflar")
-        .select("id, dosya_yolu, baslik, aciklama, sira_no")
-        .eq("aktif", true)
-        .or("gorsel_tipi.eq.slider,kullanim_alani.cs.{ana-sayfa-slider}")
-        .order("sira_no", { ascending: true })
-        .limit(10); // Maksimum 10 slider görseli
-      
-      if (error) {
-        console.error('❌ Slider photos fetch error:', error);
-        return [];
-      }
-      
-      console.log('🖼️ Slider fotoğrafları yüklendi:', data?.length || 0);
-      
-      return data?.map(photo => ({
-        id: photo.id,
-        image: getSliderImageUrl(photo.dosya_yolu),
-        title: photo.baslik || "",
-        description: photo.aciklama || ""
-      })) || [];
+      // CORB hatası önlemi: Slider fotoğrafları deaktif edildi
+      console.log('🚫 Slider fotoğrafları CORB hatası nedeniyle deaktif edildi');
+      return [];
     },
     staleTime: 1000 * 60 * 5, // 5 dakika cache
     gcTime: 1000 * 60 * 10, // 10 dakika garbage collection
@@ -140,15 +121,10 @@ const Index = () => {
   // Slider verilerini memoize et
   const slides = useMemo(() => sliderPhotos || [], [sliderPhotos]);
 
-  // Image preloading - kritik görselleri önceden yükle
+  // Image preloading deaktif edildi - CORB hatası önlemi
   useEffect(() => {
-    if (slides.length > 0) {
-      // İlk 3 slider görselini preload et
-      const imageUrls = slides.slice(0, 3).map(slide => slide.image);
-      preloadImages(imageUrls, (loaded, total) => {
-        console.log(`🚀 Slider preload progress: ${loaded}/${total}`);
-      });
-    }
+    // Slider görselleri CORB hatası nedeniyle deaktif edildi
+    console.log('🚫 Slider preloading deaktif edildi - CORB hatası önlemi');
   }, [slides]);
 
 

@@ -51,27 +51,12 @@ export const getPhotoUrl = (dosyaYolu: string, bucketName: string = 'fotograflar
 
 /**
  * Slider resimleri için özel URL oluşturucu
- * ERR_BLOCKED_BY_ORB hatalarını önler
+ * CORB hatası nedeniyle deaktif edildi - sadece placeholder döndürür
  */
 export const getSliderImageUrl = (dosyaYolu: string): string => {
-  if (!dosyaYolu) {
-    return getPlaceholderUrl('slider');
-  }
-
-  // Önce images bucket'ından dene
-  let url = getStorageUrl('images', dosyaYolu);
-  
-  if (!url) {
-    // Sonra fotograflar bucket'ından dene
-    url = getStorageUrl('fotograflar', dosyaYolu);
-  }
-
-  if (!url) {
-    console.warn(`⚠️ Slider resmi bulunamadı: ${dosyaYolu}`);
-    return getPlaceholderUrl('slider');
-  }
-
-  return url;
+  // CORB hatası nedeniyle tüm slider görselleri deaktif edildi
+  console.warn(`⚠️ Slider görselleri CORB hatası nedeniyle deaktif: ${dosyaYolu}`);
+  return getPlaceholderUrl('slider');
 };
 
 /**

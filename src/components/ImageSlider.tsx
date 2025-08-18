@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Play, Pause, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { handleImageLoadError } from '@/utils/storageUtils';
@@ -52,124 +52,42 @@ const OptimizedImage = React.memo(({ src, alt, onClick, isActive }: {
 
 OptimizedImage.displayName = "OptimizedImage";
 
-export const ImageSlider = React.memo(({ slides, autoPlay = true, interval = 5000, onImageClick }: ImageSliderProps) => {
+const ImageSlider = ({ slides, onImageClick }: ImageSliderProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const goToSlide = useCallback((index: number) => {
-    setCurrentSlide(index);
-  }, []);
-
-  const goToPrevious = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  }, [slides.length]);
-
-  const goToNext = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  }, [slides.length]);
-
-  const handleImageClick = useCallback(() => {
-    if (onImageClick) {
-      onImageClick(currentSlide);
-    }
-  }, [onImageClick, currentSlide]);
-
-  // Otomatik geçiş
-  useEffect(() => {
-    if (!autoPlay || slides.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, interval);
-    return () => clearInterval(timer);
-  }, [autoPlay, interval, slides.length]);
-
-  // Klavye navigasyonu
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft") {
-        goToPrevious();
-      } else if (event.key === "ArrowRight") {
-        goToNext();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToPrevious, goToNext]);
-
-  if (slides.length === 0) {
+  // CORB hatası önlemi: Slider görselleri deaktif edildi
+  // Slides yoksa veya boşsa placeholder göster
+  if (!slides || slides.length === 0) {
     return (
-      <div className="relative h-64 bg-muted rounded-xl flex items-center justify-center">
-        <p className="text-muted-foreground">Henüz görsel eklenmemiş</p>
+      <div className="relative w-full h-64 sm:h-80 md:h-96 bg-gradient-to-r from-warm-orange to-coral-pink rounded-lg flex items-center justify-center">
+        <div className="text-center text-white">
+          <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+          <h3 className="text-lg font-semibold mb-1">Kumlu Folyo</h3>
+          <p className="text-sm opacity-90">Profesyonel Cam Kumlama ve Folyo Hizmetleri</p>
+        </div>
       </div>
     );
   }
 
+  // CORB hatası nedeniyle slider deaktif - sadece placeholder döndür
   return (
-    <div className="relative h-64 md:h-80 lg:h-[28rem] rounded-xl overflow-hidden group">
-      {/* Görseller */}
-      <div className="relative h-full">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-500",
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            )}
-          >
-            <OptimizedImage
-              src={slide.image}
-              alt={slide.title}
-              onClick={handleImageClick}
-              isActive={index === currentSlide}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          </div>
-        ))}
+    <div className="relative w-full h-64 sm:h-80 md:h-96 bg-gradient-to-r from-warm-orange to-coral-pink rounded-lg flex items-center justify-center">
+      <div className="text-center text-white">
+        <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+        <h3 className="text-lg font-semibold mb-1">Kumlu Folyo</h3>
+        <p className="text-sm opacity-90">Profesyonel Cam Kumlama ve Folyo Hizmetleri</p>
       </div>
-
-      {/* Navigasyon Okları */}
-      {slides.length > 1 && (
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={goToPrevious}
-            aria-label="Önceki görsel"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={goToNext}
-            aria-label="Sonraki görsel"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-        </>
-      )}
-
-      {/* Nokta Göstergeleri */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all",
-                index === currentSlide
-                  ? "bg-white scale-125"
-                  : "bg-white/50 hover:bg-white/75"
-              )}
-              aria-label={`${index + 1}. görsele git`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
-});
+};
 
 ImageSlider.displayName = "ImageSlider";
+
+export default ImageSlider;
+export { ImageSlider };
