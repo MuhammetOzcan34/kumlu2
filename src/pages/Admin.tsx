@@ -48,8 +48,11 @@ export default function Admin() {
     id: string;
     user_id: string;
     display_name?: string;
+    full_name?: string;
+    email?: string;
     role: string;
     created_at: string;
+    updated_at?: string;
   }
 
   interface Kategori {
@@ -90,10 +93,12 @@ export default function Admin() {
     platform: string;
     durum: string;
     butce_gunluk?: number;
+    kategori_id?: string;
     kategoriler?: {
       ad: string;
-    };
+    } | null;
     created_at: string;
+    updated_at?: string;
   }
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -256,13 +261,7 @@ export default function Admin() {
       setProfile(profileWithRole);
       
       if (userRole === "admin") {
-        console.log('🔑 Admin - Kullanıcı admin rolüne sahip, yönetim verileri yükleniyor');
-        try {
-          await loadAdminData();
-        } catch (adminDataError) {
-          console.warn('⚠️ Admin - Yönetim verileri yükleme hatası (devam ediliyor):', adminDataError);
-          // Yönetim verileri yüklenemese bile kullanıcıyı admin paneline al
-        }
+        console.log('🔑 Admin - Kullanıcı admin rolüne sahip');
       } else {
         console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', userRole);
       }
@@ -279,7 +278,7 @@ export default function Admin() {
       setDataLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  }, [user, toast, loadAdminData]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (user && !profile) {
@@ -287,6 +286,14 @@ export default function Admin() {
       loadUserProfile();
     }
   }, [user, profile, loadUserProfile]);
+
+  // Admin verileri için ayrı useEffect
+  useEffect(() => {
+    if (profile && profile.role === "admin") {
+      console.log('🔑 Admin - Admin rolü tespit edildi, yönetim verileri yükleniyor');
+      loadAdminData();
+    }
+  }, [profile, loadAdminData]);
 
   const loadAdminData = useCallback(async () => {
     console.log('🔄 Admin - Yönetim verileri yükleniyor...');
@@ -394,12 +401,12 @@ export default function Admin() {
     console.log('✅ Admin - Yönetim verileri yükleme işlemi tamamlandı');
   }, [toast]);
 
-  const handleKampanyaSubmit = () => {
+  const handleKampanyaSubmit = useCallback(() => {
     loadAdminData();
     setEditingKampanya(null);
-  };
+  }, [loadAdminData]);
 
-  const handleKampanyaDelete = async (id: string) => {
+  const handleKampanyaDelete = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from("reklam_kampanyalari")
@@ -418,7 +425,7 @@ export default function Admin() {
         variant: "destructive",
       });
     }
-  };
+  }, [loadAdminData, toast]);
 
   const getPlatformBadge = (platform: string) => {
     const variants: { [key: string]: "default" | "secondary" | "destructive" } = {
@@ -1026,7 +1033,7 @@ export default function Admin() {
                                     });
                                     
                                     // Profili yeniden yükle
-                                    await loadUserProfile(currentUser.id);
+                                    await loadUserProfile();
                                   }
                                 } catch (err) {
                                   console.error('❌ Beklenmeyen profil güncelleme hatası:', err);
