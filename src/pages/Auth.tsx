@@ -26,30 +26,55 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        if (!mounted) return;
         
-        // Kullanıcı giriş yaptığında admin paneline yönlendir
-        if (session?.user) {
-          navigate("/admin");
+        try {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Kullanıcı giriş yaptığında admin paneline yönlendir
+          if (session?.user) {
+            navigate("/admin");
+          }
+        } catch (error) {
+          console.error('Auth state change hatası:', error);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setCheckingSession(false);
-      
-      // Eğer zaten giriş yapılmışsa admin paneline yönlendir
-      if (session?.user) {
-        navigate("/admin");
-      }
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+        
+        try {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Eğer zaten giriş yapılmışsa admin paneline yönlendir
+          if (session?.user) {
+            navigate("/admin");
+          }
+        } catch (error) {
+          console.error('Oturum kontrolü hatası:', error);
+        }
+      })
+      .catch((error) => {
+        console.error('Oturum alma hatası:', error);
+      })
+      .finally(() => {
+        if (mounted) {
+          setCheckingSession(false);
+        }
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Profil oluşturma fonksiyonunu optimize et
@@ -70,6 +95,7 @@ export default function Auth() {
       }
     } catch (error) {
       console.error('Profil oluşturma işlemi başarısız:', error);
+      throw error;
     }
   }, []);
 
@@ -98,7 +124,17 @@ export default function Auth() {
 
       // Kullanıcı oluşturulduysa profil de oluştur (optimize edilmiş)
       if (data.user && data.user.email) {
-        await createUserProfile(data.user.id, data.user.email);
+        try {
+          await createUserProfile(data.user.id, data.user.email);
+        } catch (profileError) {
+          console.error('Profil oluşturma hatası:', profileError);
+          toast({
+            title: "Uyarı",
+            description: "Hesap oluşturuldu ancak profil ayarlanırken bir sorun oluştu. Lütfen tekrar giriş yapın.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       toast({
@@ -106,6 +142,7 @@ export default function Auth() {
         description: "E-posta adresinizi kontrol edin ve hesabınızı doğrulayın.",
       });
     } catch (error) {
+      console.error('Kayıt hatası:', error);
       toast({
         title: "Kayıt hatası",
         description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
@@ -138,6 +175,7 @@ export default function Auth() {
       navigate("/admin");
       
     } catch (error) {
+      console.error('Giriş hatası:', error);
       toast({
         title: "Giriş hatası",
         description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",

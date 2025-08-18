@@ -249,6 +249,8 @@ export const TeklifFormu = ({
             
             {/* Gizli input'lar */}
             <input
+              id="teklif-file-input"
+              name="files"
               ref={fileInputRef}
               type="file"
               multiple
@@ -257,6 +259,8 @@ export const TeklifFormu = ({
               className="hidden"
             />
             <input
+              id="teklif-camera-input"
+              name="camera"
               ref={cameraInputRef}
               type="file"
               accept="image/*"

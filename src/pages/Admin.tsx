@@ -189,8 +189,7 @@ export default function Admin() {
             variant: "destructive",
           });
         }
-        navigate("/auth");
-        return;
+        return; // Hata durumunda erken çık, finally bloğu loading'i false yapacak
       }
 
       console.log('✅ Admin - Kullanıcı profili yüklendi:', profileData);
@@ -209,10 +208,14 @@ export default function Admin() {
         console.log('✅ Admin - Kullanıcı rolü JWT token\'dan (app_metadata) alındı:', userRole);
         
         // Profiles tablosunu güncelle
-        await supabase
-          .from('profiles')
-          .update({ role: userRole, updated_at: new Date().toISOString() })
-          .eq('user_id', actualUserId);
+        try {
+          await supabase
+            .from('profiles')
+            .update({ role: userRole, updated_at: new Date().toISOString() })
+            .eq('user_id', actualUserId);
+        } catch (updateError) {
+          console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
+        }
       } 
       // 3. Üçüncü öncelik: user_metadata.role (fallback)
       else if (currentUser?.user_metadata?.role) {
@@ -220,30 +223,42 @@ export default function Admin() {
         console.log('✅ Admin - Kullanıcı rolü user_metadata\'dan alındı:', userRole);
         
         // Profiles tablosunu güncelle
-        await supabase
-          .from('profiles')
-          .update({ role: userRole, updated_at: new Date().toISOString() })
-          .eq('user_id', actualUserId);
-      }
-      // 4. Son çare: kullanici_rolleri tablosundan kontrol et
-      else {
-        const { data: roleData, error: roleError } = await supabase
-          .from("kullanici_rolleri")
-          .select("role, is_super_admin")
-          .eq("email", currentUser?.email)
-          .single();
-
-        if (!roleError && roleData) {
-          userRole = roleData.role;
-          console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
-          
-          // Profiles tablosunu güncelle
+        try {
           await supabase
             .from('profiles')
             .update({ role: userRole, updated_at: new Date().toISOString() })
             .eq('user_id', actualUserId);
-        } else {
-          console.log('⚠️ Admin - Hiçbir yerden rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
+        } catch (updateError) {
+          console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
+        }
+      }
+      // 4. Son çare: kullanici_rolleri tablosundan kontrol et
+      else {
+        try {
+          const { data: roleData, error: roleError } = await supabase
+            .from("kullanici_rolleri")
+            .select("role, is_super_admin")
+            .eq("email", currentUser?.email)
+            .single();
+
+          if (!roleError && roleData) {
+            userRole = roleData.role;
+            console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
+            
+            // Profiles tablosunu güncelle
+            try {
+              await supabase
+                .from('profiles')
+                .update({ role: userRole, updated_at: new Date().toISOString() })
+                .eq('user_id', actualUserId);
+            } catch (updateError) {
+              console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
+            }
+          } else {
+            console.log('⚠️ Admin - Hiçbir yerden rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
+          }
+        } catch (roleQueryError) {
+          console.warn('⚠️ Admin - Kullanıcı rolleri sorgusu hatası (devam ediliyor):', roleQueryError);
         }
       }
       
@@ -257,7 +272,12 @@ export default function Admin() {
       
       if (userRole === "admin") {
         console.log('🔑 Admin - Kullanıcı admin rolüne sahip, yönetim verileri yükleniyor');
-        await loadAdminData();
+        try {
+          await loadAdminData();
+        } catch (adminDataError) {
+          console.warn('⚠️ Admin - Yönetim verileri yükleme hatası (devam ediliyor):', adminDataError);
+          // Yönetim verileri yüklenemese bile kullanıcıyı admin paneline al
+        }
       } else {
         console.warn('⚠️ Admin - Kullanıcı admin rolüne sahip değil:', userRole);
       }
@@ -269,97 +289,222 @@ export default function Admin() {
         description: `Bir hata oluştu: ${errorMessage}`,
         variant: "destructive",
       });
+      // Hata durumunda auth sayfasına yönlendir
+      navigate("/auth");
     } finally {
       setLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  }, [navigate, toast]);
+  }, [navigate, toast, loading]);
 
   useEffect(() => {
     console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
     let timeoutId: NodeJS.Timeout;
+    let mounted = true; // Component mount durumu takibi
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔄 Admin - Auth durumu değişti:', event, session ? 'Oturum var' : 'Oturum yok');
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-          navigate("/auth");
-        } else {
-          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          // Debounce ile aşırı istek önleme ve sonsuz döngü engelleme
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            loadUserProfile(session.user.id, session);
-          }, 300);
+      async (event, session) => {
+        try {
+          console.log('🔄 Admin - Auth durumu değişti:', event, session ? 'Oturum var' : 'Oturum yok');
+          
+          if (!mounted) {
+            console.log('⚠️ Admin - Component unmount olmuş, işlem iptal ediliyor');
+            return;
+          }
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (!session?.user) {
+            console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
+            if (mounted) {
+              setLoading(false);
+              navigate("/auth");
+            }
+          } else {
+            console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
+            // Debounce ile aşırı istek önleme ve sonsuz döngü engelleme
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(async () => {
+              if (mounted) {
+                try {
+                  await loadUserProfile(session.user.id, session);
+                } catch (profileError) {
+                  console.error('❌ Admin - Auth state change profil yükleme hatası:', profileError);
+                  if (mounted) {
+                    setLoading(false);
+                    toast({
+                      title: "Profil Yükleme Hatası",
+                      description: "Profil bilgileri yüklenirken bir hata oluştu.",
+                      variant: "destructive",
+                    });
+                  }
+                }
+              }
+            }, 300);
+          }
+        } catch (error) {
+          console.error('❌ Admin - Auth state change hatası:', error);
+          if (mounted) {
+            setLoading(false);
+            toast({
+              title: "Oturum Hatası",
+              description: "Oturum durumu kontrol edilirken bir hata oluştu.",
+              variant: "destructive",
+            });
+          }
         }
       }
     );
 
     // Mevcut oturum kontrolü - sadece ilk yüklemede
-    console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-        navigate("/auth");
-      } else {
-        console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-        loadUserProfile(session.user.id, session);
+    const checkInitialSession = async () => {
+      try {
+        console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Admin - Oturum kontrolü hatası:', error);
+          if (mounted) {
+            setLoading(false);
+            toast({
+              title: "Oturum Kontrolü Hatası",
+              description: `Oturum kontrol edilemedi: ${error.message}`,
+              variant: "destructive",
+            });
+            navigate("/auth");
+          }
+          return;
+        }
+        
+        console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
+        
+        if (!mounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session?.user) {
+          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
+          setLoading(false);
+          navigate("/auth");
+        } else {
+          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
+          try {
+            await loadUserProfile(session.user.id, session);
+          } catch (profileError) {
+            console.error('❌ Admin - İlk profil yükleme hatası:', profileError);
+            if (mounted) {
+              setLoading(false);
+              toast({
+                title: "Profil Yükleme Hatası",
+                description: "Profil bilgileri yüklenirken bir hata oluştu.",
+                variant: "destructive",
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Admin - Oturum kontrolü sırasında beklenmeyen hata:', error);
+        if (mounted) {
+          setLoading(false);
+          toast({
+            title: "Beklenmeyen Hata",
+            description: "Oturum kontrol edilirken beklenmeyen bir hata oluştu.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
       }
-    }).catch(error => {
-      console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
-      setLoading(false); // Hata durumunda loading'i false yap
-    });
+    };
+    
+    checkInitialSession();
 
     return () => {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
+      mounted = false;
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [navigate]); // loadUserProfile dependency'sini kaldırdık - sonsuz döngü önleme
 
   const loadAdminData = async () => {
+    console.log('🔄 Admin - Yönetim verileri yükleniyor...');
+    
+    // Kategorileri yükle
     try {
-      console.log('🔄 Admin - Yönetim verileri yükleniyor...');
-      
-      // Kategorileri yükle
       console.log('📋 Admin - Kategoriler yükleniyor...');
       const kategorilerRes = await supabase.from("kategoriler").select("*").order("sira_no");
       if (kategorilerRes.error) {
         console.error('❌ Admin - Kategoriler yüklenirken hata:', kategorilerRes.error);
+        toast({
+          title: "Kategoriler Yükleme Hatası",
+          description: `Kategoriler yüklenemedi: ${kategorilerRes.error.message}`,
+          variant: "destructive",
+        });
       } else {
         console.log(`✅ Admin - ${kategorilerRes.data?.length || 0} kategori yüklendi`);
         setKategoriler(kategorilerRes.data || []);
       }
-      
-      // Fotoğrafları yükle
+    } catch (error) {
+      console.error('❌ Admin - Kategoriler sorgusu hatası:', error);
+      toast({
+        title: "Kategoriler Hatası",
+        description: "Kategoriler sorgulanırken beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+    
+    // Fotoğrafları yükle
+    try {
       console.log('🖼️ Admin - Fotoğraflar yükleniyor...');
       const fotograflarRes = await supabase.from("fotograflar").select("*").order("sira_no");
       if (fotograflarRes.error) {
         console.error('❌ Admin - Fotoğraflar yüklenirken hata:', fotograflarRes.error);
+        toast({
+          title: "Fotoğraflar Yükleme Hatası",
+          description: `Fotoğraflar yüklenemedi: ${fotograflarRes.error.message}`,
+          variant: "destructive",
+        });
       } else {
         console.log(`✅ Admin - ${fotograflarRes.data?.length || 0} fotoğraf yüklendi`);
         setFotograflar(fotograflarRes.data || []);
       }
-      
-      // Ayarları yükle
+    } catch (error) {
+      console.error('❌ Admin - Fotoğraflar sorgusu hatası:', error);
+      toast({
+        title: "Fotoğraflar Hatası",
+        description: "Fotoğraflar sorgulanırken beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+    
+    // Ayarları yükle
+    try {
       console.log('⚙️ Admin - Ayarlar yükleniyor...');
       const ayarlarRes = await supabase.from("ayarlar").select("*").order("anahtar");
       if (ayarlarRes.error) {
         console.error('❌ Admin - Ayarlar yüklenirken hata:', ayarlarRes.error);
+        toast({
+          title: "Ayarlar Yükleme Hatası",
+          description: `Ayarlar yüklenemedi: ${ayarlarRes.error.message}`,
+          variant: "destructive",
+        });
       } else {
         console.log(`✅ Admin - ${ayarlarRes.data?.length || 0} ayar yüklendi`);
         setAyarlar(ayarlarRes.data || []);
       }
-      
-      // Kampanyaları yükle
+    } catch (error) {
+      console.error('❌ Admin - Ayarlar sorgusu hatası:', error);
+      toast({
+        title: "Ayarlar Hatası",
+        description: "Ayarlar sorgulanırken beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+    
+    // Kampanyaları yükle
+    try {
       console.log('📢 Admin - Kampanyalar yükleniyor...');
       const kampanyalarRes = await supabase.from("reklam_kampanyalari").select(`
         *,
@@ -368,15 +513,25 @@ export default function Admin() {
       
       if (kampanyalarRes.error) {
         console.error('❌ Admin - Kampanyalar yüklenirken hata:', kampanyalarRes.error);
+        toast({
+          title: "Kampanyalar Yükleme Hatası",
+          description: `Kampanyalar yüklenemedi: ${kampanyalarRes.error.message}`,
+          variant: "destructive",
+        });
       } else {
         console.log(`✅ Admin - ${kampanyalarRes.data?.length || 0} kampanya yüklendi`);
         setKampanyalar(kampanyalarRes.data || []);
       }
-      
-      console.log('✅ Admin - Tüm yönetim verileri başarıyla yüklendi');
     } catch (error) {
-      console.error("❌ Admin - Veri yükleme hatası:", error);
+      console.error('❌ Admin - Kampanyalar sorgusu hatası:', error);
+      toast({
+        title: "Kampanyalar Hatası",
+        description: "Kampanyalar sorgulanırken beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
     }
+    
+    console.log('✅ Admin - Yönetim verileri yükleme işlemi tamamlandı');
   };
 
   const handleKampanyaSubmit = () => {
