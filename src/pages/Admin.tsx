@@ -277,6 +277,7 @@ export default function Admin() {
 
   useEffect(() => {
     console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
+    let timeoutId: NodeJS.Timeout;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -289,17 +290,16 @@ export default function Admin() {
           navigate("/auth");
         } else {
           console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          // Debounce ile aşırı istek önleme
-          const timeoutId = setTimeout(() => {
+          // Debounce ile aşırı istek önleme ve sonsuz döngü engelleme
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
             loadUserProfile(session.user.id, session);
           }, 300);
-          
-          return () => clearTimeout(timeoutId);
         }
       }
     );
 
-    // Mevcut oturum kontrolü
+    // Mevcut oturum kontrolü - sadece ilk yüklemede
     console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
@@ -315,13 +315,15 @@ export default function Admin() {
       }
     }).catch(error => {
       console.error('❌ Admin - Oturum kontrolü sırasında hata:', error);
+      setLoading(false); // Hata durumunda loading'i false yap
     });
 
     return () => {
       console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [navigate, loadUserProfile]); // loadUserProfile useCallback ile optimize edildi
+  }, [navigate]); // loadUserProfile dependency'sini kaldırdık - sonsuz döngü önleme
 
   const loadAdminData = async () => {
     try {

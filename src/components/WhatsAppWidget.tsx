@@ -75,40 +75,37 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
   const isMobile = window.innerWidth <= 768;
 
   useEffect(() => {
-    // Eğer WhatsApp devre dışı bırakılmışsa event listener'ları ekleme
-    if (!whatsappEnabled) {
-      return;
-    }
-
-
+    if (!isDragging || !isMobile) return;
+    
+    // Modern AbortController kullanarak event listener'ları yönet
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging && isMobile) {
-        const deltaX = e.clientX - dragStart.x;
-        const deltaY = e.clientY - dragStart.y;
-        
-        setPosition(prev => ({
-          x: Math.max(0, Math.min(window.innerWidth - 48, prev.x + deltaX)),
-          y: Math.max(0, Math.min(window.innerHeight - 48, prev.y + deltaY))
-        }));
-        
-        setDragStart({ x: e.clientX, y: e.clientY });
-      }
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
+      
+      setPosition(prev => ({
+        x: Math.max(0, Math.min(window.innerWidth - 48, prev.x + deltaX)),
+        y: Math.max(0, Math.min(window.innerHeight - 48, prev.y + deltaY))
+      }));
+      
+      setDragStart({ x: e.clientX, y: e.clientY });
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (isDragging && isMobile) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - dragStart.x;
-        const deltaY = touch.clientY - dragStart.y;
-        
-        setPosition(prev => ({
-          x: Math.max(0, Math.min(window.innerWidth - 48, prev.x + deltaX)),
-          y: Math.max(0, Math.min(window.innerHeight - 48, prev.y + deltaY))
-        }));
-        
-        setDragStart({ x: touch.clientX, y: touch.clientY });
-      }
+      const touch = e.touches[0];
+      if (!touch) return;
+      
+      const deltaX = touch.clientX - dragStart.x;
+      const deltaY = touch.clientY - dragStart.y;
+      
+      setPosition(prev => ({
+        x: Math.max(0, Math.min(window.innerWidth - 48, prev.x + deltaX)),
+        y: Math.max(0, Math.min(window.innerHeight - 48, prev.y + deltaY))
+      }));
+      
+      setDragStart({ x: touch.clientX, y: touch.clientY });
     };
 
     const handleMouseUp = () => {
@@ -119,18 +116,15 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
       setIsDragging(false);
     };
 
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
-      document.addEventListener("touchend", handleTouchEnd, { passive: true });
-    }
+    // Modern event listener ekleme - AbortController ile otomatik cleanup
+    document.addEventListener("mousemove", handleMouseMove, { signal });
+    document.addEventListener("mouseup", handleMouseUp, { signal });
+    document.addEventListener("touchmove", handleTouchMove, { passive: true, signal });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true, signal });
 
+    // Cleanup - AbortController tüm event listener'ları otomatik olarak kaldırır
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
+      abortController.abort();
     };
   }, [isDragging, dragStart, isMobile, whatsappEnabled]);
 
