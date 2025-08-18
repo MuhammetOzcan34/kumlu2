@@ -168,25 +168,35 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           const selectedCategoryData = selectedCategory ? filteredCategories.find(c => c.id === selectedCategory) : null;
           console.log('📋 Seçilen kategori verisi:', selectedCategoryData);
           
-          // Save to database
+          // Save to database - Upsert ile çakışma kontrolü
+          const fotografData = {
+            baslik: file.name.replace(/\.[^/.]+$/, ""), // Dosya adını uzantısız olarak başlık yap
+            aciklama: "", // Açıklama boş bırak
+            dosya_yolu: storageData.path,
+            kategori_id: selectedCategory && typeof selectedCategory === 'string' && selectedCategory.trim() !== '' && selectedCategory.trim() !== 'undefined' ? selectedCategory.trim() : null,
+            kategori_adi: selectedCategoryData?.ad || null,
+            kullanim_alani: [selectedUsageArea],
+            gorsel_tipi: gorselTipi,
+            mime_type: 'image/jpeg',
+            boyut: processedBlob.size,
+            logo_eklendi: addLogo && logoImage !== null,
+            aktif: true,
+            sira_no: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
           const { error: dbError } = await supabase
             .from('fotograflar')
-            .insert({
-              baslik: file.name.replace(/\.[^/.]+$/, ""), // Dosya adını uzantısız olarak başlık yap
-              aciklama: "", // Açıklama boş bırak
-              dosya_yolu: storageData.path,
-              kategori_id: selectedCategory && typeof selectedCategory === 'string' && selectedCategory.trim() !== '' && selectedCategory.trim() !== 'undefined' ? selectedCategory.trim() : null,
-              kategori_adi: selectedCategoryData?.ad || null,
-              kullanim_alani: [selectedUsageArea],
-              gorsel_tipi: gorselTipi,
-              mime_type: 'image/jpeg',
-              boyut: processedBlob.size,
-              logo_eklendi: addLogo && logoImage !== null,
-              aktif: true,
-              sira_no: 0
+            .upsert(fotografData, {
+              onConflict: 'dosya_yolu',
+              ignoreDuplicates: false
             });
 
-          if (dbError) throw dbError;
+          if (dbError) {
+            console.error('❌ Veritabanı hatası:', dbError);
+            throw dbError;
+          }
           
           console.log(`✅ Tamamlandı: ${fileName}`);
           return { success: true, fileName };
@@ -238,12 +248,14 @@ export const PhotoUploadManager: React.FC<PhotoUploadManagerProps> = ({ onPhotoU
           <Label htmlFor="photos">Fotoğraflar</Label>
           <Input
             id="photos"
+            name="photos"
             type="file"
             multiple
             accept="image/*"
             ref={photoInputRef}
             onChange={(e) => setPhotos(e.target.files)}
             className="mt-1"
+            autoComplete="off"
           />
           {photos && (
             <p className="text-sm text-muted-foreground mt-1">

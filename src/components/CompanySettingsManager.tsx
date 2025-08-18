@@ -113,7 +113,7 @@ export const CompanySettingsManager: React.FC = () => {
         setLogoFile(null);
       }
 
-      // Tüm ayarları güncelle
+      // Tüm ayarları güncelle - Batch upsert ile optimize edilmiş
       const updates = [];
       for (const [key, value] of Object.entries(settings)) {
         if (key === 'firma_logo_url') {
@@ -131,16 +131,15 @@ export const CompanySettingsManager: React.FC = () => {
         }
       }
 
-      // Batch upsert işlemi
-      for (const update of updates) {
-        const { error } = await supabase
-          .from('ayarlar')
-          .upsert(update, { 
-            onConflict: 'anahtar'
-          });
+      // Batch upsert işlemi - Tek seferde tüm ayarları kaydet
+      const { error } = await supabase
+        .from('ayarlar')
+        .upsert(updates, { 
+          onConflict: 'anahtar',
+          ignoreDuplicates: false
+        });
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // State'i güncelle
       setSettings(prev => ({
@@ -204,9 +203,11 @@ export const CompanySettingsManager: React.FC = () => {
             <Label htmlFor="firma_adi">Firma Adı *</Label>
             <Input
               id="firma_adi"
+              name="firma_adi"
               value={settings.firma_adi}
               onChange={(e) => handleInputChange('firma_adi', e.target.value)}
               placeholder="Firma adınızı girin"
+              autoComplete="organization"
             />
           </div>
 
@@ -214,10 +215,12 @@ export const CompanySettingsManager: React.FC = () => {
             <Label htmlFor="firma_email">E-posta *</Label>
             <Input
               id="firma_email"
+              name="firma_email"
               type="email"
               value={settings.firma_email}
               onChange={(e) => handleInputChange('firma_email', e.target.value)}
               placeholder="info@firmaniz.com"
+              autoComplete="email"
             />
           </div>
 
@@ -225,9 +228,12 @@ export const CompanySettingsManager: React.FC = () => {
             <Label htmlFor="firma_telefon">Telefon</Label>
             <Input
               id="firma_telefon"
+              name="firma_telefon"
+              type="tel"
               value={settings.firma_telefon}
               onChange={(e) => handleInputChange('firma_telefon', e.target.value)}
               placeholder="+90 (xxx) xxx xx xx"
+              autoComplete="tel"
             />
           </div>
 
@@ -235,9 +241,12 @@ export const CompanySettingsManager: React.FC = () => {
             <Label htmlFor="firma_website">Website</Label>
             <Input
               id="firma_website"
+              name="firma_website"
+              type="url"
               value={settings.firma_website}
               onChange={(e) => handleInputChange('firma_website', e.target.value)}
               placeholder="www.firmaniz.com"
+              autoComplete="url"
             />
           </div>
         </div>
@@ -246,10 +255,12 @@ export const CompanySettingsManager: React.FC = () => {
           <Label htmlFor="firma_adres">Adres</Label>
           <Textarea
             id="firma_adres"
+            name="firma_adres"
             value={settings.firma_adres}
             onChange={(e) => handleInputChange('firma_adres', e.target.value)}
             placeholder="Firma adresinizi girin"
             rows={3}
+            autoComplete="street-address"
           />
         </div>
 
@@ -257,10 +268,12 @@ export const CompanySettingsManager: React.FC = () => {
           <Label htmlFor="firma_calisma_saatleri">Çalışma Saatleri</Label>
           <Textarea
             id="firma_calisma_saatleri"
+            name="firma_calisma_saatleri"
             value={settings.firma_calisma_saatleri}
             onChange={(e) => handleInputChange('firma_calisma_saatleri', e.target.value)}
             placeholder="Pazartesi - Cuma: 08:00 - 18:00&#10;Cumartesi: 09:00 - 17:00&#10;Pazar: Kapalı"
             rows={4}
+            autoComplete="off"
           />
           <p className="text-xs text-muted-foreground mt-1">
             Her satıra bir çalışma günü yazın. Örnek: Pazartesi - Cuma: 08:00 - 18:00
@@ -302,12 +315,14 @@ export const CompanySettingsManager: React.FC = () => {
             {/* Logo Upload */}
             <Input
               id="logo"
+              name="logo_upload"
               type="file"
               accept="image/*"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) setLogoFile(file);
               }}
+              autoComplete="off"
             />
             
             {logoFile && (

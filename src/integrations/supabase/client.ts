@@ -50,6 +50,25 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
       }, 12000); // 12 saniye timeout (daha agresif)
 
       try {
+        // JWT token'ı localStorage'dan al (döngüsel referansı önlemek için)
+        let authToken = SUPABASE_ANON_KEY;
+        try {
+          const storedSession = localStorage.getItem('sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
+          if (storedSession) {
+            const sessionData = JSON.parse(storedSession);
+            if (sessionData?.access_token && sessionData?.expires_at > Date.now() / 1000) {
+              authToken = sessionData.access_token;
+              console.log('🔑 JWT token localStorage\'dan alındı:', authToken.substring(0, 20) + '...');
+            } else {
+              console.log('⚠️ JWT token süresi dolmuş veya geçersiz, anon key kullanılıyor');
+            }
+          } else {
+            console.log('⚠️ JWT token localStorage\'da bulunamadı, anon key kullanılıyor');
+          }
+        } catch (tokenError) {
+          console.warn('⚠️ JWT token alınırken hata:', tokenError);
+        }
+
         const response = await fetch(url, {
           ...options,
           signal: controller.signal,
@@ -58,7 +77,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
             'Accept': 'application/json, text/plain, */*',
             ...options.headers,
             'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${authToken}`,
             'Cache-Control': 'public, max-age=3600',
             'Connection': 'keep-alive',
             'Keep-Alive': 'timeout=5, max=100', // Connection pooling

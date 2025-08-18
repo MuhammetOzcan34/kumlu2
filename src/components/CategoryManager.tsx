@@ -159,30 +159,39 @@ export const CategoryManager: React.FC = () => {
     }
 
     try {
+      // Kategori verilerini hazırla
+      const kategoriData = {
+        ad: formData.ad,
+        slug: formData.slug,
+        aciklama: formData.aciklama,
+        tip: formData.tip,
+        aktif: formData.aktif,
+        sira_no: formData.sira_no,
+        updated_at: new Date().toISOString()
+      };
+
       if (editingCategory) {
-        // Güncelleme
-        console.log('📝 CategoryManager - Kategori güncelleniyor:', editingCategory.id, formData);
-        const { error, data } = await supabase
-          .from('kategoriler')
-          .update(formData)
-          .eq('id', editingCategory.id)
-          .select();
-
-        if (error) throw error;
-        console.log('✅ CategoryManager - Kategori başarıyla güncellendi:', data?.[0]?.id, formData.ad);
-        toast.success('Kategori başarıyla güncellendi');
+        // Güncelleme için ID ekle
+        kategoriData.id = editingCategory.id;
       } else {
-        // Yeni ekleme
-        console.log('➕ CategoryManager - Yeni kategori ekleniyor:', formData);
-        const { error, data } = await supabase
-          .from('kategoriler')
-          .insert(formData)
-          .select();
-
-        if (error) throw error;
-        console.log('✅ CategoryManager - Kategori başarıyla eklendi:', data?.[0]?.id, formData.ad);
-        toast.success('Kategori başarıyla eklendi');
+        // Yeni kategori için created_at ekle
+        kategoriData.created_at = new Date().toISOString();
       }
+
+      // Upsert işlemi - Hem ekleme hem güncelleme için tek method
+      const { error } = await supabase
+        .from('kategoriler')
+        .upsert(kategoriData, {
+          onConflict: editingCategory ? 'id' : 'slug',
+          ignoreDuplicates: false
+        });
+
+      if (error) {
+        console.error('❌ Kategori kayıt hatası:', error);
+        throw error;
+      }
+
+      toast.success(editingCategory ? 'Kategori başarıyla güncellendi' : 'Kategori başarıyla eklendi');
 
       closeDialog();
       
@@ -371,9 +380,11 @@ export const CategoryManager: React.FC = () => {
                 <Label htmlFor="kategori-ad">Kategori Adı *</Label>
                 <Input
                   id="kategori-ad"
+                  name="kategori_ad"
                   value={formData.ad}
                   onChange={(e) => handleFormChange('ad', e.target.value)}
                   placeholder="Kategori adını girin"
+                  autoComplete="off"
                 />
               </div>
 
@@ -381,9 +392,11 @@ export const CategoryManager: React.FC = () => {
                 <Label htmlFor="kategori-slug">Slug</Label>
                 <Input
                   id="kategori-slug"
+                  name="kategori_slug"
                   value={formData.slug}
                   onChange={(e) => handleFormChange('slug', e.target.value)}
                   placeholder="kategori-slug"
+                  autoComplete="off"
                 />
               </div>
 
@@ -408,10 +421,12 @@ export const CategoryManager: React.FC = () => {
                 <Label htmlFor="kategori-sira-no">Sıra Numarası</Label>
                 <Input
                   id="kategori-sira-no"
+                  name="kategori_sira_no"
                   type="number"
                   value={formData.sira_no}
                   onChange={(e) => handleFormChange('sira_no', parseInt(e.target.value) || 0)}
                   min="0"
+                  autoComplete="off"
                 />
               </div>
 
@@ -419,10 +434,12 @@ export const CategoryManager: React.FC = () => {
                 <Label htmlFor="kategori-aciklama">Açıklama</Label>
                 <Textarea
                   id="kategori-aciklama"
+                  name="kategori_aciklama"
                   value={formData.aciklama}
                   onChange={(e) => handleFormChange('aciklama', e.target.value)}
                   placeholder="Kategori açıklaması"
                   rows={3}
+                  autoComplete="off"
                 />
               </div>
             </div>
