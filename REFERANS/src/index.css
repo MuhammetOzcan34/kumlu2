@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Açık tema - Sıcak ve modern renkler */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 24 90% 58%; /* Sıcak turuncu */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9.8% 10%;
+
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+
+    --accent: 12 95% 62%; /* Parlak coral */
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 24 90% 58%;
+
+    /* Özel sıcak renkler */
+    --warm-orange: 24 90% 58%;
+    --coral-pink: 12 95% 62%;
+    --amber-gold: 45 93% 58%;
+    --sunset-red: 4 90% 65%;
+
+    /* Gradientler */
+    --gradient-primary: linear-gradient(135deg, hsl(24 90% 58%), hsl(12 95% 62%));
+    --gradient-glass: linear-gradient(180deg, hsl(24 90% 58% / 0.1), hsl(12 95% 62% / 0.05));
+    
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 15%;
+    --sidebar-primary: 200 85% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 95%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 215 15% 88%;
+    --sidebar-ring: 200 85% 50%;
+  }
+
+  .dark {
+    /* Koyu tema - Sıcak ve modern koyu renkler */
+    --background: 20 14.3% 4.1%;
+    --foreground: 0 0% 95%;
+
+    --card: 24 9.8% 8%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 24 9.8% 8%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 20.5 90.2% 48.2%; /* Sıcak turuncu */
+    --primary-foreground: 60 9.1% 97.8%;
+
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+
+    --accent: 12 76% 61%; /* Parlak coral */
+    --accent-foreground: 60 9.1% 97.8%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 20.5 90.2% 48.2%;
+
+    /* Koyu tema sıcak renkler */
+    --warm-orange: 20.5 90.2% 48.2%;
+    --coral-pink: 12 76% 61%;
+    --amber-gold: 45 93% 47%;
+    --sunset-red: 4 90% 58%;
+
+    /* Koyu tema gradientleri */
+    --gradient-primary: linear-gradient(135deg, hsl(20.5 90.2% 48.2%), hsl(12 76% 61%));
+    --gradient-glass: linear-gradient(180deg, hsl(20.5 90.2% 48.2% / 0.15), hsl(12 76% 61% / 0.08));
+
+    --sidebar-background: 222 25% 8%;
+    --sidebar-foreground: 210 15% 92%;
+    --sidebar-primary: 200 85% 60%;
+    --sidebar-primary-foreground: 222 25% 8%;
+    --sidebar-accent: 222 20% 15%;
+    --sidebar-accent-foreground: 210 15% 85%;
+    --sidebar-border: 222 20% 18%;
+    --sidebar-ring: 200 85% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* PWA ve mobil optimizasyonları */
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark mode default */
+  html {
+    @apply dark;
+  }
+}
+
+@layer components {
+  /* Mobil-first buton stilleri */
+  .btn-mobile {
+    @apply h-12 px-4 rounded-xl font-medium transition-all duration-300;
+    @apply bg-gradient-to-r from-primary to-accent text-primary-foreground;
+    @apply hover:shadow-lg hover:scale-105 active:scale-95;
+  }
+
+  /* Mobil hizmet kartları */
+  .service-card-mobile {
+    @apply h-24;
+  }
+
+  /* Cam efekti kartlar */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+    @apply rounded-xl shadow-lg;
+    background: var(--gradient-glass);
+  }
+
+  /* Mobil bottom navigation */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50;
+    @apply bg-card/95 backdrop-blur-md border-t border-border;
+    @apply px-4 py-2 safe-area-inset-bottom;
+  }
+
+
+  /* Instagram benzeri galeri */
+  .gallery-grid {
+    @apply grid grid-cols-3 gap-1 md:gap-2;
+  }
+
+  /* Kategori sekmeler */
+  .category-tabs {
+    @apply flex overflow-x-auto space-x-2 px-4 py-2;
+    @apply scrollbar-hide;
+  }
+
+  .category-tab {
+    @apply flex-none px-4 py-2 rounded-full text-sm font-medium;
+    @apply bg-muted text-muted-foreground;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply transition-all duration-200;
+  }
+
+  .category-tab.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Scrollbar gizleme */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area support */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}

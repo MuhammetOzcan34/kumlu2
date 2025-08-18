@@ -1,19 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import type { User, Session } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -21,51 +15,34 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Mevcut oturumu kontrol et
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          navigate("/admin");
+        }
+      }
+    );
+
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session) {
-        navigate('/admin');
-      }
-    });
-
-    // Oturum değişikliklerini dinle
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session) {
-        navigate('/admin');
+      
+      if (session?.user) {
+        navigate("/admin");
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  const createUserProfile = async (userId: string, userEmail: string | undefined) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: userId,
-          email: userEmail,
-          display_name: userEmail?.split('@')[0] || 'Kullanıcı',
-          role: userEmail === 'admin@kumlu2.com' ? 'admin' : 'user'
-        });
-
-      if (error && error.code !== '23505') {
-        console.error('Profil oluşturma hatası:', error);
-        throw error;
-      }
-    } catch (error) {
-      console.error('Profil oluşturma işlemi başarısız:', error);
-      throw error;
-    }
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,39 +51,24 @@ export default function Auth() {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      // Kullanıcı rolünü belirle (admin email kontrolü)
-      const userRole = email === 'admin@kumlu2.com' ? 'admin' : 'user';
-
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            role: userRole // Role bilgisini raw_app_meta_data içine ekle
-          }
-        },
+          emailRedirectTo: redirectUrl
+        }
       });
 
       if (error) throw error;
-
-      if (data.user && data.user.email) {
-        try {
-          await createUserProfile(data.user.id, data.user.email);
-        } catch (profileError) {
-          console.error('Profil oluşturma hatası:', profileError);
-        }
-      }
 
       toast({
         title: "Kayıt başarılı",
         description: "E-posta adresinizi kontrol edin ve hesabınızı doğrulayın.",
       });
-    } catch (error) {
-      console.error('Kayıt hatası:', error);
+    } catch (error: any) {
       toast({
         title: "Kayıt hatası",
-        description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -119,7 +81,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -130,12 +92,10 @@ export default function Auth() {
         title: "Giriş başarılı",
         description: "Yönetim paneline yönlendiriliyorsunuz.",
       });
-      
-    } catch (error) {
-      console.error('Giriş hatası:', error);
+    } catch (error: any) {
       toast({
         title: "Giriş hatası",
-        description: error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -143,19 +103,13 @@ export default function Auth() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-gray-600">Yükleniyor...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Yönetim Paneli</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Yönetim Paneli
+          </CardTitle>
           <CardDescription className="text-center">
             Giriş yapın veya yeni hesap oluşturun
           </CardDescription>
@@ -166,34 +120,28 @@ export default function Auth() {
               <TabsTrigger value="signin">Giriş Yap</TabsTrigger>
               <TabsTrigger value="signup">Kayıt Ol</TabsTrigger>
             </TabsList>
-
+            
             <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">E-posta</Label>
+                  <Label htmlFor="email">E-posta</Label>
                   <Input
-                    id="signin-email"
-                    name="email"
+                    id="email"
                     type="email"
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
                     required
-                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Şifre</Label>
+                  <Label htmlFor="password">Şifre</Label>
                   <Input
-                    id="signin-password"
-                    name="password"
+                    id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
                     required
-                    disabled={loading}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -201,34 +149,28 @@ export default function Auth() {
                 </Button>
               </form>
             </TabsContent>
-
+            
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">E-posta</Label>
                   <Input
                     id="signup-email"
-                    name="signup-email"
                     type="email"
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
                     required
-                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Şifre</Label>
                   <Input
                     id="signup-password"
-                    name="signup-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
                     required
-                    disabled={loading}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
