@@ -7,6 +7,8 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { PWAIconManager } from "@/components/PWAIconManager";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { lazy, Suspense } from 'react';
 import Index from "./pages/Index";
 
@@ -62,26 +64,49 @@ const App = () => (
             v7_relativeSplatPath: true,
           }}
         >
-          <ScrollToTop />
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/kumlamalar" element={<Kumlamalar />} />
-              <Route path="/arac-giydirme" element={<AracGiydirme />} />
-              <Route path="/tabelalar" element={<Tabelalar />} />
-              <Route path="/referanslar" element={<Referanslar />} />
-              <Route path="/video-galeri" element={<VideoGaleri />} />
-              <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
-              <Route path="/hesaplama" element={<Hesaplama />} />
-              <Route path="/iletisim" element={<Iletisim />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
-              <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <WhatsAppWidget />
+          <AuthProvider>
+            <ScrollToTop />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Herkese açık sayfalar */}
+                <Route path="/" element={<Index />} />
+                <Route path="/kumlamalar" element={<Kumlamalar />} />
+                <Route path="/arac-giydirme" element={<AracGiydirme />} />
+                <Route path="/tabelalar" element={<Tabelalar />} />
+                <Route path="/referanslar" element={<Referanslar />} />
+                <Route path="/video-galeri" element={<VideoGaleri />} />
+                <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
+                <Route path="/hesaplama" element={<Hesaplama />} />
+                <Route path="/iletisim" element={<Iletisim />} />
+                <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
+                <Route path="/kullanim-sartlari" element={<KullanimSartlari />} />
+                
+                {/* Auth sayfası - giriş yapmış kullanıcıları admin'e yönlendir */}
+                <Route 
+                  path="/auth" 
+                  element={
+                    <ProtectedRoute requireAuth={false}>
+                      <Auth />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Korumalı admin sayfası */}
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute requireAuth={true}>
+                      <Admin />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* 404 sayfası */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            <WhatsAppWidget />
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </SettingsProvider>

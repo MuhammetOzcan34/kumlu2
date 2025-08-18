@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,69 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { User, Session } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    let mounted = true;
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!mounted) return;
-        
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          // Kullanıcı giriş yaptığında admin paneline yönlendir
-          if (session?.user) {
-            navigate("/admin");
-          }
-        } catch (error) {
-          console.error('Auth state change hatası:', error);
-        }
-      }
-    );
-
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (!mounted) return;
-        
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          // Eğer zaten giriş yapılmışsa admin paneline yönlendir
-          if (session?.user) {
-            navigate("/admin");
-          }
-        } catch (error) {
-          console.error('Oturum kontrolü hatası:', error);
-        }
-      })
-      .catch((error) => {
-        console.error('Oturum alma hatası:', error);
-      })
-      .finally(() => {
-        if (mounted) {
-          setCheckingSession(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+  // AuthContext otomatik olarak oturum kontrolü ve yönlendirme yapıyor
 
   // Profil oluşturma fonksiyonunu optimize et
   const createUserProfile = useCallback(async (userId: string, userEmail: string | undefined) => {
@@ -170,9 +116,7 @@ export default function Auth() {
         description: "Yönetim paneline yönlendiriliyorsunuz.",
       });
       
-      // Giriş başarılı olduktan sonra admin paneline yönlendir
-      // Profil kontrolü Admin.tsx'de yapılacak, burada gereksiz istek yapmıyoruz
-      navigate("/admin");
+      // AuthContext otomatik olarak yönlendirme yapacak
       
     } catch (error) {
       console.error('Giriş hatası:', error);
@@ -186,7 +130,7 @@ export default function Auth() {
     }
   };
 
-  if (checkingSession) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg text-gray-600">Oturum kontrol ediliyor...</p>
@@ -213,26 +157,30 @@ export default function Auth() {
             <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-posta</Label>
+                  <Label htmlFor="signin-email">E-posta</Label>
                   <Input
-                    id="email"
+                    id="signin-email"
+                    name="email"
                     type="email"
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Şifre</Label>
+                  <Label htmlFor="signin-password">Şifre</Label>
                   <Input
-                    id="password"
+                    id="signin-password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -247,23 +195,27 @@ export default function Auth() {
                   <Label htmlFor="signup-email">E-posta</Label>
                   <Input
                     id="signup-email"
+                    name="signup-email"
                     type="email"
                     placeholder="ornek@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Şifre</Label>
                   <Input
                     id="signup-password"
+                    name="signup-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>

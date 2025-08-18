@@ -474,7 +474,7 @@ const Hesaplama = () => {
                 <div className="space-y-2">
                   <Label htmlFor="sehir">Şehir Seçiniz</Label>
                   <Select value={sehir} onValueChange={setSehir} disabled={montajIsteniyor}>
-                    <SelectTrigger>
+                    <SelectTrigger id="sehir" name="sehir">
                       <SelectValue placeholder="Şehir seçin" />
                     </SelectTrigger>
                     <SelectContent>
@@ -493,7 +493,7 @@ const Hesaplama = () => {
                   <div className="space-y-2">
                     <Label htmlFor="ilce">İlçe Seçiniz</Label>
                     <Select value={ilce} onValueChange={setIlce}>
-                      <SelectTrigger>
+                      <SelectTrigger id="ilce" name="ilce">
                         <SelectValue placeholder="İlçe seçin" />
                       </SelectTrigger>
                       <SelectContent>

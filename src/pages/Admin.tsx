@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, Session } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 import { LogoDisplay } from "@/components/LogoDisplay";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
@@ -40,8 +40,9 @@ import {
 import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
 
 export default function Admin() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { user, session, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
   // Tip tanımlamaları
   interface Profile {
     id: string;
@@ -96,7 +97,7 @@ export default function Admin() {
   }
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [fotograflar, setFotograflar] = useState<Fotograf[]>([]);
   const [ayarlar, setAyarlar] = useState<Ayar[]>([]);
@@ -104,39 +105,24 @@ export default function Admin() {
   const [showKampanyaForm, setShowKampanyaForm] = useState(false);
   const [editingKampanya, setEditingKampanya] = useState<Kampanya | null>(null);
   const [activeTab, setActiveTab] = useState("kampanyalar");
-  const navigate = useNavigate();
   const { toast } = useToast();
 
 
 
-  const loadUserProfile = useCallback(async (userId?: string, currentSession?: Session | null) => {
-    // Eğer zaten yükleme devam ediyorsa, tekrar istek yapma
-    if (loading) {
-      console.log('⏳ Admin - Zaten yükleme devam ediyor, tekrar istek yapılmıyor');
+  const loadUserProfile = useCallback(async () => {
+    if (!user) {
       return;
     }
     
     try {
-      console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
-      setLoading(true);
-      
-      // JWT token kontrolü ve kullanıcı bilgisi alma - daha güvenilir yöntem
-      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !currentUser) {
-        console.error('❌ Admin - JWT token alınamadı veya kullanıcı bulunamadı:', userError);
-        navigate("/auth");
-        return;
-      }
-      
-      console.log('✅ Admin - JWT token başarıyla alındı, user_id:', currentUser.id);
-      const actualUserId = currentUser.id;
+      console.log('🔍 Admin - Kullanıcı profili yükleniyor:', user.id);
+      setDataLoading(true);
       
       // Önce profiles tablosundan kullanıcı bilgilerini al
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", actualUserId)
+        .eq("user_id", user.id)
         .single();
 
       if (profileError) {
@@ -149,10 +135,10 @@ export default function Admin() {
           const { data: newProfile, error: createError } = await supabase
             .from("profiles")
             .insert({
-              user_id: actualUserId,
-              display_name: currentUser?.email?.split('@')[0] || 'Kullanıcı',
-              full_name: currentUser?.user_metadata?.full_name || '',
-              email: currentUser?.email || '',
+              user_id: user.id,
+              display_name: user?.email?.split('@')[0] || 'Kullanıcı',
+              full_name: user?.user_metadata?.full_name || '',
+              email: user?.email || '',
               role: 'user', // Varsayılan rol user
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -167,7 +153,6 @@ export default function Admin() {
               description: `Kullanıcı profili oluşturulamadı: ${createError.message}`,
               variant: "destructive",
             });
-            navigate("/auth");
             return;
           }
           
@@ -203,8 +188,8 @@ export default function Admin() {
         console.log('✅ Admin - Kullanıcı rolü profiles tablosundan alındı:', userRole);
       }
       // 2. İkinci öncelik: app_metadata.role (JWT token'dan gelen)
-      else if (currentUser?.app_metadata?.role) {
-        userRole = currentUser.app_metadata.role;
+      else if (user?.app_metadata?.role) {
+        userRole = user.app_metadata.role;
         console.log('✅ Admin - Kullanıcı rolü JWT token\'dan (app_metadata) alındı:', userRole);
         
         // Profiles tablosunu güncelle
@@ -212,14 +197,14 @@ export default function Admin() {
           await supabase
             .from('profiles')
             .update({ role: userRole, updated_at: new Date().toISOString() })
-            .eq('user_id', actualUserId);
+            .eq('user_id', user.id);
         } catch (updateError) {
           console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
         }
       } 
       // 3. Üçüncü öncelik: user_metadata.role (fallback)
-      else if (currentUser?.user_metadata?.role) {
-        userRole = currentUser.user_metadata.role;
+      else if (user?.user_metadata?.role) {
+        userRole = user.user_metadata.role;
         console.log('✅ Admin - Kullanıcı rolü user_metadata\'dan alındı:', userRole);
         
         // Profiles tablosunu güncelle
@@ -227,7 +212,7 @@ export default function Admin() {
           await supabase
             .from('profiles')
             .update({ role: userRole, updated_at: new Date().toISOString() })
-            .eq('user_id', actualUserId);
+            .eq('user_id', user.id);
         } catch (updateError) {
           console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
         }
@@ -238,7 +223,7 @@ export default function Admin() {
           const { data: roleData, error: roleError } = await supabase
             .from("kullanici_rolleri")
             .select("role, is_super_admin")
-            .eq("email", currentUser?.email)
+            .eq("email", user?.email)
             .single();
 
           if (!roleError && roleData) {
@@ -250,7 +235,7 @@ export default function Admin() {
               await supabase
                 .from('profiles')
                 .update({ role: userRole, updated_at: new Date().toISOString() })
-                .eq('user_id', actualUserId);
+                .eq('user_id', user.id);
             } catch (updateError) {
               console.warn('⚠️ Admin - Profil rol güncelleme hatası (devam ediliyor):', updateError);
             }
@@ -289,146 +274,21 @@ export default function Admin() {
         description: `Bir hata oluştu: ${errorMessage}`,
         variant: "destructive",
       });
-      // Hata durumunda auth sayfasına yönlendir
-      navigate("/auth");
+      // AuthContext otomatik olarak yönlendirme yapacak
     } finally {
-      setLoading(false);
+      setDataLoading(false);
       console.log('✅ Admin - Profil yükleme tamamlandı, loading durumu false yapıldı');
     }
-  }, [navigate, toast, loading]);
+  }, [user, toast, loadAdminData]);
 
   useEffect(() => {
-    console.log('🔄 Admin - Auth durumu takibi başlatılıyor...');
-    let timeoutId: NodeJS.Timeout;
-    let mounted = true; // Component mount durumu takibi
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        try {
-          console.log('🔄 Admin - Auth durumu değişti:', event, session ? 'Oturum var' : 'Oturum yok');
-          
-          if (!mounted) {
-            console.log('⚠️ Admin - Component unmount olmuş, işlem iptal ediliyor');
-            return;
-          }
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (!session?.user) {
-            console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-            if (mounted) {
-              setLoading(false);
-              navigate("/auth");
-            }
-          } else {
-            console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-            // Debounce ile aşırı istek önleme ve sonsuz döngü engelleme
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(async () => {
-              if (mounted) {
-                try {
-                  await loadUserProfile(session.user.id, session);
-                } catch (profileError) {
-                  console.error('❌ Admin - Auth state change profil yükleme hatası:', profileError);
-                  if (mounted) {
-                    setLoading(false);
-                    toast({
-                      title: "Profil Yükleme Hatası",
-                      description: "Profil bilgileri yüklenirken bir hata oluştu.",
-                      variant: "destructive",
-                    });
-                  }
-                }
-              }
-            }, 300);
-          }
-        } catch (error) {
-          console.error('❌ Admin - Auth state change hatası:', error);
-          if (mounted) {
-            setLoading(false);
-            toast({
-              title: "Oturum Hatası",
-              description: "Oturum durumu kontrol edilirken bir hata oluştu.",
-              variant: "destructive",
-            });
-          }
-        }
-      }
-    );
+    if (user && !profile) {
+      console.log('🔄 Admin - Kullanıcı var, profil yükleniyor');
+      loadUserProfile();
+    }
+  }, [user, profile, loadUserProfile]);
 
-    // Mevcut oturum kontrolü - sadece ilk yüklemede
-    const checkInitialSession = async () => {
-      try {
-        console.log('🔍 Admin - Mevcut oturum kontrol ediliyor...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Admin - Oturum kontrolü hatası:', error);
-          if (mounted) {
-            setLoading(false);
-            toast({
-              title: "Oturum Kontrolü Hatası",
-              description: `Oturum kontrol edilemedi: ${error.message}`,
-              variant: "destructive",
-            });
-            navigate("/auth");
-          }
-          return;
-        }
-        
-        console.log('🔍 Admin - Oturum durumu:', session ? 'Oturum var' : 'Oturum yok');
-        
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          console.log('⚠️ Admin - Kullanıcı oturumu yok, auth sayfasına yönlendiriliyor');
-          setLoading(false);
-          navigate("/auth");
-        } else {
-          console.log('✅ Admin - Kullanıcı oturumu var, profil yükleniyor:', session.user.id);
-          try {
-            await loadUserProfile(session.user.id, session);
-          } catch (profileError) {
-            console.error('❌ Admin - İlk profil yükleme hatası:', profileError);
-            if (mounted) {
-              setLoading(false);
-              toast({
-                title: "Profil Yükleme Hatası",
-                description: "Profil bilgileri yüklenirken bir hata oluştu.",
-                variant: "destructive",
-              });
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ Admin - Oturum kontrolü sırasında beklenmeyen hata:', error);
-        if (mounted) {
-          setLoading(false);
-          toast({
-            title: "Beklenmeyen Hata",
-            description: "Oturum kontrol edilirken beklenmeyen bir hata oluştu.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-        }
-      }
-    };
-    
-    checkInitialSession();
-
-    return () => {
-      console.log('🔄 Admin - Sayfa temizleniyor, abonelikler iptal ediliyor');
-      mounted = false;
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
-  }, [navigate]); // loadUserProfile dependency'sini kaldırdık - sonsuz döngü önleme
-
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     console.log('🔄 Admin - Yönetim verileri yükleniyor...');
     
     // Kategorileri yükle
@@ -532,7 +392,7 @@ export default function Admin() {
     }
     
     console.log('✅ Admin - Yönetim verileri yükleme işlemi tamamlandı');
-  };
+  }, [toast]);
 
   const handleKampanyaSubmit = () => {
     loadAdminData();
@@ -600,12 +460,25 @@ export default function Admin() {
     }
   };
 
-  if (loading) {
+  // AuthContext loading durumu - oturum kontrolü
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Yükleniyor...</p>
+          <p className="text-muted-foreground">Oturum kontrol ediliyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Veri yükleme durumu - profil ve admin verileri
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Veriler yükleniyor...</p>
         </div>
       </div>
     );
