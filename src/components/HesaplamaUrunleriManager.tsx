@@ -247,8 +247,11 @@ export const HesaplamaUrunleriManager = () => {
                     <Label htmlFor="urun-ad">Malzeme Adı</Label>
                 <Input
                   id="urun-ad"
+                  name="ad"
                   value={formData.ad}
                   onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
+                  placeholder="Malzeme adını girin"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -257,8 +260,11 @@ export const HesaplamaUrunleriManager = () => {
                 <Label htmlFor="urun-aciklama">Açıklama</Label>
                 <Textarea
                   id="urun-aciklama"
+                  name="aciklama"
                   value={formData.aciklama}
                   onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
+                  placeholder="Malzeme açıklaması"
+                  autoComplete="off"
                 />
               </div>
               
@@ -267,9 +273,12 @@ export const HesaplamaUrunleriManager = () => {
                   <Label htmlFor="urun-kategori">Kategori</Label>
                   <Input
                     id="urun-kategori"
+                    name="kategori"
                     value={formData.kategori}
                     onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                        required
+                    placeholder="Kategori adı"
+                    autoComplete="off"
+                    required
                   />
                 </div>
                 
@@ -277,11 +286,14 @@ export const HesaplamaUrunleriManager = () => {
                   <Label htmlFor="urun-sira-no">Sıra No</Label>
                   <Input
                     id="urun-sira-no"
+                    name="sira_no"
                     type="number"
                     value={formData.sira_no}
                     onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}
                     min="0"
-                        required
+                    placeholder="Sıra numarası"
+                    autoComplete="off"
+                    required
                   />
                 </div>
               </div>
@@ -415,11 +427,14 @@ export const HesaplamaUrunleriManager = () => {
                         <Label htmlFor="fiyat-metrekare-min">Min m²</Label>
                         <Input
                           id="fiyat-metrekare-min"
+                          name="metrekare_min"
                           type="number"
                           value={fiyatFormData.metrekare_min}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, metrekare_min: Number(e.target.value) })}
                           min="0"
                           step="0.1"
+                          placeholder="Minimum m²"
+                          autoComplete="off"
                           required
                         />
                       </div>
@@ -428,11 +443,14 @@ export const HesaplamaUrunleriManager = () => {
                         <Label htmlFor="fiyat-metrekare-max">Max m²</Label>
                         <Input
                           id="fiyat-metrekare-max"
+                          name="metrekare_max"
                           type="number"
                           value={fiyatFormData.metrekare_max}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, metrekare_max: Number(e.target.value) })}
                           min="0"
                           step="0.1"
+                          placeholder="Maksimum m²"
+                          autoComplete="off"
                           required
                         />
                       </div>
@@ -443,11 +461,14 @@ export const HesaplamaUrunleriManager = () => {
                         <Label htmlFor="fiyat-malzeme">Malzeme Fiyatı (₺/m²)</Label>
                         <Input
                           id="fiyat-malzeme"
+                          name="malzeme_fiyat"
                           type="number"
                           value={fiyatFormData.malzeme_fiyat}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, malzeme_fiyat: Number(e.target.value) })}
                           min="0"
                           step="0.01"
+                          placeholder="Malzeme fiyatı"
+                          autoComplete="off"
                           required
                         />
                       </div>
@@ -456,11 +477,14 @@ export const HesaplamaUrunleriManager = () => {
                         <Label htmlFor="fiyat-montaj">Montaj Fiyatı (₺/m²)</Label>
                         <Input
                           id="fiyat-montaj"
+                          name="montaj_fiyat"
                           type="number"
                           value={fiyatFormData.montaj_fiyat}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, montaj_fiyat: Number(e.target.value) })}
                           min="0"
                           step="0.01"
+                          placeholder="Montaj fiyatı"
+                          autoComplete="off"
                           required
                         />
                       </div>

@@ -101,8 +101,11 @@ export const ContactForm: React.FC = () => {
             <Label htmlFor="contact-name">Ad Soyad *</Label>
             <Input
               id="contact-name"
+              name="contact_name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Adınız ve soyadınız"
+              autoComplete="name"
               required
             />
           </div>
@@ -111,9 +114,12 @@ export const ContactForm: React.FC = () => {
             <Label htmlFor="contact-phone">Telefon *</Label>
             <Input
               id="contact-phone"
+              name="contact_phone"
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="0555 123 45 67"
+              autoComplete="tel"
               required
             />
           </div>
@@ -122,9 +128,12 @@ export const ContactForm: React.FC = () => {
             <Label htmlFor="contact-email">E-posta</Label>
             <Input
               id="contact-email"
+              name="contact_email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="ornek@email.com"
+              autoComplete="email"
             />
           </div>
 
@@ -132,8 +141,11 @@ export const ContactForm: React.FC = () => {
             <Label htmlFor="contact-subject">Konu *</Label>
             <Input
               id="contact-subject"
+              name="contact_subject"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              placeholder="Mesaj konusu"
+              autoComplete="off"
               required
             />
           </div>
@@ -142,9 +154,12 @@ export const ContactForm: React.FC = () => {
             <Label htmlFor="contact-message">Mesaj *</Label>
             <Textarea
               id="contact-message"
+              name="contact_message"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              placeholder="Mesajınızı buraya yazın..."
               rows={4}
+              autoComplete="off"
               required
             />
           </div>

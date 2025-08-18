@@ -191,6 +191,9 @@ export const ServisBedelleriManager = () => {
                   <Label htmlFor="servis-hizmet-adi">Hizmet Adı</Label>
                   <Input
                     id="servis-hizmet-adi"
+                    name="hizmet_adi"
+                    placeholder="Örn: Kumlama İşlemi"
+                    autoComplete="off"
                     value={formData.hizmet_adi}
                   onChange={(e) => setFormData({ ...formData, hizmet_adi: e.target.value })}
                   required
@@ -217,6 +220,9 @@ export const ServisBedelleriManager = () => {
                   <Label htmlFor="servis-birim-fiyat">Birim Fiyat</Label>
                     <Input
                       id="servis-birim-fiyat"
+                      name="birim_fiyat"
+                      placeholder="0.00"
+                      autoComplete="off"
                       type="number"
                     value={formData.birim_fiyat}
                     onChange={(e) => setFormData({ ...formData, birim_fiyat: Number(e.target.value) })}
@@ -231,6 +237,9 @@ export const ServisBedelleriManager = () => {
                   <Label htmlFor="servis-aciklama">Açıklama</Label>
                   <Textarea
                     id="servis-aciklama"
+                    name="aciklama"
+                    placeholder="Hizmet açıklaması (isteğe bağlı)"
+                    autoComplete="off"
                     value={formData.aciklama}
                   onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                   />
@@ -240,6 +249,9 @@ export const ServisBedelleriManager = () => {
                   <Label htmlFor="servis-sira-no">Sıra No</Label>
                   <Input
                     id="servis-sira-no"
+                    name="sira_no"
+                    placeholder="0"
+                    autoComplete="off"
                     type="number"
                     value={formData.sira_no}
                   onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}

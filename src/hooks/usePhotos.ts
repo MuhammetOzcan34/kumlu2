@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { requestLimiter } from "@/utils/debounce";
 
@@ -85,4 +85,137 @@ export const usePhotos = (categoryId?: string, usageArea?: string) => {
 
 export const getImageUrl = (filePath: string) => {
   return supabase.storage.from("fotograflar").getPublicUrl(filePath).data.publicUrl;
+};
+
+// Fotoğraf CRUD işlemleri için mutation hook'ları
+export const useCreatePhoto = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (photo: Omit<Photo, "id" | "created_at" | "updated_at">) => {
+      console.log('📸 Creating new photo:', photo);
+      const { data, error } = await supabase
+        .from("fotograflar")
+        .insert([photo])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Photo creation error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Photo created:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["photos"] });
+    },
+  });
+};
+
+export const useUpdatePhoto = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Photo> & { id: string }) => {
+      console.log('📸 Updating photo:', id, updates);
+      const { data, error } = await supabase
+        .from("fotograflar")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Photo update error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Photo updated:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["photos"] });
+    },
+  });
+};
+
+export const useDeletePhoto = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      console.log('📸 Deleting photo:', id);
+      
+      // Önce fotoğraf bilgilerini al (dosya yolunu almak için)
+      const { data: photo, error: fetchError } = await supabase
+        .from("fotograflar")
+        .select("dosya_yolu")
+        .eq("id", id)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Photo fetch error for deletion:', fetchError);
+        throw fetchError;
+      }
+
+      // Veritabanından sil
+      const { error: deleteError } = await supabase
+        .from("fotograflar")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        console.error('❌ Photo deletion error:', deleteError);
+        throw deleteError;
+      }
+
+      // Storage'dan da sil
+      if (photo?.dosya_yolu) {
+        const { error: storageError } = await supabase.storage
+          .from("fotograflar")
+          .remove([photo.dosya_yolu]);
+
+        if (storageError) {
+          console.warn('⚠️ Storage deletion warning:', storageError);
+          // Storage hatası kritik değil, devam et
+        }
+      }
+      
+      console.log('✅ Photo deleted:', id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["photos"] });
+    },
+  });
+};
+
+// Slider fotoğrafları için optimize edilmiş query
+export const useSliderPhotos = () => {
+  return useQuery({
+    queryKey: ["photos", "slider"],
+    queryFn: async () => {
+      console.log('🎠 Fetching slider photos...');
+      const { data, error } = await supabase
+        .from("fotograflar")
+        .select("id, dosya_yolu, baslik, aciklama, sira_no")
+        .eq("aktif", true)
+        .or("gorsel_tipi.eq.slider,kullanim_alani.cs.{ana-sayfa-slider}")
+        .order("sira_no", { ascending: true })
+        .limit(10);
+
+      if (error) {
+        console.error('❌ Slider photos fetch error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Slider photos loaded:', data?.length || 0);
+      return data as Photo[];
+    },
+    staleTime: 1000 * 60 * 5, // 5 dakika
+    gcTime: 1000 * 60 * 15, // 15 dakika
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 };

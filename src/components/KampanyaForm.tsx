@@ -160,6 +160,9 @@ export function KampanyaForm({
               <Label htmlFor="kampanya_adi">Kampanya Adı</Label>
               <Input
                 id="kampanya_adi"
+                name="kampanya_adi"
+                placeholder="Örn: Yaz Kampanyası 2024"
+                autoComplete="off"
                 value={formData.kampanya_adi}
                 onChange={(e) => setFormData({ ...formData, kampanya_adi: e.target.value })}
                 required
@@ -224,6 +227,9 @@ export function KampanyaForm({
               <Label htmlFor="butce_gunluk">Günlük Bütçe (₺)</Label>
               <Input
                 id="butce_gunluk"
+                name="butce_gunluk"
+                placeholder="0.00"
+                autoComplete="off"
                 type="number"
                 step="0.01"
                 value={formData.butce_gunluk}
@@ -235,6 +241,8 @@ export function KampanyaForm({
               <Label htmlFor="baslangic_tarihi">Başlangıç Tarihi</Label>
               <Input
                 id="baslangic_tarihi"
+                name="baslangic_tarihi"
+                autoComplete="off"
                 type="date"
                 value={formData.baslangic_tarihi}
                 onChange={(e) => setFormData({ ...formData, baslangic_tarihi: e.target.value })}
@@ -245,6 +253,8 @@ export function KampanyaForm({
               <Label htmlFor="bitis_tarihi">Bitiş Tarihi</Label>
               <Input
                 id="bitis_tarihi"
+                name="bitis_tarihi"
+                autoComplete="off"
                 type="date"
                 value={formData.bitis_tarihi}
                 onChange={(e) => setFormData({ ...formData, bitis_tarihi: e.target.value })}
@@ -255,6 +265,8 @@ export function KampanyaForm({
               <Label htmlFor="hedef_url">Hedef URL</Label>
               <Input
                 id="hedef_url"
+                name="hedef_url"
+                autoComplete="url"
                 type="url"
                 value={formData.hedef_url}
                 onChange={(e) => setFormData({ ...formData, hedef_url: e.target.value })}
@@ -267,6 +279,8 @@ export function KampanyaForm({
             <Label htmlFor="reklam_metni">Reklam Metni</Label>
             <Textarea
               id="reklam_metni"
+              name="reklam_metni"
+              autoComplete="off"
               value={formData.reklam_metni}
               onChange={(e) => setFormData({ ...formData, reklam_metni: e.target.value })}
               rows={4}

@@ -109,32 +109,53 @@ export default function Admin() {
 
 
 
-  const loadUserProfile = useCallback(async (userId: string, currentSession?: Session | null) => {
+  const loadUserProfile = useCallback(async (userId?: string, currentSession?: Session | null) => {
+    // Eğer zaten yükleme devam ediyorsa, tekrar istek yapma
+    if (loading) {
+      console.log('⏳ Admin - Zaten yükleme devam ediyor, tekrar istek yapılmıyor');
+      return;
+    }
+    
     try {
       console.log('🔍 Admin - Kullanıcı profili yükleniyor:', userId);
       setLoading(true);
+      
+      // JWT token kontrolü ve kullanıcı bilgisi alma - daha güvenilir yöntem
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !currentUser) {
+        console.error('❌ Admin - JWT token alınamadı veya kullanıcı bulunamadı:', userError);
+        navigate("/auth");
+        return;
+      }
+      
+      console.log('✅ Admin - JWT token başarıyla alındı, user_id:', currentUser.id);
+      const actualUserId = currentUser.id;
       
       // Önce profiles tablosundan kullanıcı bilgilerini al
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", actualUserId)
         .single();
 
       if (profileError) {
         console.error("❌ Admin - Profil yükleme hatası:", profileError);
         
-        // Eğer profil bulunamazsa, otomatik olarak oluşturmaya çalış
+        // Eğer profil bulunamazsa (PGRST116: no rows returned), otomatik olarak oluşturmaya çalış
         if (profileError.code === 'PGRST116') {
           console.log('🔧 Admin - Profil bulunamadı, oluşturuluyor...');
-          const currentUser = currentSession?.user;
+          
           const { data: newProfile, error: createError } = await supabase
             .from("profiles")
             .insert({
-              id: userId,
-              user_id: userId,
-              display_name: currentUser?.email || 'Kullanıcı',
-              role: 'user' // Varsayılan rol user
+              user_id: actualUserId,
+              display_name: currentUser?.email?.split('@')[0] || 'Kullanıcı',
+              full_name: currentUser?.user_metadata?.full_name || '',
+              email: currentUser?.email || '',
+              role: 'user', // Varsayılan rol user
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             })
             .select()
             .single();
@@ -143,7 +164,7 @@ export default function Admin() {
             console.error('❌ Admin - Profil oluşturma hatası:', createError);
             toast({
               title: "Profil Hatası",
-              description: "Kullanıcı profili oluşturulamadı. Lütfen yöneticinizle iletişime geçin.",
+              description: `Kullanıcı profili oluşturulamadı: ${createError.message}`,
               variant: "destructive",
             });
             navigate("/auth");
@@ -152,34 +173,59 @@ export default function Admin() {
           
           console.log('✅ Admin - Yeni profil oluşturuldu:', newProfile);
           setProfile(newProfile);
+          return; // Yeni profil oluşturulduysa, rol kontrolüne gerek yok
+        } 
+        // Diğer hatalar için (403 Forbidden, RLS policy hatası vb.)
+        else if (profileError.code === '42501' || profileError.message?.includes('permission denied')) {
+          toast({
+            title: "Yetki Hatası",
+            description: "Profil bilgilerine erişim izniniz yok. RLS politikaları kontrol edilmelidir.",
+            variant: "destructive",
+          });
         } else {
           toast({
             title: "Profil Yükleme Hatası",
-            description: "Kullanıcı profili yüklenemedi. Sayfayı yenilemeyi deneyin.",
+            description: `Kullanıcı profili yüklenemedi: ${profileError.message}`,
             variant: "destructive",
           });
-          navigate("/auth");
         }
+        navigate("/auth");
         return;
       }
 
       console.log('✅ Admin - Kullanıcı profili yüklendi:', profileData);
       
-      // Önce user_metadata\'dan rol bilgisini kontrol et
-      const currentUser = currentSession?.user;
-      let userRole = 'user'; // Varsayılan rol
+      // Rol bilgisini belirle (öncelik sırası: profiles.role > app_metadata.role > user_metadata.role > kullanici_rolleri)
+      let userRole = profileData.role || 'user'; // Varsayılan rol user
       
-      // 1. Öncelik: app_metadata.role (JWT token'dan gelen raw_app_meta_data)
-      if (currentUser?.app_metadata?.role) {
+      // 1. Öncelik: profiles tablosundaki role kolonu
+      if (profileData.role) {
+        userRole = profileData.role;
+        console.log('✅ Admin - Kullanıcı rolü profiles tablosundan alındı:', userRole);
+      }
+      // 2. İkinci öncelik: app_metadata.role (JWT token'dan gelen)
+      else if (currentUser?.app_metadata?.role) {
         userRole = currentUser.app_metadata.role;
         console.log('✅ Admin - Kullanıcı rolü JWT token\'dan (app_metadata) alındı:', userRole);
+        
+        // Profiles tablosunu güncelle
+        await supabase
+          .from('profiles')
+          .update({ role: userRole, updated_at: new Date().toISOString() })
+          .eq('user_id', actualUserId);
       } 
-      // 2. İkinci öncelik: user_metadata.role (fallback)
+      // 3. Üçüncü öncelik: user_metadata.role (fallback)
       else if (currentUser?.user_metadata?.role) {
         userRole = currentUser.user_metadata.role;
         console.log('✅ Admin - Kullanıcı rolü user_metadata\'dan alındı:', userRole);
+        
+        // Profiles tablosunu güncelle
+        await supabase
+          .from('profiles')
+          .update({ role: userRole, updated_at: new Date().toISOString() })
+          .eq('user_id', actualUserId);
       }
-      // 3. Son çare: kullanici_rolleri tablosundan kontrol et
+      // 4. Son çare: kullanici_rolleri tablosundan kontrol et
       else {
         const { data: roleData, error: roleError } = await supabase
           .from("kullanici_rolleri")
@@ -190,12 +236,18 @@ export default function Admin() {
         if (!roleError && roleData) {
           userRole = roleData.role;
           console.log('✅ Admin - Kullanıcı rolü kullanici_rolleri tablosundan alındı:', userRole);
+          
+          // Profiles tablosunu güncelle
+          await supabase
+            .from('profiles')
+            .update({ role: userRole, updated_at: new Date().toISOString() })
+            .eq('user_id', actualUserId);
         } else {
           console.log('⚠️ Admin - Hiçbir yerden rol bulunamadı, varsayılan rol kullanılıyor:', userRole);
         }
       }
       
-      // Profile nesnesine rol bilgisini ekle
+      // Profile nesnesine güncel rol bilgisini ekle
       const profileWithRole = {
         ...profileData,
         role: userRole
@@ -211,9 +263,10 @@ export default function Admin() {
       }
     } catch (error) {
       console.error("❌ Admin - Profil yükleme hatası:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
       toast({
         title: "Beklenmeyen Hata",
-        description: "Bir hata oluştu. Lütfen sayfayı yenileyin.",
+        description: `Bir hata oluştu: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -837,27 +890,161 @@ export default function Admin() {
                         <CardHeader>
                           <CardTitle>Profil Bilgileri</CardTitle>
                           <CardDescription>
-                            Hesap bilgilerinizi görüntüleyin.
+                            Hesap bilgilerinizi görüntüleyin ve güncelleyin.
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div>
-                            <p className="text-sm font-medium">E-posta:</p>
-                            <p className="text-muted-foreground">{user.email}</p>
+                        <CardContent className="space-y-6">
+                          {/* Mevcut Profil Bilgileri */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium">E-posta:</p>
+                              <p className="text-muted-foreground">{user.email}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Görünen Ad:</p>
+                              <p className="text-muted-foreground">{profile.display_name || "Belirtilmemiş"}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Rol:</p>
+                              <p className="text-muted-foreground">{profile.role}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Kayıt Tarihi:</p>
+                              <p className="text-muted-foreground">
+                                {new Date(profile.created_at).toLocaleDateString("tr-TR")}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">Görünen Ad:</p>
-                            <p className="text-muted-foreground">{profile.display_name || "Belirtilmemiş"}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Rol:</p>
-                            <p className="text-muted-foreground">{profile.role}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Kayıt Tarihi:</p>
-                            <p className="text-muted-foreground">
-                              {new Date(profile.created_at).toLocaleDateString("tr-TR")}
-                            </p>
+
+                          {/* Profil Güncelleme Formu */}
+                          <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4">Profil Güncelle</h3>
+                            <form 
+                              id="profileUpdateForm" 
+                              className="space-y-4"
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.target as HTMLFormElement);
+                                const displayName = formData.get('profile_display_name') as string;
+                                const fullName = formData.get('profile_full_name') as string;
+                                
+                                // Form validasyonu
+                                if (!displayName.trim()) {
+                                  toast({
+                                    title: "Validasyon Hatası",
+                                    description: "Görünen ad boş olamaz.",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+                                
+                                try {
+                                  // Güncel kullanıcı bilgisini al
+                                  const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                                  if (userError || !currentUser) {
+                                    console.error('❌ Kullanıcı bilgisi alınamadı:', userError);
+                                    toast({
+                                      title: "Kimlik Doğrulama Hatası",
+                                      description: "Kullanıcı bilgisi alınamadı. Lütfen tekrar giriş yapın.",
+                                      variant: "destructive",
+                                    });
+                                    navigate("/auth");
+                                    return;
+                                  }
+                                  
+                                  console.log('🔄 Profil güncelleniyor:', { displayName, fullName, userId: currentUser.id });
+                                  
+                                  const { data, error } = await supabase
+                                    .from('profiles')
+                                    .update({ 
+                                      display_name: displayName.trim(),
+                                      full_name: fullName.trim(),
+                                      updated_at: new Date().toISOString()
+                                    })
+                                    .eq('user_id', currentUser.id)
+                                    .select()
+                                    .single();
+                                  
+                                  if (error) {
+                                    console.error('❌ Profil güncelleme hatası:', error);
+                                    
+                                    // Spesifik hata mesajları
+                                    if (error.code === '42501' || error.message?.includes('permission denied')) {
+                                      toast({
+                                        title: "Yetki Hatası",
+                                        description: "Profil güncelleme izniniz yok. RLS politikaları kontrol edilmelidir.",
+                                        variant: "destructive",
+                                      });
+                                    } else if (error.code === 'PGRST116') {
+                                      toast({
+                                        title: "Profil Bulunamadı",
+                                        description: "Güncellenecek profil bulunamadı. Sayfayı yenilemeyi deneyin.",
+                                        variant: "destructive",
+                                      });
+                                    } else {
+                                      toast({
+                                        title: "Güncelleme Hatası",
+                                        description: `Profil güncellenirken hata oluştu: ${error.message}`,
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  } else {
+                                    console.log('✅ Profil başarıyla güncellendi:', data);
+                                    toast({
+                                      title: "Başarılı",
+                                      description: "Profil bilgileriniz başarıyla güncellendi.",
+                                    });
+                                    
+                                    // Profili yeniden yükle
+                                    await loadUserProfile(currentUser.id);
+                                  }
+                                } catch (err) {
+                                  console.error('❌ Beklenmeyen profil güncelleme hatası:', err);
+                                  const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu';
+                                  toast({
+                                    title: "Beklenmeyen Hata",
+                                    description: `Bir hata oluştu: ${errorMessage}`,
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            >
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label htmlFor="profile_display_name" className="block text-sm font-medium mb-2">
+                                    Görünen Ad
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="profile_display_name"
+                                    name="profile_display_name"
+                                    defaultValue={profile.display_name || ''}
+                                    autoComplete="name"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Görünen adınızı girin"
+                                  />
+                                </div>
+                                <div>
+                                  <label htmlFor="profile_full_name" className="block text-sm font-medium mb-2">
+                                    Tam Ad
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="profile_full_name"
+                                    name="profile_full_name"
+                                    defaultValue={profile.full_name || ''}
+                                    autoComplete="name"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Tam adınızı girin"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end">
+                                <Button type="submit" className="px-6">
+                                  Profili Güncelle
+                                </Button>
+                              </div>
+                            </form>
                           </div>
                         </CardContent>
                       </Card>

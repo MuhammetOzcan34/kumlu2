@@ -1,266 +1,258 @@
-# Kumlu Folyo - Modern Web Uygulaması
+# Kumlu Folyo - Araç Giydirme ve Folyo Hizmetleri
 
 ## 📋 Proje Hakkında
 
-Kumlu Folyo, modern React teknolojileri kullanılarak geliştirilmiş kapsamlı bir web uygulamasıdır. Supabase backend altyapısı ile güçlendirilmiş bu uygulama, fotoğraf galerisi yönetimi, kategori sistemi, kullanıcı kimlik doğrulaması ve admin paneli gibi özellikler sunar.
+Kumlu Folyo, araç giydirme, folyo kaplama, tabela üretimi ve reklam hizmetleri sunan modern bir web uygulamasıdır. React, TypeScript, Tailwind CSS ve Supabase teknolojileri kullanılarak geliştirilmiştir.
 
-## 🚀 Teknoloji Stack
+## 🚀 Özellikler
+
+### 🎨 Ana Özellikler
+- **Araç Giydirme Galerisi**: Çeşitli araç giydirme örnekleri
+- **Folyo Çeşitleri**: Farklı folyo türleri ve uygulamaları
+- **Tabela Hizmetleri**: Özel tabela tasarım ve üretimi
+- **Kumlamalar**: Cam kumlama hizmetleri
+- **Referans Galerisi**: Tamamlanmış projeler
+- **Video Galeri**: Hizmet süreçleri ve sonuçları
+- **Hesaplama Aracı**: Otomatik fiyat hesaplama sistemi
+- **İletişim Formu**: Müşteri talep yönetimi
+
+### 🔧 Admin Panel
+- **Fotoğraf Yönetimi**: Galeri fotoğraflarını ekleme, düzenleme, silme
+- **Kategori Yönetimi**: Hizmet kategorilerini organize etme
+- **Ayarlar Yönetimi**: Site ayarlarını güncelleme
+- **Kullanıcı Yönetimi**: Admin yetkilerini kontrol etme
+- **Hesaplama Ürünleri**: Fiyat hesaplama parametrelerini yönetme
+- **Servis Bedelleri**: Hizmet fiyatlarını güncelleme
+
+### 📱 Teknik Özellikler
+- **Responsive Tasarım**: Tüm cihazlarda uyumlu
+- **PWA Desteği**: Mobil uygulama deneyimi
+- **SEO Optimizasyonu**: Arama motoru dostu
+- **Gerçek Zamanlı Güncellemeler**: Supabase ile canlı veri
+- **Güvenli Authentication**: JWT tabanlı kimlik doğrulama
+- **RLS (Row Level Security)**: Veri güvenliği
+- **Image Optimization**: Otomatik görsel optimizasyonu
+
+## 🛠️ Teknolojiler
 
 ### Frontend
-- **React 18** - Modern UI kütüphanesi
-- **TypeScript** - Tip güvenliği
-- **Vite** - Hızlı geliştirme ortamı
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Router** - Client-side routing
-- **Zustand** - State management
-- **React Query** - Server state management
-- **Lucide React** - İkon kütüphanesi
-- **Sonner** - Toast bildirimleri
-- **React Hook Form** - Form yönetimi
+- **React 18**: Modern UI kütüphanesi
+- **TypeScript**: Tip güvenli geliştirme
+- **Vite**: Hızlı build aracı
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Router**: SPA routing
+- **React Query**: Server state yönetimi
+- **Zustand**: Client state yönetimi
+- **Framer Motion**: Animasyonlar
+- **Lucide React**: İkon kütüphanesi
+- **React Hook Form**: Form yönetimi
+- **Sonner**: Toast bildirimleri
 
 ### Backend & Database
-- **Supabase** - Backend-as-a-Service
-- **PostgreSQL** - Veritabanı
-- **Row Level Security (RLS)** - Güvenlik
-- **Storage** - Dosya yönetimi
-- **Authentication** - Kimlik doğrulama
+- **Supabase**: Backend-as-a-Service
+- **PostgreSQL**: İlişkisel veritabanı
+- **Supabase Auth**: Kimlik doğrulama
+- **Supabase Storage**: Dosya depolama
+- **Row Level Security**: Veri güvenliği
 
-## 📁 Proje Yapısı
+### DevOps & Tools
+- **ESLint**: Kod kalitesi
+- **Prettier**: Kod formatı
+- **Husky**: Git hooks
+- **Vercel**: Deployment platform
 
-```
-kumlu2-master-15.08/
-├── src/
-│   ├── components/          # React bileşenleri
-│   │   ├── admin/          # Admin panel bileşenleri
-│   │   ├── ui/             # UI bileşenleri (shadcn/ui)
-│   │   └── ...             # Diğer bileşenler
-│   ├── contexts/           # React Context'leri
-│   ├── hooks/              # Custom React Hook'ları
-│   ├── pages/              # Sayfa bileşenleri
-│   ├── utils/              # Yardımcı fonksiyonlar
-│   └── lib/                # Kütüphane konfigürasyonları
-├── supabase/
-│   └── migrations/         # Veritabanı migration dosyaları
-├── public/                 # Statik dosyalar
-└── dist/                   # Build çıktıları
-```
-
-## 🗄️ Veritabanı Şeması
-
-### Tablolar
-
-#### `kategoriler`
-- `id` (UUID, Primary Key)
-- `ad` (Text) - Kategori adı
-- `slug` (Text, Unique) - URL dostu ad
-- `aciklama` (Text) - Kategori açıklaması
-- `created_at` (Timestamp)
-
-#### `fotograflar`
-- `id` (UUID, Primary Key)
-- `baslik` (Text) - Fotoğraf başlığı
-- `dosya_yolu` (Text, Unique) - Storage'daki dosya yolu
-- `kategori_id` (UUID, Foreign Key) - Kategori referansı
-- `kullanim_alani` (Text) - Kullanım alanı
-- `gorsel_tipi` (Text) - Görsel tipi
-- `created_at` (Timestamp)
-
-#### `ayarlar`
-- `id` (UUID, Primary Key)
-- `anahtar` (Text, Unique) - Ayar anahtarı
-- `deger` (Text) - Ayar değeri
-- `created_at` (Timestamp)
-
-#### `kullanici_rolleri`
-- `id` (UUID, Primary Key)
-- `kullanici_id` (UUID) - Kullanıcı ID'si
-- `rol` (Text) - Kullanıcı rolü (admin/user)
-- `created_at` (Timestamp)
-
-### Storage Buckets
-- `fotograflar` - Fotoğraf dosyaları
-- `images` - Genel resim dosyaları
-- `watermark` - Filigran dosyaları
-- `public` - Genel erişilebilir dosyalar
-
-## 🔐 Güvenlik
-
-### Row Level Security (RLS)
-Tüm tablolarda RLS etkinleştirilmiştir:
-- **Okuma**: Herkese açık
-- **Yazma/Güncelleme/Silme**: Sadece admin kullanıcılar
-
-### Authentication
-- JWT token tabanlı kimlik doğrulama
-- Otomatik token yenileme
-- Role-based access control
-
-## 🛠️ Kurulum
+## 📦 Kurulum
 
 ### Gereksinimler
 - Node.js 18+
 - npm veya pnpm
 - Supabase hesabı
 
-### Adımlar
-
-1. **Projeyi klonlayın**
+### 1. Projeyi Klonlayın
 ```bash
 git clone <repository-url>
 cd kumlu2-master-15.08
 ```
 
-2. **Bağımlılıkları yükleyin**
+### 2. Bağımlılıkları Yükleyin
 ```bash
 npm install
+# veya
+pnpm install
 ```
 
-3. **Ortam değişkenlerini ayarlayın**
-`.env` dosyası oluşturun:
+### 3. Ortam Değişkenlerini Ayarlayın
+`.env.local` dosyası oluşturun:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. **Supabase migration'larını çalıştırın**
+### 4. Supabase Kurulumu
+
+#### Veritabanı Tabloları
+Aşağıdaki tabloları oluşturun:
+
+```sql
+-- Kategoriler tablosu
+CREATE TABLE kategoriler (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ad TEXT NOT NULL,
+  aciklama TEXT,
+  tip TEXT NOT NULL,
+  aktif BOOLEAN DEFAULT true,
+  sira_no INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Fotoğraflar tablosu
+CREATE TABLE fotograflar (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  dosya_yolu TEXT NOT NULL,
+  baslik TEXT,
+  aciklama TEXT,
+  kategori_id UUID REFERENCES kategoriler(id),
+  gorsel_tipi TEXT,
+  kullanim_alani TEXT[],
+  aktif BOOLEAN DEFAULT true,
+  sira_no INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Ayarlar tablosu
+CREATE TABLE ayarlar (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  anahtar TEXT UNIQUE NOT NULL,
+  deger TEXT,
+  aciklama TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Profiller tablosu
+CREATE TABLE profiles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  full_name TEXT,
+  role TEXT DEFAULT 'user',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### RLS Politikaları
+```sql
+-- Migration dosyasını çalıştırın
+-- supabase/migrations/20250118_full_admin_repair.sql
+```
+
+### 5. Geliştirme Sunucusunu Başlatın
 ```bash
+npm run dev
+# veya
+pnpm dev
+```
+
+Uygulama `http://localhost:5173` adresinde çalışacaktır.
+
+## 🏗️ Proje Yapısı
+
+```
+src/
+├── components/          # React bileşenleri
+│   ├── ui/             # Temel UI bileşenleri
+│   ├── admin/          # Admin panel bileşenleri
+│   └── layout/         # Layout bileşenleri
+├── contexts/           # React Context'ler
+├── hooks/              # Custom React Hook'ları
+├── pages/              # Sayfa bileşenleri
+├── utils/              # Yardımcı fonksiyonlar
+├── types/              # TypeScript tip tanımları
+└── lib/                # Kütüphane konfigürasyonları
+
+supabase/
+├── migrations/         # Veritabanı migration'ları
+└── config.toml         # Supabase konfigürasyonu
+
+public/
+├── icons/              # PWA ikonları
+└── images/             # Statik görseller
+```
+
+## 🔧 Geliştirme
+
+### Kod Kalitesi Kontrolleri
+```bash
+# TypeScript kontrolü
+npm run type-check
+
+# ESLint kontrolü
+npm run lint
+
+# Build testi
+npm run build
+```
+
+### Yeni Özellik Ekleme
+1. İlgili bileşeni `src/components/` altında oluşturun
+2. Gerekirse custom hook ekleyin `src/hooks/` altına
+3. Supabase tablosu gerekiyorsa migration oluşturun
+4. RLS politikalarını güncelleyin
+5. TypeScript tiplerini tanımlayın
+
+### Veritabanı Migration'ları
+```bash
+# Yeni migration oluştur
+supabase migration new migration_name
+
+# Migration'ı uygula
 supabase db push
 ```
 
-5. **Geliştirme sunucusunu başlatın**
-```bash
-npm run dev
-```
-
-## 📝 Kullanılabilir Komutlar
-
-```bash
-# Geliştirme sunucusu
-npm run dev
-
-# Production build
-npm run build
-
-# Build önizleme
-npm start
-
-# TypeScript tip kontrolü
-npm run type-check
-
-# ESLint kod kalitesi kontrolü
-npm run lint
-```
-
-## 🔧 Admin Panel
-
-### Özellikler
-- **Fotoğraf Yönetimi**: Fotoğraf yükleme, düzenleme, silme
-- **Kategori Yönetimi**: Kategori oluşturma, düzenleme, silme
-- **Ayar Yönetimi**: Site ayarlarını güncelleme
-- **Kullanıcı Yönetimi**: Kullanıcı rollerini yönetme
-
-### Erişim
-1. `/auth` sayfasından giriş yapın
-2. Admin yetkisi olan hesapla giriş yapın
-3. `/admin` sayfasına yönlendirileceksiniz
-
-## 🎨 UI/UX Özellikleri
-
-- **Responsive Design**: Tüm cihazlarda uyumlu
-- **Dark/Light Mode**: Tema desteği
-- **Modern Animasyonlar**: Smooth geçişler
-- **Accessibility**: WCAG uyumlu
-- **PWA Ready**: Progressive Web App desteği
-
-## 📱 Bileşenler
-
-### Ana Bileşenler
-- `Admin.tsx` - Admin panel ana bileşeni
-- `Auth.tsx` - Kimlik doğrulama bileşeni
-- `ImageSlider.tsx` - Fotoğraf slider'ı
-- `HamburgerMenu.tsx` - Mobil menü
-- `DesktopSidebar.tsx` - Masaüstü yan menü
-
-### Admin Bileşenleri
-- `PhotoUploadManager.tsx` - Fotoğraf yükleme yöneticisi
-- `CategoryManager.tsx` - Kategori yöneticisi
-- `CompanySettingsManager.tsx` - Şirket ayarları yöneticisi
-
-## 🔄 State Management
-
-### Zustand Store'ları
-- Global uygulama durumu
-- Kullanıcı oturumu
-- UI durumları
-
-### React Query
-- Server state yönetimi
-- Cache yönetimi
-- Otomatik refetch
-
-## 🚨 Hata Yönetimi
-
-- **Global Error Boundary**: Uygulama çapında hata yakalama
-- **Toast Notifications**: Kullanıcı dostu hata mesajları
-- **Logging**: Konsol ve server-side loglama
-- **Fallback UI**: Hata durumunda alternatif arayüz
-
-## 🔍 Debugging
-
-### Geliştirme Araçları
-- React Developer Tools
-- Redux DevTools (Zustand)
-- Network tab (API çağrıları)
-- Console logs
-
-### Yaygın Sorunlar
-1. **401 Unauthorized**: JWT token kontrolü yapın
-2. **RLS Policy**: Supabase policy'lerini kontrol edin
-3. **CORS**: Supabase URL'lerini doğrulayın
-
-## 📈 Performans
-
-### Optimizasyonlar
-- **Code Splitting**: Route-based lazy loading
-- **Image Optimization**: WebP format desteği
-- **Bundle Analysis**: Webpack bundle analyzer
-- **Caching**: Browser ve CDN cache
-
-## 🧪 Test
-
-### Test Stratejisi
-- Unit testler (Jest)
-- Integration testler
-- E2E testler (Playwright)
-- Visual regression testler
-
 ## 🚀 Deployment
 
-### Vercel (Önerilen)
+### Vercel ile Deployment
+1. Vercel hesabınıza bağlayın
+2. Ortam değişkenlerini ayarlayın
+3. Otomatik deployment aktif olacaktır
+
+### Manuel Build
 ```bash
-# Vercel CLI ile deploy
-npm i -g vercel
-vercel
+npm run build
 ```
 
-### Netlify
-```bash
-# Build komutu: npm run build
-# Publish directory: dist
-```
+Build dosyaları `dist/` klasöründe oluşturulur.
 
-### Docker
-```dockerfile
-# Dockerfile örneği
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+## 🔐 Güvenlik
+
+### Authentication
+- Supabase Auth ile JWT tabanlı kimlik doğrulama
+- Admin rolleri için özel yetkilendirme
+- Güvenli session yönetimi
+
+### Row Level Security (RLS)
+- Tüm tablolarda RLS aktif
+- Kullanıcı bazlı veri erişim kontrolü
+- Admin yetkilerinin ayrı politikalarla yönetimi
+
+### Veri Güvenliği
+- SQL injection koruması
+- XSS koruması
+- CSRF koruması
+- Güvenli dosya yükleme
+
+## 📊 Performans
+
+### Optimizasyonlar
+- Code splitting ile lazy loading
+- Image optimization
+- React Query ile akıllı caching
+- Bundle size optimization
+- Tree shaking
+
+### Monitoring
+- Error boundary'ler
+- Performance monitoring
+- User analytics
 
 ## 🤝 Katkıda Bulunma
 
@@ -268,28 +260,29 @@ CMD ["npm", "start"]
 2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
 3. Commit yapın (`git commit -m 'Add amazing feature'`)
 4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request açın
+5. Pull Request oluşturun
 
-## 📄 Lisans
+## 📝 Lisans
 
-Bu proje MIT lisansı altında lisanslanmıştır.
+Bu proje özel lisans altındadır. Kullanım için izin gereklidir.
 
 ## 📞 İletişim
 
-- **Proje Sahibi**: Kumlu Folyo
+- **Web**: [kumlufolyo.com](https://kumlufolyo.com)
 - **Email**: info@kumlufolyo.com
-- **Website**: https://kumlufolyo.com
+- **Telefon**: +90 XXX XXX XX XX
 
-## 🔄 Changelog
+## 🔄 Güncellemeler
 
-### v1.0.0 (2024-08-18)
-- ✅ İlk stabil sürüm
-- ✅ Admin panel CRUD işlemleri
-- ✅ Supabase entegrasyonu
-- ✅ Authentication sistemi
-- ✅ Responsive design
-- ✅ Performance optimizasyonları
+### v2.0.0 (2025-01-18)
+- ✅ Supabase RLS politikaları düzeltildi
+- ✅ Authentication döngü sorunu çözüldü
+- ✅ Form yapıları optimize edildi
+- ✅ CRUD işlemleri iyileştirildi
+- ✅ Admin panel testleri tamamlandı
+- ✅ TypeScript ve ESLint uyarıları giderildi
 
 ---
 
-**Not**: Bu README dosyası projenin güncel durumunu yansıtmaktadır. Herhangi bir sorun yaşarsanız, lütfen issue açın veya doğrudan iletişime geçin.
+**Geliştirici**: SOLO Coding AI Assistant  
+**Son Güncelleme**: 18 Ocak 2025

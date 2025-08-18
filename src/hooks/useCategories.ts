@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { withRetry, isResourceError, getErrorMessage, requestQueue, withFallback, getFallbackData, getCachedData, setCachedData, memoryManager, connectionManager } from "@/integrations/supabase/utils";
 import { useMemo, useCallback, useRef, useEffect } from "react";
@@ -223,4 +223,115 @@ export const useCategories = (tip?: CategoryType) => {
     isError,
     invalidateCache: debouncedInvalidate
   };
+};
+
+// Kategori CRUD işlemleri için mutation hook'ları
+export const useCreateCategory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (category: Omit<Category, "id" | "created_at" | "updated_at">) => {
+      console.log('📁 Creating new category:', category);
+      const { data, error } = await supabase
+        .from("kategoriler")
+        .insert([category])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Category creation error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Category created:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};
+
+export const useUpdateCategory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Category> & { id: string }) => {
+      console.log('📁 Updating category:', id, updates);
+      const { data, error } = await supabase
+        .from("kategoriler")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Category update error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Category updated:', data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};
+
+export const useDeleteCategory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      console.log('📁 Deleting category:', id);
+      const { error } = await supabase
+        .from("kategoriler")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error('❌ Category deletion error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Category deleted:', id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};
+
+// Kategori sıralama güncelleme için özel hook
+export const useUpdateCategoryOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (categories: { id: string; sira_no: number }[]) => {
+      console.log('📁 Updating category order:', categories);
+      
+      // Batch update için upsert kullan
+      const updates = categories.map(cat => ({
+        id: cat.id,
+        sira_no: cat.sira_no
+      }));
+      
+      const { data, error } = await supabase
+        .from("kategoriler")
+        .upsert(updates, { onConflict: 'id' })
+        .select();
+
+      if (error) {
+        console.error('❌ Category order update error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Category order updated:', data?.length || 0);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
 };

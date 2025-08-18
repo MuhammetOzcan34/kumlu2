@@ -154,6 +154,7 @@ export const TeklifFormu = ({
               value={formData.ad}
               onChange={handleInputChange}
               placeholder="Adınız ve soyadınız"
+              autoComplete="name"
               required
             />
           </div>
@@ -170,6 +171,7 @@ export const TeklifFormu = ({
                 value={formData.telefon}
                 onChange={handleInputChange}
                 placeholder="0555 123 45 67"
+                autoComplete="tel"
                 required
               />
             </div>
@@ -183,6 +185,7 @@ export const TeklifFormu = ({
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="ornek@email.com"
+                autoComplete="email"
               />
             </div>
           </div>
@@ -197,6 +200,7 @@ export const TeklifFormu = ({
               value={formData.konu}
               onChange={handleInputChange}
               placeholder="Teklif konusu"
+              autoComplete="off"
               required
             />
           </div>
@@ -212,6 +216,7 @@ export const TeklifFormu = ({
               onChange={handleInputChange}
               placeholder="Detaylı bilgi ve isteklerinizi yazın..."
               rows={4}
+              autoComplete="off"
               required
             />
           </div>
