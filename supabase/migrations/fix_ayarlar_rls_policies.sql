@@ -1,47 +1,43 @@
--- Ayarlar tablosu RLS politikalarını düzelt
--- Mevcut politikaları kaldır
-DROP POLICY IF EXISTS "Allow public read access to settings" ON public.ayarlar;
-DROP POLICY IF EXISTS "Allow admin manage settings" ON public.ayarlar;
-DROP POLICY IF EXISTS "Ayarlar okuma" ON public.ayarlar;
-DROP POLICY IF EXISTS "Ayarlar yazma" ON public.ayarlar;
-DROP POLICY IF EXISTS "Admin can manage settings" ON public.ayarlar;
+-- Ayarlar tablosu için RLS politikalarını oluştur
 
--- Yeni RLS politikaları oluştur
--- Herkes ayarları okuyabilir
-CREATE POLICY "ayarlar_select_policy" ON public.ayarlar
-  FOR SELECT USING (true);
+-- Önce mevcut politikaları temizle (varsa)
+DROP POLICY IF EXISTS "Authenticated users can view ayarlar" ON ayarlar;
+DROP POLICY IF EXISTS "Authenticated users can insert ayarlar" ON ayarlar;
+DROP POLICY IF EXISTS "Authenticated users can update ayarlar" ON ayarlar;
+DROP POLICY IF EXISTS "Authenticated users can delete ayarlar" ON ayarlar;
 
--- Sadece admin kullanıcılar ayarları güncelleyebilir
-CREATE POLICY "ayarlar_insert_policy" ON public.ayarlar
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE auth.users.id = auth.uid() 
-      AND (auth.users.raw_app_meta_data->>'role' = 'admin' OR auth.users.email = 'admin@kumlu2.com')
-    )
-  );
+-- Authenticated kullanıcılar için SELECT politikası
+CREATE POLICY "Authenticated users can view ayarlar" 
+ON ayarlar FOR SELECT 
+TO authenticated 
+USING (true);
 
-CREATE POLICY "ayarlar_update_policy" ON public.ayarlar
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE auth.users.id = auth.uid() 
-      AND (auth.users.raw_app_meta_data->>'role' = 'admin' OR auth.users.email = 'admin@kumlu2.com')
-    )
-  );
+-- Authenticated kullanıcılar için INSERT politikası
+CREATE POLICY "Authenticated users can insert ayarlar" 
+ON ayarlar FOR INSERT 
+TO authenticated 
+WITH CHECK (true);
 
-CREATE POLICY "ayarlar_delete_policy" ON public.ayarlar
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE auth.users.id = auth.uid() 
-      AND (auth.users.raw_app_meta_data->>'role' = 'admin' OR auth.users.email = 'admin@kumlu2.com')
-    )
-  );
+-- Authenticated kullanıcılar için UPDATE politikası
+CREATE POLICY "Authenticated users can update ayarlar" 
+ON ayarlar FOR UPDATE 
+TO authenticated 
+USING (true) 
+WITH CHECK (true);
 
--- Gerekli izinleri ver
-GRANT SELECT ON public.ayarlar TO anon, authenticated;
-GRANT INSERT, UPDATE, DELETE ON public.ayarlar TO authenticated;
+-- Authenticated kullanıcılar için DELETE politikası
+CREATE POLICY "Authenticated users can delete ayarlar" 
+ON ayarlar FOR DELETE 
+TO authenticated 
+USING (true);
 
--- Ayarlar tablosunda RLS'nin etkin olduğundan emin ol
-ALTER TABLE public.ayarlar ENABLE ROW LEVEL SECURITY;
+-- Authenticated role'üne ayarlar tablosu için tüm izinleri ver
+GRANT ALL PRIVILEGES ON ayarlar TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE ayarlar_id_seq TO authenticated;
+
+-- Anon kullanıcılar için sadece SELECT izni (isteğe bağlı)
+GRANT SELECT ON ayarlar TO anon;
+
+-- Service role için tüm izinler (admin işlemleri için)
+GRANT ALL PRIVILEGES ON ayarlar TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE ayarlar_id_seq TO service_role;

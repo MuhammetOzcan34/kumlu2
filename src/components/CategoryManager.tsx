@@ -368,9 +368,9 @@ export const CategoryManager: React.FC = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="ad">Kategori Adı *</Label>
+                <Label htmlFor="kategori-ad">Kategori Adı *</Label>
                 <Input
-                  id="ad"
+                  id="kategori-ad"
                   value={formData.ad}
                   onChange={(e) => handleFormChange('ad', e.target.value)}
                   placeholder="Kategori adını girin"
@@ -378,9 +378,9 @@ export const CategoryManager: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="slug">Slug</Label>
+                <Label htmlFor="kategori-slug">Slug</Label>
                 <Input
-                  id="slug"
+                  id="kategori-slug"
                   value={formData.slug}
                   onChange={(e) => handleFormChange('slug', e.target.value)}
                   placeholder="kategori-slug"
@@ -405,9 +405,9 @@ export const CategoryManager: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="sira_no">Sıra Numarası</Label>
+                <Label htmlFor="kategori-sira-no">Sıra Numarası</Label>
                 <Input
-                  id="sira_no"
+                  id="kategori-sira-no"
                   type="number"
                   value={formData.sira_no}
                   onChange={(e) => handleFormChange('sira_no', parseInt(e.target.value) || 0)}
@@ -416,9 +416,9 @@ export const CategoryManager: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="aciklama">Açıklama</Label>
+                <Label htmlFor="kategori-aciklama">Açıklama</Label>
                 <Textarea
-                  id="aciklama"
+                  id="kategori-aciklama"
                   value={formData.aciklama}
                   onChange={(e) => handleFormChange('aciklama', e.target.value)}
                   placeholder="Kategori açıklaması"

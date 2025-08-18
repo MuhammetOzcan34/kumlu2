@@ -122,16 +122,14 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove, { passive: true });
-      document.addEventListener("touchstart", handleTouchStart, { passive: true });
-      document.addEventListener("touchend", handleTouchEnd);
+      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchend", handleTouchEnd, { passive: true });
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchstart", handleTouchStart);
       document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isDragging, dragStart, isMobile, whatsappEnabled]);
@@ -194,10 +192,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
         <Button
           onClick={isMobile ? () => setIsOpen(true) : handleQuickContact}
           onMouseDown={handleMouseDown}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            handleTouchStart(e);
-          }}
+          onTouchStart={handleTouchStart}
           className={cn(
             "rounded-full shadow-lg hover:shadow-xl transition-all duration-200",
             "bg-green-500 hover:bg-green-600 text-white",
@@ -241,11 +236,11 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
           <CardContent className="p-4 space-y-4">
             <div className="space-y-3">
               <div>
-                <Label htmlFor="name" className="text-sm font-medium">
+                <Label htmlFor="whatsapp-name" className="text-sm font-medium">
                   Adınız
                 </Label>
                 <Input
-                  id="name"
+                  id="whatsapp-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Adınızı girin"
@@ -254,11 +249,11 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
               </div>
               
               <div>
-                <Label htmlFor="phone" className="text-sm font-medium">
+                <Label htmlFor="whatsapp-phone" className="text-sm font-medium">
                   Telefon (İsteğe bağlı)
                 </Label>
                 <Input
-                  id="phone"
+                  id="whatsapp-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Telefon numaranız"
@@ -267,11 +262,11 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
               </div>
 
               <div>
-                <Label htmlFor="message" className="text-sm font-medium">
+                <Label htmlFor="whatsapp-message" className="text-sm font-medium">
                   Mesajınız
                 </Label>
                 <Textarea
-                  id="message"
+                  id="whatsapp-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Mesajınızı yazın..."

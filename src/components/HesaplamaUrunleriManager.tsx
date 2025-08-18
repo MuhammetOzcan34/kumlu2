@@ -244,9 +244,9 @@ export const HesaplamaUrunleriManager = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                    <Label htmlFor="ad">Malzeme Adı</Label>
+                    <Label htmlFor="urun-ad">Malzeme Adı</Label>
                 <Input
-                  id="ad"
+                  id="urun-ad"
                   value={formData.ad}
                   onChange={(e) => setFormData({ ...formData, ad: e.target.value })}
                   required
@@ -254,9 +254,9 @@ export const HesaplamaUrunleriManager = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="aciklama">Açıklama</Label>
+                <Label htmlFor="urun-aciklama">Açıklama</Label>
                 <Textarea
-                  id="aciklama"
+                  id="urun-aciklama"
                   value={formData.aciklama}
                   onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                 />
@@ -264,9 +264,9 @@ export const HesaplamaUrunleriManager = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="kategori">Kategori</Label>
+                  <Label htmlFor="urun-kategori">Kategori</Label>
                   <Input
-                    id="kategori"
+                    id="urun-kategori"
                     value={formData.kategori}
                     onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
                         required
@@ -274,9 +274,9 @@ export const HesaplamaUrunleriManager = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="sira_no">Sıra No</Label>
+                  <Label htmlFor="urun-sira-no">Sıra No</Label>
                   <Input
-                    id="sira_no"
+                    id="urun-sira-no"
                     type="number"
                     value={formData.sira_no}
                     onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}
@@ -412,9 +412,9 @@ export const HesaplamaUrunleriManager = () => {
                   <form onSubmit={handleFiyatSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="metrekare_min">Min m²</Label>
+                        <Label htmlFor="fiyat-metrekare-min">Min m²</Label>
                         <Input
-                          id="metrekare_min"
+                          id="fiyat-metrekare-min"
                           type="number"
                           value={fiyatFormData.metrekare_min}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, metrekare_min: Number(e.target.value) })}
@@ -425,9 +425,9 @@ export const HesaplamaUrunleriManager = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="metrekare_max">Max m²</Label>
+                        <Label htmlFor="fiyat-metrekare-max">Max m²</Label>
                         <Input
-                          id="metrekare_max"
+                          id="fiyat-metrekare-max"
                           type="number"
                           value={fiyatFormData.metrekare_max}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, metrekare_max: Number(e.target.value) })}
@@ -440,9 +440,9 @@ export const HesaplamaUrunleriManager = () => {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="malzeme_fiyat">Malzeme Fiyatı (₺/m²)</Label>
+                        <Label htmlFor="fiyat-malzeme">Malzeme Fiyatı (₺/m²)</Label>
                         <Input
-                          id="malzeme_fiyat"
+                          id="fiyat-malzeme"
                           type="number"
                           value={fiyatFormData.malzeme_fiyat}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, malzeme_fiyat: Number(e.target.value) })}
@@ -453,9 +453,9 @@ export const HesaplamaUrunleriManager = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="montaj_fiyat">Montaj Fiyatı (₺/m²)</Label>
+                        <Label htmlFor="fiyat-montaj">Montaj Fiyatı (₺/m²)</Label>
                         <Input
-                          id="montaj_fiyat"
+                          id="fiyat-montaj"
                           type="number"
                           value={fiyatFormData.montaj_fiyat}
                           onChange={(e) => setFiyatFormData({ ...fiyatFormData, montaj_fiyat: Number(e.target.value) })}

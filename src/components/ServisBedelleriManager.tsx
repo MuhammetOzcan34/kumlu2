@@ -188,9 +188,9 @@ export const ServisBedelleriManager = () => {
               </div>
               
               <div className="space-y-2">
-                  <Label htmlFor="hizmet_adi">Hizmet Adı</Label>
+                  <Label htmlFor="servis-hizmet-adi">Hizmet Adı</Label>
                   <Input
-                    id="hizmet_adi"
+                    id="servis-hizmet-adi"
                     value={formData.hizmet_adi}
                   onChange={(e) => setFormData({ ...formData, hizmet_adi: e.target.value })}
                   required
@@ -214,9 +214,9 @@ export const ServisBedelleriManager = () => {
                   </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="birim_fiyat">Birim Fiyat</Label>
+                  <Label htmlFor="servis-birim-fiyat">Birim Fiyat</Label>
                     <Input
-                      id="birim_fiyat"
+                      id="servis-birim-fiyat"
                       type="number"
                     value={formData.birim_fiyat}
                     onChange={(e) => setFormData({ ...formData, birim_fiyat: Number(e.target.value) })}
@@ -228,18 +228,18 @@ export const ServisBedelleriManager = () => {
                 </div>
               
               <div className="space-y-2">
-                  <Label htmlFor="aciklama">Açıklama</Label>
+                  <Label htmlFor="servis-aciklama">Açıklama</Label>
                   <Textarea
-                    id="aciklama"
+                    id="servis-aciklama"
                     value={formData.aciklama}
                   onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
                   />
                 </div>
               
               <div className="space-y-2">
-                  <Label htmlFor="sira_no">Sıra No</Label>
+                  <Label htmlFor="servis-sira-no">Sıra No</Label>
                   <Input
-                    id="sira_no"
+                    id="servis-sira-no"
                     type="number"
                     value={formData.sira_no}
                   onChange={(e) => setFormData({ ...formData, sira_no: Number(e.target.value) })}

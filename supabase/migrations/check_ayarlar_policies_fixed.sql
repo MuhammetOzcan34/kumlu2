@@ -18,15 +18,4 @@ SELECT
     privilege_type 
 FROM information_schema.role_table_grants 
 WHERE table_schema = 'public' 
-    AND table_name = 'ayarlar' 
-    AND grantee IN ('anon', 'authenticated', 'service_role')
-ORDER BY grantee, privilege_type;
-
--- Ayarlar tablosunun RLS durumunu kontrol et
-SELECT 
-    schemaname,
-    tablename,
-    rowsecurity,
-    forcerowsecurity
-FROM pg_tables 
-WHERE tablename = 'ayarlar';
+    AND table_name = 'ayarlar'

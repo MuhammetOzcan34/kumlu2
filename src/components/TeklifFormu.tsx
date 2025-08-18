@@ -145,11 +145,11 @@ export const TeklifFormu = ({
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ad">
+            <Label htmlFor="teklif-ad">
               Ad Soyad <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="ad"
+              id="teklif-ad"
               name="ad"
               value={formData.ad}
               onChange={handleInputChange}
@@ -158,50 +158,55 @@ export const TeklifFormu = ({
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="teklif-telefon">
+                Telefon <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="teklif-telefon"
+                name="telefon"
+                type="tel"
+                value={formData.telefon}
+                onChange={handleInputChange}
+                placeholder="0555 123 45 67"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="teklif-email">E-posta</Label>
+              <Input
+                id="teklif-email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="ornek@email.com"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="telefon">
-              Telefon <span className="text-destructive">*</span>
+            <Label htmlFor="teklif-konu">
+              Konu <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="telefon"
-              name="telefon"
-              type="tel"
-              value={formData.telefon}
+              id="teklif-konu"
+              name="konu"
+              value={formData.konu}
               onChange={handleInputChange}
-              placeholder="0555 123 45 67"
+              placeholder="Teklif konusu"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="ornek@email.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="konu">Konu</Label>
-            <Input
-              id="konu"
-              name="konu"
-              value={formData.konu}
-              onChange={handleInputChange}
-              placeholder="Teklif konusu"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="mesaj">
+            <Label htmlFor="teklif-mesaj">
               Mesaj <span className="text-destructive">*</span>
             </Label>
             <Textarea
-              id="mesaj"
+              id="teklif-mesaj"
               name="mesaj"
               value={formData.mesaj}
               onChange={handleInputChange}

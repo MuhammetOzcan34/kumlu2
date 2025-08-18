@@ -15,14 +15,17 @@ root.render(
   </StrictMode>
 );
 
-// Service Worker kaydı - PWA desteği için
+// Service Worker kaydı - PWA desteği için (sadece production'da)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', {
       scope: '/'
     })
     .then((registration) => {
-      console.log('SW registered: ', registration);
+      // Sessiz kayıt - sadece geliştirme modunda log
+      if (import.meta.env.DEV) {
+        console.log('Service Worker kaydedildi');
+      }
       
       // Güncelleme kontrolü
       registration.addEventListener('updatefound', () => {
@@ -30,15 +33,20 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Yeni service worker hazır, kullanıcıya bildir
-              console.log('New content is available; please refresh.');
+              // Yeni service worker hazır - sessiz güncelleme
+              if (import.meta.env.DEV) {
+                console.log('Yeni içerik mevcut, sayfa yenilenebilir.');
+              }
             }
           });
         }
       });
     })
     .catch((registrationError) => {
-      console.warn('SW registration failed: ', registrationError);
+      // Sadece gerçek hatalar için uyarı
+      if (import.meta.env.DEV) {
+        console.warn('Service Worker kaydı başarısız:', registrationError);
+      }
     });
   });
 }

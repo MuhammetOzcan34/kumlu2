@@ -20,18 +20,9 @@ export const getStorageUrl = (bucketName: string, filePath: string): string => {
       return '';
     }
 
-    // URL'yi CORS-safe hale getir
-    const url = new URL(data.publicUrl);
-    
-    // Cache busting için timestamp ekle
-    url.searchParams.set('t', Date.now().toString());
-    
-    // CORS headers için özel parametreler
-    url.searchParams.set('cors', 'true');
-    url.searchParams.set('cache', 'public');
-    
+    // Basit URL döndür - CORS parametrelerini kaldır
     console.log(`✅ Storage URL oluşturuldu: ${bucketName}/${filePath}`);
-    return url.toString();
+    return data.publicUrl;
   } catch (error) {
     console.error(`❌ Storage URL hatası: ${bucketName}/${filePath}`, error);
     return '';

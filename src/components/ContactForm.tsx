@@ -97,58 +97,54 @@ export const ContactForm: React.FC = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Ad Soyad *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Adınız ve soyadınız"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="0555 123 45 67"
-              />
-            </div>
-          </div>
-          
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta *</Label>
+            <Label htmlFor="contact-name">Ad Soyad *</Label>
             <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="ornek@email.com"
+              id="contact-name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="subject">Konu</Label>
+            <Label htmlFor="contact-phone">Telefon *</Label>
             <Input
-              id="subject"
-              value={formData.subject}
-              onChange={(e) => handleInputChange('subject', e.target.value)}
-              placeholder="Mesajınızın konusu"
+              id="contact-phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="message">Mesaj *</Label>
+            <Label htmlFor="contact-email">E-posta</Label>
+            <Input
+              id="contact-email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact-subject">Konu *</Label>
+            <Input
+              id="contact-subject"
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact-message">Mesaj *</Label>
             <Textarea
-              id="message"
+              id="contact-message"
               value={formData.message}
-              onChange={(e) => handleInputChange('message', e.target.value)}
-              placeholder="Mesajınızı buraya yazın..."
-              className="min-h-[120px]"
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              rows={4}
               required
             />
           </div>
