@@ -32,7 +32,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
   global: {
     headers: {
       'X-Client-Info': 'kumlu-cam-kumlama', // API çağrılarında özel bilgi
-      'Connection': 'keep-alive' // Bağlantıyı canlı tut
+      'Connection': 'keep-alive', // Bağlantıyı canlı tut
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey'
     },
     fetch: async (url, options = {}) => {
       const connectionId = generateConnectionId();
@@ -52,21 +55,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
             ...options.headers,
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
+            'Cache-Control': 'public, max-age=3600',
             'Connection': 'keep-alive',
             'Keep-Alive': 'timeout=5, max=100', // Connection pooling
             'X-Requested-With': 'XMLHttpRequest',
-            'X-Connection-ID': connectionId
+            'X-Connection-ID': connectionId,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey'
           },
           // Connection pooling ve performance ayarları
           keepalive: true,
           mode: 'cors',
-          credentials: 'same-origin'
+          credentials: 'omit' // CORS sorunlarını önlemek için
         });
         
         // Başarılı response'da connection'ı kaldır

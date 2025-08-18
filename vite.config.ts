@@ -11,13 +11,31 @@ export default defineConfig(({ mode }) => {
       port: 8080,
       hmr: {
         port: 8080,
-        host: 'localhost'
+        host: 'localhost',
+        // HMR bağlantı sorunlarını önle
+        clientPort: 8080,
+        protocol: 'ws'
       },
       watch: {
         usePolling: true,
-        interval: 100
+        interval: 100,
+        // Dosya değişikliklerini daha iyi takip et
+        ignored: ['**/node_modules/**', '**/.git/**']
       },
-      cors: true
+      cors: {
+        origin: true,
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+      },
+      // Proxy ayarları - CORS sorunlarını önle
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
     plugins,
     build: {
@@ -53,6 +71,12 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+      // Module resolution sorunlarını önle
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+      // Symlink sorunlarını önle
+      preserveSymlinks: false,
+      // Dedupe modülleri
+      dedupe: ['react', 'react-dom']
     },
     define: {
       global: "globalThis",
@@ -65,10 +89,19 @@ export default defineConfig(({ mode }) => {
         '@tanstack/react-query',
         'react-router-dom',
         'lucide-react',
-        'react-is'
+        'react-is',
+        // ERR_ABORTED hatalarını önlemek için ek modüller
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-select',
+        'class-variance-authority',
+        'clsx',
+        'tailwind-merge'
       ],
       // Büyük kütüphaneleri önceden bundle'la
       force: true,
+      // Module loading sorunlarını önle
+      exclude: ['@vite/client', '@vite/env']
     },
     // CSS optimizasyonu
     css: {

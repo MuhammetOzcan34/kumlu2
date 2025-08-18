@@ -13,6 +13,7 @@ import { TeklifFormu } from "@/components/TeklifFormu";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getSliderImageUrl, preloadImages } from "@/utils/storageUtils";
 
 // Servis kartları - memoize edilmiş
 const services = [
@@ -127,7 +128,7 @@ const Index = () => {
       
       return data?.map(photo => ({
         id: photo.id,
-        image: supabase.storage.from('fotograflar').getPublicUrl(photo.dosya_yolu).data.publicUrl,
+        image: getSliderImageUrl(photo.dosya_yolu),
         title: photo.baslik || "",
         description: photo.aciklama || ""
       })) || [];
@@ -143,13 +144,9 @@ const Index = () => {
   useEffect(() => {
     if (slides.length > 0) {
       // İlk 3 slider görselini preload et
-      const preloadImages = slides.slice(0, 3);
-      preloadImages.forEach((slide) => {
-        const img = new Image();
-        img.src = slide.image;
-        // Preload işlemini sessizce yap
-        img.onload = () => console.log(`🚀 Preloaded: ${slide.title}`);
-        img.onerror = () => console.warn(`⚠️ Preload failed: ${slide.title}`);
+      const imageUrls = slides.slice(0, 3).map(slide => slide.image);
+      preloadImages(imageUrls, (loaded, total) => {
+        console.log(`🚀 Slider preload progress: ${loaded}/${total}`);
       });
     }
   }, [slides]);

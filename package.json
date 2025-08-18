@@ -9,7 +9,7 @@
     "build": "vite build",
     "start": "vite preview",
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 50"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

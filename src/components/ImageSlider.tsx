@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, memo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { getPlaceholderImage, handleImageError } from "@/utils/placeholders";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { handleImageLoadError } from '@/utils/storageUtils';
 
 interface SlideItem {
   id: string;
@@ -18,7 +18,7 @@ interface ImageSliderProps {
   onImageClick?: (index: number) => void;
 }
 
-const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
+const OptimizedImage = React.memo(({ src, alt, onClick, isActive }: {
   src: string;
   alt: string;
   onClick: () => void;
@@ -34,44 +34,17 @@ const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
-      {error && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <img
-            src={getPlaceholderImage('ana-sayfa-slider')}
-            alt="Placeholder"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              const parent = target.parentElement;
-              if (parent) {
-                parent.innerHTML = '<p class="text-muted-foreground text-sm">Görsel yüklenemedi</p>';
-              }
-            }}
-          />
-        </div>
-      )}
       <img
         src={src}
         alt={alt}
-        className={cn(
-          "w-full h-full object-cover cursor-pointer transition-opacity duration-300",
-          loaded ? "opacity-100" : "opacity-0"
-        )}
-        onClick={onClick}
+        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+        loading={isActive ? 'eager' : 'lazy'}
         onLoad={() => setLoaded(true)}
         onError={(e) => {
-          // İlk önce placeholder dene
-          const target = e.currentTarget;
-          if (!target.src.includes('trae-api-sg.mchost.guru')) {
-            const placeholderUrl = getPlaceholderImage('ana-sayfa-slider');
-            target.src = placeholderUrl;
-          } else {
-            setError(true);
-          }
+          setError(true);
+          handleImageLoadError(e, 'slider');
         }}
-        loading={isActive ? "eager" : "lazy"}
-        decoding="async"
+        onClick={onClick}
       />
     </div>
   );
@@ -79,7 +52,7 @@ const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
 
 OptimizedImage.displayName = "OptimizedImage";
 
-export const ImageSlider = memo(({ slides, autoPlay = true, interval = 5000, onImageClick }: ImageSliderProps) => {
+export const ImageSlider = React.memo(({ slides, autoPlay = true, interval = 5000, onImageClick }: ImageSliderProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const goToSlide = useCallback((index: number) => {

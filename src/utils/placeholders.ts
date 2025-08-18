@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Placeholder görsel URL'leri
 export const PLACEHOLDER_IMAGES = {
   // Genel placeholder'lar
