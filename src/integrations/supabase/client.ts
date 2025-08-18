@@ -51,6 +51,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
           ...options,
           signal: controller.signal,
           headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
             ...options.headers,
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
