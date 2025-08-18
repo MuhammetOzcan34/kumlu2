@@ -297,108 +297,124 @@ export default function Admin() {
 
   const loadAdminData = useCallback(async () => {
     console.log('🔄 Admin - Yönetim verileri yükleniyor...');
+    setDataLoading(true);
     
-    // Kategorileri yükle
     try {
-      console.log('📋 Admin - Kategoriler yükleniyor...');
-      const kategorilerRes = await supabase.from("kategoriler").select("*").order("sira_no");
-      if (kategorilerRes.error) {
-        console.error('❌ Admin - Kategoriler yüklenirken hata:', kategorilerRes.error);
+      // Kategorileri yükle
+      try {
+        console.log('📋 Admin - Kategoriler yükleniyor...');
+        const kategorilerRes = await supabase.from("kategoriler").select("*").order("sira_no");
+        if (kategorilerRes.error) {
+          console.error('❌ Admin - Kategoriler yüklenirken hata:', kategorilerRes.error);
+          toast({
+            title: "Kategoriler Yükleme Hatası",
+            description: `Kategoriler yüklenemedi: ${kategorilerRes.error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log(`✅ Admin - ${kategorilerRes.data?.length || 0} kategori yüklendi`);
+          setKategoriler(kategorilerRes.data || []);
+        }
+      } catch (error) {
+        console.error('❌ Admin - Kategoriler sorgusu hatası:', error);
         toast({
-          title: "Kategoriler Yükleme Hatası",
-          description: `Kategoriler yüklenemedi: ${kategorilerRes.error.message}`,
+          title: "Kategoriler Hatası",
+          description: "Kategoriler sorgulanırken beklenmeyen bir hata oluştu.",
           variant: "destructive",
         });
-      } else {
-        console.log(`✅ Admin - ${kategorilerRes.data?.length || 0} kategori yüklendi`);
-        setKategoriler(kategorilerRes.data || []);
+        setKategoriler([]); // Hata durumunda boş array set et
       }
-    } catch (error) {
-      console.error('❌ Admin - Kategoriler sorgusu hatası:', error);
-      toast({
-        title: "Kategoriler Hatası",
-        description: "Kategoriler sorgulanırken beklenmeyen bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-    
-    // Fotoğrafları yükle
-    try {
-      console.log('🖼️ Admin - Fotoğraflar yükleniyor...');
-      const fotograflarRes = await supabase.from("fotograflar").select("*").order("sira_no");
-      if (fotograflarRes.error) {
-        console.error('❌ Admin - Fotoğraflar yüklenirken hata:', fotograflarRes.error);
-        toast({
-          title: "Fotoğraflar Yükleme Hatası",
-          description: `Fotoğraflar yüklenemedi: ${fotograflarRes.error.message}`,
-          variant: "destructive",
-        });
-      } else {
-        console.log(`✅ Admin - ${fotograflarRes.data?.length || 0} fotoğraf yüklendi`);
-        setFotograflar(fotograflarRes.data || []);
-      }
-    } catch (error) {
-      console.error('❌ Admin - Fotoğraflar sorgusu hatası:', error);
-      toast({
-        title: "Fotoğraflar Hatası",
-        description: "Fotoğraflar sorgulanırken beklenmeyen bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-    
-    // Ayarları yükle
-    try {
-      console.log('⚙️ Admin - Ayarlar yükleniyor...');
-      const ayarlarRes = await supabase.from("ayarlar").select("*").order("anahtar");
-      if (ayarlarRes.error) {
-        console.error('❌ Admin - Ayarlar yüklenirken hata:', ayarlarRes.error);
-        toast({
-          title: "Ayarlar Yükleme Hatası",
-          description: `Ayarlar yüklenemedi: ${ayarlarRes.error.message}`,
-          variant: "destructive",
-        });
-      } else {
-        console.log(`✅ Admin - ${ayarlarRes.data?.length || 0} ayar yüklendi`);
-        setAyarlar(ayarlarRes.data || []);
-      }
-    } catch (error) {
-      console.error('❌ Admin - Ayarlar sorgusu hatası:', error);
-      toast({
-        title: "Ayarlar Hatası",
-        description: "Ayarlar sorgulanırken beklenmeyen bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-    
-    // Kampanyaları yükle
-    try {
-      console.log('📢 Admin - Kampanyalar yükleniyor...');
-      const kampanyalarRes = await supabase.from("reklam_kampanyalari").select(`
-        *,
-        kategoriler(ad)
-      `).order("created_at", { ascending: false });
       
-      if (kampanyalarRes.error) {
-        console.error('❌ Admin - Kampanyalar yüklenirken hata:', kampanyalarRes.error);
+      // Fotoğrafları yükle
+      try {
+        console.log('🖼️ Admin - Fotoğraflar yükleniyor...');
+        const fotograflarRes = await supabase.from("fotograflar").select("*").order("sira_no");
+        if (fotograflarRes.error) {
+          console.error('❌ Admin - Fotoğraflar yüklenirken hata:', fotograflarRes.error);
+          toast({
+            title: "Fotoğraflar Yükleme Hatası",
+            description: `Fotoğraflar yüklenemedi: ${fotograflarRes.error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log(`✅ Admin - ${fotograflarRes.data?.length || 0} fotoğraf yüklendi`);
+          setFotograflar(fotograflarRes.data || []);
+        }
+      } catch (error) {
+        console.error('❌ Admin - Fotoğraflar sorgusu hatası:', error);
         toast({
-          title: "Kampanyalar Yükleme Hatası",
-          description: `Kampanyalar yüklenemedi: ${kampanyalarRes.error.message}`,
+          title: "Fotoğraflar Hatası",
+          description: "Fotoğraflar sorgulanırken beklenmeyen bir hata oluştu.",
           variant: "destructive",
         });
-      } else {
-        console.log(`✅ Admin - ${kampanyalarRes.data?.length || 0} kampanya yüklendi`);
-        setKampanyalar(kampanyalarRes.data || []);
+        setFotograflar([]); // Hata durumunda boş array set et
       }
+      
+      // Ayarları yükle
+      try {
+        console.log('⚙️ Admin - Ayarlar yükleniyor...');
+        const ayarlarRes = await supabase.from("ayarlar").select("*").order("anahtar");
+        if (ayarlarRes.error) {
+          console.error('❌ Admin - Ayarlar yüklenirken hata:', ayarlarRes.error);
+          toast({
+            title: "Ayarlar Yükleme Hatası",
+            description: `Ayarlar yüklenemedi: ${ayarlarRes.error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log(`✅ Admin - ${ayarlarRes.data?.length || 0} ayar yüklendi`);
+          setAyarlar(ayarlarRes.data || []);
+        }
+      } catch (error) {
+        console.error('❌ Admin - Ayarlar sorgusu hatası:', error);
+        toast({
+          title: "Ayarlar Hatası",
+          description: "Ayarlar sorgulanırken beklenmeyen bir hata oluştu.",
+          variant: "destructive",
+        });
+        setAyarlar([]); // Hata durumunda boş array set et
+      }
+      
+      // Kampanyaları yükle
+      try {
+        console.log('📢 Admin - Kampanyalar yükleniyor...');
+        const kampanyalarRes = await supabase.from("reklam_kampanyalari").select(`
+          *,
+          kategoriler(ad)
+        `).order("created_at", { ascending: false });
+        
+        if (kampanyalarRes.error) {
+          console.error('❌ Admin - Kampanyalar yüklenirken hata:', kampanyalarRes.error);
+          toast({
+            title: "Kampanyalar Yükleme Hatası",
+            description: `Kampanyalar yüklenemedi: ${kampanyalarRes.error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log(`✅ Admin - ${kampanyalarRes.data?.length || 0} kampanya yüklendi`);
+          setKampanyalar(kampanyalarRes.data || []);
+        }
+      } catch (error) {
+        console.error('❌ Admin - Kampanyalar sorgusu hatası:', error);
+        toast({
+          title: "Kampanyalar Hatası",
+          description: "Kampanyalar sorgulanırken beklenmeyen bir hata oluştu.",
+          variant: "destructive",
+        });
+        setKampanyalar([]); // Hata durumunda boş array set et
+      }
+      
+      console.log('✅ Admin - Yönetim verileri yükleme işlemi tamamlandı');
     } catch (error) {
-      console.error('❌ Admin - Kampanyalar sorgusu hatası:', error);
+      console.error('❌ Admin - Genel veri yükleme hatası:', error);
       toast({
-        title: "Kampanyalar Hatası",
-        description: "Kampanyalar sorgulanırken beklenmeyen bir hata oluştu.",
+        title: "Veri Yükleme Hatası",
+        description: "Veriler yüklenirken beklenmeyen bir hata oluştu.",
         variant: "destructive",
       });
+    } finally {
+      setDataLoading(false); // Her durumda loading'i false yap
     }
-    
-    console.log('✅ Admin - Yönetim verileri yükleme işlemi tamamlandı');
   }, [toast]);
 
   const handleKampanyaSubmit = useCallback(() => {
