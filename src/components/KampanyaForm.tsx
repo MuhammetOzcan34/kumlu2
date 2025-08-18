@@ -172,7 +172,7 @@ export function KampanyaForm({
                 value={formData.platform}
                 onValueChange={(value) => setFormData({ ...formData, platform: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="platform">
                   <SelectValue placeholder="Platform seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,7 +189,7 @@ export function KampanyaForm({
                 value={formData.durum}
                 onValueChange={(value) => setFormData({ ...formData, durum: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="durum">
                   <SelectValue placeholder="Durum seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,7 +207,7 @@ export function KampanyaForm({
                 value={formData.kategori_id}
                 onValueChange={(value) => setFormData({ ...formData, kategori_id: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="kategori_id">
                   <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>

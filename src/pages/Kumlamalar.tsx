@@ -9,6 +9,7 @@ import { useSetting } from "@/hooks/useSettings";
 import { useCategories } from "@/hooks/useCategories";
 import { usePhotos, getImageUrl } from "@/hooks/usePhotos";
 import { cn } from "@/lib/utils";
+import { getPlaceholderImage, handleImageError } from "@/utils/placeholders";
 
 const Kumlamalar = () => {
   console.log('Kumlamalar component version: 2.0'); // Sürüm kontrolü
@@ -158,14 +159,14 @@ const Kumlamalar = () => {
                         onClick={() => handleImageClick(index)}
                       >
                         <img 
-                          src={image.image} 
+                          src={image.image || getPlaceholderImage('kumlamalar', 'kumlama')} 
                           alt={image.title}
                           className="w-full h-full object-cover"
                           loading="lazy"
                           decoding="async"
                           onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
+                            const fallbackUrl = getPlaceholderImage('kumlamalar', 'kumlama');
+                            handleImageError(e, fallbackUrl);
                           }}
                         />
                       </div>

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQueryClient } from '@tanstack/react-query';
+import { getPlaceholderImage, handleImageError } from '@/utils/placeholders';
 
 interface Photo {
   id: string;
@@ -461,8 +462,11 @@ const PhotoGalleryManager: React.FC = memo(() => {
                     loading="lazy"
                     decoding="async"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
+                      const fallbackUrl = getPlaceholderImage(
+                        photo.kategori_adi?.toLowerCase(),
+                        photo.kullanim_alani?.[0]
+                      );
+                      handleImageError(e, fallbackUrl);
                     }}
                   />
                   <div className="absolute top-1 right-1 flex gap-1">

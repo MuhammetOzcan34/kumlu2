@@ -7,6 +7,7 @@ import { useSetting } from "@/hooks/useSettings";
 import { useVideos } from "@/hooks/useVideos";
 import { Play } from "lucide-react";
 import React, { useState, useCallback } from "react";
+import { getPlaceholderImage, handleImageError } from "@/utils/placeholders";
 
 interface Video {
   id: string;
@@ -60,14 +61,14 @@ const VideoGaleri = () => {
                 <div key={video.id} className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <div className="relative aspect-video bg-muted cursor-pointer" onClick={() => handleVideoClick(video)}>
                     <img 
-                      src={video.thumbnail_url || ''} 
+                      src={video.thumbnail_url || getPlaceholderImage('video', 'galeri')} 
                       alt={video.baslik}
                       className="w-full h-full object-cover"
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        const fallbackUrl = getPlaceholderImage('video', 'galeri');
+                        handleImageError(e, fallbackUrl);
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPlaceholderImage, handleImageError } from "@/utils/placeholders";
 
 interface SlideItem {
   id: string;
@@ -35,7 +36,19 @@ const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
       )}
       {error && (
         <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">Görsel yüklenemedi</p>
+          <img
+            src={getPlaceholderImage('ana-sayfa-slider')}
+            alt="Placeholder"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              const parent = target.parentElement;
+              if (parent) {
+                parent.innerHTML = '<p class="text-muted-foreground text-sm">Görsel yüklenemedi</p>';
+              }
+            }}
+          />
         </div>
       )}
       <img
@@ -47,7 +60,16 @@ const OptimizedImage = memo(({ src, alt, onClick, isActive }: {
         )}
         onClick={onClick}
         onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
+        onError={(e) => {
+          // İlk önce placeholder dene
+          const target = e.currentTarget;
+          if (!target.src.includes('trae-api-sg.mchost.guru')) {
+            const placeholderUrl = getPlaceholderImage('ana-sayfa-slider');
+            target.src = placeholderUrl;
+          } else {
+            setError(true);
+          }
+        }}
         loading={isActive ? "eager" : "lazy"}
         decoding="async"
       />

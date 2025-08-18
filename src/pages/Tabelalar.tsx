@@ -8,6 +8,7 @@ import { useSetting } from "@/hooks/useSettings";
 import { useCategories } from "@/hooks/useCategories";
 import { usePhotos, getImageUrl } from "@/hooks/usePhotos";
 import { cn } from "@/lib/utils";
+import { getPlaceholderImage, handleImageError } from "@/utils/placeholders";
 
 const Tabelalar = () => {
   console.log('Tabelalar component version: 2.0'); // Sürüm kontrolü
@@ -137,14 +138,14 @@ const Tabelalar = () => {
                         onClick={() => handleImageClick(index)}
                       >
                         <img 
-                          src={image.image} 
+                          src={image.image || getPlaceholderImage('tabelalar', 'tabela')} 
                           alt={image.title}
                           className="w-full h-full object-cover"
                           loading="lazy"
                           decoding="async"
                           onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
+                            const fallbackUrl = getPlaceholderImage('tabelalar', 'tabela');
+                            handleImageError(e, fallbackUrl);
                           }}
                         />
                       </div>
