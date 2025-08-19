@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import Index from "./pages/Index";
@@ -38,8 +39,8 @@ const App = () => (
               <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
               <Route path="/hesaplama" element={<Hesaplama />} />
               <Route path="/iletisim" element={<Iletisim />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/auth" element={<ProtectedRoute requireAuth={false}><Auth /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute requireAuth={true} requireRole="admin" redirectUnauthorized="/auth"><Admin /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

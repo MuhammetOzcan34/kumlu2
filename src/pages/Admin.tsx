@@ -42,6 +42,7 @@ import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager'
 function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -50,10 +51,11 @@ function Admin() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
       
       if (!session) {
         navigate('/auth');
+      } else {
+        loadUserProfile(session.user.id);
       }
     });
 
@@ -64,11 +66,40 @@ function Admin() {
       
       if (!session) {
         navigate('/auth');
+      } else {
+        loadUserProfile(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+  
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.error("Profil yükleme hatası:", error);
+        setLoading(false);
+        return;
+      }
+
+      setProfile(data);
+      
+      // Kullanıcı admin ise verileri yükle
+      if (data?.role === "admin") {
+        await loadAdminData();
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Profil yükleme hatası:", error);
+      setLoading(false);
+    }
+  };
   
   // Tip tanımlamaları
   interface Kategori {
@@ -134,11 +165,7 @@ function Admin() {
 
 
 
-  useEffect(() => {
-    if (user && user.email === 'admin@kumlu2.com') {
-      loadAdminData();
-    }
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Admin verileri profil yüklendiğinde loadUserProfile içinde yükleniyor
 
   const loadAdminData = async () => {
     try {
@@ -253,7 +280,7 @@ function Admin() {
     );
   }
 
-  if (!user) {
+  if (!user || !profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -273,7 +300,7 @@ function Admin() {
     );
   }
 
-  if (user.email !== "admin@kumlu2.com") {
+  if (profile.role !== "admin") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">

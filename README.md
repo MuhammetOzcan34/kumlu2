@@ -94,21 +94,59 @@ kumlu2/
 
 Tüm tablolar için Row Level Security aktif edilmiştir:
 - `anon` rolü: Sadece okuma yetkisi
-- `authenticated` rolü: Tam yetki
+- `authenticated` rolü: Kendi verilerine erişim
 - Admin kullanıcıları: Tüm verilere erişim
+
+#### Kategoriler Tablosu
+- `Kategoriler herkese görünür`: Herkes kategorileri görebilir (SELECT)
+- `Admin kategorileri yönetebilir`: Admin rolüne sahip kullanıcılar tüm CRUD işlemlerini yapabilir
+
+#### Profiles Tablosu
+- Kullanıcılar kendi profillerini görebilir ve düzenleyebilir
+- Admin rolüne sahip kullanıcılar tüm profilleri görebilir ve düzenleyebilir
+
+### Rol Kontrolü İçin Kullanılan Fonksiyonlar
+```sql
+-- Kullanıcı rolünü döndüren fonksiyon
+CREATE OR REPLACE FUNCTION public.get_user_role(user_id uuid)
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  user_role text;
+BEGIN
+  SELECT role INTO user_role FROM public.profiles WHERE user_id = $1;
+  RETURN user_role;
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN 'user';
+END;
+$function$;
+```
 
 ## 🔐 Kimlik Doğrulama
 
 ### Kullanıcı Rolleri
-- **admin**: Tam yönetim yetkisi (admin@kumlu2.com)
+- **admin**: Tam yönetim yetkisi
 - **user**: Standart kullanıcı yetkisi
 
 ### Özellikler
 - E-posta/şifre ile giriş
 - Kullanıcı kaydı
 - Otomatik profil oluşturma
-- Rol tabanlı yetkilendirme
+- Rol tabanlı yetkilendirme (profile.role)
 - Oturum yönetimi
+
+### Kimlik Doğrulama Akışı
+1. Kullanıcı `/auth` sayfasından giriş yapar
+2. Başarılı giriş sonrası, kullanıcının profil bilgileri `profiles` tablosundan yüklenir
+3. Kullanıcı rolü `profile.role` alanından alınır
+4. Admin rolüne sahip kullanıcılar `/admin` sayfasına erişebilir
+
+### Rol Tabanlı Erişim Kontrolü (RBAC)
+- `ProtectedRoute` bileşeni, sayfalara erişimi rol bazlı kontrol eder
+- `AuthContext` içinde kullanıcı ve profil bilgileri saklanır
+- Admin sayfasına erişim için `profile.role === "admin"` kontrolü yapılır
 
 ## 🎨 UI Bileşenleri
 

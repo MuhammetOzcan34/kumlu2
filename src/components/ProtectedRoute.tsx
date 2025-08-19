@@ -6,19 +6,23 @@ import { useAuth } from '../contexts/AuthContext';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
+  requireRole?: string;
   redirectTo?: string;
+  redirectUnauthorized?: string;
 }
 
 /**
  * Korumalı route bileşeni
- * Kullanıcının oturum durumunu kontrol eder ve gerektiğinde yönlendirir
+ * Kullanıcının oturum durumunu ve rolünü kontrol eder ve gerektiğinde yönlendirir
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requireAuth = true, 
-  redirectTo = '/auth' 
+  requireAuth = true,
+  requireRole,
+  redirectTo = '/auth',
+  redirectUnauthorized = '/' 
 }) => {
-  const { user, session, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const location = useLocation();
 
   // Yükleme durumunda loading göster
@@ -34,7 +38,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Oturum gerekli ama kullanıcı giriş yapmamış
-  if (requireAuth && (!user || !session)) {
+  if (requireAuth && !user) {
     console.log('Korumalı sayfaya erişim reddedildi, auth sayfasına yönlendiriliyor...');
     return (
       <Navigate 
@@ -44,10 +48,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       />
     );
   }
+  
+  // Belirli bir rol gerekli ama kullanıcının rolü uygun değil
+  if (requireRole && profile && profile.role !== requireRole) {
+    console.log(`Yetkisiz erişim: ${requireRole} rolü gerekli, kullanıcı rolü: ${profile.role}`);
+    return (
+      <Navigate 
+        to={redirectUnauthorized} 
+        state={{ from: location.pathname, reason: 'unauthorized' }} 
+        replace 
+      />
+    );
+  }
 
   // Oturum var ama auth sayfasına gitmeye çalışıyor
-  if (!requireAuth && user && session && location.pathname === '/auth') {
-    console.log('Giriş yapmış kullanıcı auth sayfasından admin paneline yönlendiriliyor...');
+  if (!requireAuth && user && location.pathname === '/auth') {
+    console.log('Giriş yapmış kullanıcı auth sayfasından ana sayfaya yönlendiriliyor...');
     return <Navigate to="/admin" replace />;
   }
 

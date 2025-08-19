@@ -2,10 +2,22 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Profile {
+  id: string;
+  user_id: string;
+  display_name?: string;
+  avatar_url?: string;
+  role: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,7 +32,35 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Profil yüklenirken hata:', error);
+        return null;
+      }
+
+      return data as Profile;
+    } catch (error) {
+      console.error('Profil yüklenirken hata:', error);
+      return null;
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
+  };
 
   useEffect(() => {
     // Mevcut oturumu kontrol et
@@ -28,6 +68,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const profileData = await fetchProfile(session.user.id);
+          setProfile(profileData);
+        }
       } catch (error) {
         console.error('Oturum alınırken hata:', error);
       } finally {
@@ -41,6 +86,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const profileData = await fetchProfile(session.user.id);
+          setProfile(profileData);
+        } else {
+          setProfile(null);
+        }
+        
         setLoading(false);
       }
     );
@@ -58,8 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    profile,
     loading,
     signOut,
+    refreshProfile,
   };
 
   return (
