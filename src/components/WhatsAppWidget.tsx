@@ -137,6 +137,7 @@ export function WhatsAppWidget({ className }: WhatsAppWidgetProps) {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isMobile) {
+      // Passive event listener uyarısını önlemek için preventDefault kullanmıyoruz
       setIsDragging(true);
       const touch = e.touches[0];
       setDragStart({ x: touch.clientX, y: touch.clientY });

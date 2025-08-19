@@ -1,28 +1,26 @@
 import { useEffect, useState } from "react";
 import { Instagram } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
 export const ElfsightInstagramFeed = () => {
-  const [settings, setSettings] = useState({
-    instagram_enabled: false,
-    instagram_widget_type: 'elfsight' as 'elfsight' | 'api',
-    elfsight_widget_id: '',
-    elfsight_widget_code: ''
-  });
+  const { data: dbSettings } = useSettings();
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  useEffect(() => {
-    // Ayarları localStorage'dan yükle
-    const loadSettings = () => {
-      setSettings({
-        instagram_enabled: localStorage.getItem("instagram_enabled") === "true",
-        instagram_widget_type: (localStorage.getItem("instagram_widget_type") as 'elfsight' | 'api') || 'elfsight',
-        elfsight_widget_id: localStorage.getItem("elfsight_widget_id") || "",
-        elfsight_widget_code: localStorage.getItem("elfsight_widget_code") || ""
-      });
-    };
+  // Ayarları localStorage ve veritabanından birleştir
+  const settings = {
+    instagram_enabled: localStorage.getItem("instagram_enabled") === "true" || dbSettings?.instagram_enabled === "true",
+    instagram_widget_type: (localStorage.getItem("instagram_widget_type") as 'elfsight' | 'api') || dbSettings?.instagram_widget_type || 'elfsight',
+    elfsight_widget_id: localStorage.getItem("elfsight_widget_id") || dbSettings?.elfsight_widget_id || "",
+    elfsight_widget_code: localStorage.getItem("elfsight_widget_code") || dbSettings?.elfsight_widget_code || ""
+  };
 
-    loadSettings();
-  }, []);
+  // Debug log ekle
+  useEffect(() => {
+    console.log('Instagram Ayarları:', settings);
+    if (!settings.instagram_enabled) {
+      console.log('Instagram devre dışı - bileşen gösterilmiyor');
+    }
+  }, [settings]);
 
   useEffect(() => {
     // Elfsight script'ini yükle
