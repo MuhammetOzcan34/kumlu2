@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import Index from "./pages/Index";
 import Kumlamalar from "./pages/Kumlamalar";
 import AracGiydirme from "./pages/AracGiydirme";
@@ -20,26 +22,30 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/kumlamalar" element={<Kumlamalar />} />
-          <Route path="/arac-giydirme" element={<AracGiydirme />} />
-          <Route path="/tabelalar" element={<Tabelalar />} />
-          <Route path="/referanslar" element={<Referanslar />} />
-          <Route path="/video-galeri" element={<VideoGaleri />} />
-          <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
-          <Route path="/hesaplama" element={<Hesaplama />} />
-          <Route path="/iletisim" element={<Iletisim />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/kumlamalar" element={<Kumlamalar />} />
+              <Route path="/arac-giydirme" element={<AracGiydirme />} />
+              <Route path="/tabelalar" element={<Tabelalar />} />
+              <Route path="/referanslar" element={<Referanslar />} />
+              <Route path="/video-galeri" element={<VideoGaleri />} />
+              <Route path="/servis-bedelleri" element={<ServisBedelleri />} />
+              <Route path="/hesaplama" element={<Hesaplama />} />
+              <Route path="/iletisim" element={<Iletisim />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

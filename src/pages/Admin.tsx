@@ -39,7 +39,7 @@ import {
 
 import { WatermarkSettingsManager } from '@/components/WatermarkSettingsManager';
 
-export default function Admin() {
+function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,11 +108,16 @@ export default function Admin() {
     kampanya_adi: string;
     platform: string;
     durum: string;
-    butce_gunluk?: number;
-    kategori_id?: string;
+    butce_gunluk: number;
+    butce_toplam: number;
+    kategori_id: string;
+    baslangic_tarihi: string;
+    bitis_tarihi: string;
+    hedef_url: string;
+    reklam_metni: string;
     kategoriler?: {
       ad: string;
-    } | null;
+    };
     created_at: string;
     updated_at?: string;
   }
@@ -853,4 +858,6 @@ export default function Admin() {
       )}
     </div>
   );
-}
+};
+
+export default Admin;

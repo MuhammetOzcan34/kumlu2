@@ -14,11 +14,14 @@ interface Kampanya {
   platform: string;
   durum: string;
   kategori_id: string;
-  butce_gunluk: string;
+  butce_gunluk: number;
+  butce_toplam: number;
   baslangic_tarihi: string;
   bitis_tarihi: string;
   hedef_url: string;
   reklam_metni: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Kategori {
@@ -49,6 +52,7 @@ export function KampanyaForm({
     durum: "taslak",
     kategori_id: "",
     butce_gunluk: "",
+    butce_toplam: "",
     baslangic_tarihi: "",
     bitis_tarihi: "",
     reklam_metni: "",
@@ -65,6 +69,7 @@ export function KampanyaForm({
         durum: kampanya.durum || "taslak",
         kategori_id: kampanya.kategori_id || "",
         butce_gunluk: kampanya.butce_gunluk?.toString() || "",
+        butce_toplam: kampanya.butce_toplam?.toString() || "",
         baslangic_tarihi: kampanya.baslangic_tarihi || "",
         bitis_tarihi: kampanya.bitis_tarihi || "",
         reklam_metni: kampanya.reklam_metni || "",
@@ -77,6 +82,7 @@ export function KampanyaForm({
         durum: "taslak",
         kategori_id: "",
         butce_gunluk: "",
+        butce_toplam: "",
         baslangic_tarihi: "",
         bitis_tarihi: "",
         reklam_metni: "",
@@ -92,7 +98,8 @@ export function KampanyaForm({
     try {
       const submitData = {
         ...formData,
-        butce_gunluk: formData.butce_gunluk ? parseFloat(formData.butce_gunluk) : null
+        butce_gunluk: formData.butce_gunluk ? parseFloat(formData.butce_gunluk) : null,
+        butce_toplam: formData.butce_toplam ? parseFloat(formData.butce_toplam) : null
       };
 
       if (kampanya) {
@@ -234,6 +241,20 @@ export function KampanyaForm({
                 step="0.01"
                 value={formData.butce_gunluk}
                 onChange={(e) => setFormData({ ...formData, butce_gunluk: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="butce_toplam">Toplam Bütçe (₺)</Label>
+              <Input
+                id="butce_toplam"
+                name="butce_toplam"
+                placeholder="0.00"
+                autoComplete="off"
+                type="number"
+                step="0.01"
+                value={formData.butce_toplam}
+                onChange={(e) => setFormData({ ...formData, butce_toplam: e.target.value })}
               />
             </div>
             
