@@ -396,9 +396,9 @@ npm run dev
 
 ### Test Kullanıcısı
 
-* **E-posta:** <admin@kumlu2.com>
+* **E-posta:** ckumlama@gmail.com
 
-* **Şifre:** 123456
+* **Şifre:** CamKumlama25
 
 * **Rol:** admin
 
