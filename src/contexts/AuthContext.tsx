@@ -22,13 +22,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+// useAuth hook'u - named export olarak tanımlandı
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -72,31 +73,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
+        } else {
+          // Oturum yoksa profili null olarak ayarla
+          setProfile(null);
         }
       } catch (error) {
         console.error('Oturum alınırken hata:', error);
+        // Hata durumunda kullanıcı ve profili null olarak ayarla
+        setUser(null);
+        setProfile(null);
       } finally {
+        // Her durumda loading'i false yap
         setLoading(false);
       }
     };
 
-    getSession();
+    // Timeout ekleyerek oturum kontrolünün takılı kalmasını önle
+    const timeoutId = setTimeout(() => {
+      setLoading(false); // 5 saniye içinde yanıt gelmezse loading'i kapat
+    }, 5000);
+
+    getSession().finally(() => clearTimeout(timeoutId));
+    
 
     // Auth durumu değişikliklerini dinle
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const profileData = await fetchProfile(session.user.id);
-          setProfile(profileData);
-        } else {
+        try {
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            const profileData = await fetchProfile(session.user.id);
+            setProfile(profileData);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Auth durumu değişikliği işlenirken hata:', error);
+          // Hata durumunda kullanıcı ve profili null olarak ayarla
+          setUser(null);
           setProfile(null);
+        } finally {
+          // Her durumda loading'i false yap
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
+
+    // Komponent unmount olduğunda subscription'ı temizle
 
     return () => subscription.unsubscribe();
   }, []);
