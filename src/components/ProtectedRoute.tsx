@@ -15,7 +15,7 @@ interface ProtectedRouteProps {
  * Korumalı route bileşeni
  * Kullanıcının oturum durumunu ve rolünü kontrol eder ve gerektiğinde yönlendirir
  */
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   requireAuth = true,
   requireRole,
@@ -71,4 +71,4 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+// Bileşen doğrudan export edildi
