@@ -47,14 +47,12 @@ function Admin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Oturum kontrolü
+    // Oturum kontrolü - ProtectedRoute tarafından yönetiliyor
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (!session) {
-        navigate('/auth');
-      } else {
+      if (session) {
         loadUserProfile(session.user.id);
       }
     });
@@ -64,9 +62,7 @@ function Admin() {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (!session) {
-        navigate('/auth');
-      } else {
+      if (session) {
         loadUserProfile(session.user.id);
       }
     });
@@ -90,10 +86,8 @@ function Admin() {
 
       setProfile(data);
       
-      // Kullanıcı admin ise verileri yükle
-      if (data?.role === "admin") {
-        await loadAdminData();
-      }
+      // ProtectedRoute zaten admin kontrolü yapıyor, doğrudan verileri yükle
+      await loadAdminData();
       setLoading(false);
     } catch (error) {
       console.error("Profil yükleme hatası:", error);
